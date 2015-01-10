@@ -17,7 +17,7 @@
         Please <input type="submit" value="login" ng-click="googleLogin()"> with your Google ID. 
       </div>
       <div ng-show="currentUser">
-        You are logged in as {{currentUser.name}}.
+        You are logged in as {{currentUser.name}} ({{currentUser.authData.uid}}).
       </div>
 
 
@@ -50,20 +50,12 @@
       Solution: <textarea ng-model="newsolution"></textarea><br>
       Current Solution = {{currentSolution.solution}}<br>
 
-      <input type="submit" ng-click="verify('chris', problemKey, newsolution)"><br>      
+      <input type="submit" ng-click="verify(currentUser.authData.uid, problemKey, newsolution)"><br>      
       
       <h3>Solutions</h3> - users last solve attempt. 
       <ul>
-        <li ng-repeat='(userKey, value) in solutions'>
-          User: {{userKey}}
-          <ol ng-repeat='(problemKey, solution) in value'>
-            <li>
-              problem: {{problemKey}}, solution: {{solution}}
-              <!--<input type="submit" value="Check Solution" ng-click="verify(userKey, problemKey)">
-              <input type="submit" value="Mark Solved" ng-click="markSolved(userKey,problemKey)">-->
-            </li>
-          </ol>
-
+        <li ng-repeat='(k, solution) in solutions'>           
+               problem: {{k}}, isSolved: {{solution.isSolved}}, solution: {{solution.solution}}
         </li>
       </ul>
 
@@ -73,7 +65,7 @@
           User: {{userKey}}
           <ol ng-repeat='(problemKey, solution) in value'>
             <li>
-              problem: {{problemKey}}, solution: {{solution}}
+              problemKey: {{problemKey}}, solution: {{solution}}
               <input type="submit" value="delete" ng-click="deleteSolved(userKey, problemKey)">
             </li>
           </ol>
@@ -93,8 +85,6 @@
 
     </div>
 
-
-
     <script>
       var myApp = angular.module("myApp", ["firebase"]);
 
@@ -103,10 +93,8 @@
 
           //CREATE A FIREBASE REFERENCE
           var ref = new Firebase("https://singpath.firebaseio.com");
-          $scope.root =  $firebase(ref).$asObject();
-          $scope.chris = $firebase(ref.child("solution").child("chris")).$asObject();
           $scope.problems = $firebase(ref.child("problem")).$asArray();
-          $scope.solutions = $firebase(ref.child("solution")).$asObject();
+          $scope.solutions =[];// $firebase(ref.child("solution").$asObject();
           $scope.solved = $firebase(ref.child("solved")).$asObject();
           $scope.verifyRequests = $firebase(ref.child("verifyRequest")).$asObject();
           
@@ -122,12 +110,13 @@
                 console.log("Login Failed!", error);
               } else {
                 //Just insert the authData for the user into the users table and use the Google diplayName as initial name. 
-                //console.log("Authenticated successfully with payload:", authData);
-
-                ref.child("users/"+authData.uid).transaction(function(currentValue) {
+                //check for existing user first or just overwrite current data. 
+                ref.child("user/"+authData.uid).transaction(function(currentValue) {
                   return {"authData":authData, "name":authData.google.displayName};
                 });
-                $scope.currentUser = $firebase(ref.child("users").child(authData.uid)).$asObject();
+                $scope.currentUser = $firebase(ref.child("user").child(authData.uid)).$asObject();
+                $scope.solutions = $firebase(ref.child("solution").child(authData.uid)).$asObject();
+          
               }
             });
 
@@ -148,8 +137,7 @@
               $scope.currentProblem = $firebase(ref.child("problem").child(problemKey)).$asObject();
               
               //Pre-fill the last solution as a start if there was one. 
-              //HARDCODING to user chris for now. 
-              ref.child("solution/"+"chris"+"/"+problemKey).transaction(function(currentValue) {
+              ref.child("solution/"+$scope.currentUser.authData.uid+"/"+problemKey).transaction(function(currentValue) {
                   $scope.newsolution = "Type your solution here.";
                   if (currentValue) {
                     $scope.newsolution = currentValue.solution;
@@ -185,7 +173,7 @@
           }
           $scope.deleteSolved = function(userKey, problemKey) {
             //Delete the solved records to reset the need to solve a problem. 
-            var temp = $firebase(ref.child("solved").child("chris").child(problemKey));
+            var temp = $firebase(ref.child("solved").child(userKey).child(problemKey));
             temp.$remove();
           }
           $scope.simulateVerify = function(userKey,problemKey,isSolved) {
