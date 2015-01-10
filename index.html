@@ -13,7 +13,13 @@
     <div>
       <header>SingPathFire Prototype</header>
 
-      TBD - Add login support and remove references to user chris. <br>
+      <div ng-hide="currentUser">
+        Please <input type="submit" value="login" ng-click="googleLogin()"> with your Google ID. 
+      </div>
+      <div ng-show="currentUser">
+        You are logged in as {{currentUser.name}}.
+      </div>
+
 
       <h3>Add Problem</h3>
 
@@ -98,15 +104,34 @@
           //CREATE A FIREBASE REFERENCE
           var ref = new Firebase("https://singpath.firebaseio.com");
           $scope.root =  $firebase(ref).$asObject();
-
           $scope.chris = $firebase(ref.child("solution").child("chris")).$asObject();
           $scope.problems = $firebase(ref.child("problem")).$asArray();
           $scope.solutions = $firebase(ref.child("solution")).$asObject();
           $scope.solved = $firebase(ref.child("solved")).$asObject();
           $scope.verifyRequests = $firebase(ref.child("verifyRequest")).$asObject();
           
+          $scope.currentUser = null;
           $scope.currentProblem = null;
+
           
+          $scope.googleLogin = function(){
+
+            var ref = new Firebase("https://singpath.firebaseio.com");
+            ref.authWithOAuthPopup("google", function(error, authData) {
+              if (error) {
+                console.log("Login Failed!", error);
+              } else {
+                //Just insert the authData for the user into the users table and use the Google diplayName as initial name. 
+                //console.log("Authenticated successfully with payload:", authData);
+
+                ref.child("users/"+authData.uid).transaction(function(currentValue) {
+                  return {"authData":authData, "name":authData.google.displayName};
+                });
+                $scope.currentUser = $firebase(ref.child("users").child(authData.uid)).$asObject();
+              }
+            });
+
+          }
           //ADD PROBLEM METHOD
           $scope.addProblem = function() {
               //ADD TO FIREBASE
@@ -145,6 +170,8 @@
               ref.child("verifyRequest/"+userKey).transaction(function(currentValue) {
                   return {"problemKey": problemKey, "status": "requested"};
               });
+
+              //TODO: Do a GET or POST to the verifier to tell it to check for pending requests. 
           }
 
           $scope.markSolved = function(userKey, problemKey) {
