@@ -8,3 +8,4 @@ tools/*.log
 tools/*.pid
 gulpfile.js
 phantomjsdriver.log
+npm-debug.log

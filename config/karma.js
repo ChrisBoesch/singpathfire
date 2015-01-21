@@ -17,7 +17,6 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'src/vendor/es5-shim/es5-shim.js',
       'src/vendor/firebase/firebase.js',
       'src/vendor/moment/moment.js',
       'src/vendor/angular/angular.js',
@@ -27,6 +26,7 @@ module.exports = function(config) {
       'src/vendor/angular-strap/dist/angular-strap.js',
       'src/vendor/angular-strap/dist/angular-strap.tpl.js',
       'src/vendor/angularfire/dist/angularfire.js',
+      'src/vendor/angular-mocks/angular-mocks.js',
       'src/app/app.js',
       'src/app/app-fixtures.js',
       'src/app/components/**/*.js',
