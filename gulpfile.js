@@ -9,7 +9,7 @@ var replace = require('gulp-replace');
 var rev = require('gulp-rev');
 var revReplace = require('gulp-rev-replace');
 var streamqueue = require('streamqueue');
-var targetHTML = require('gulp-targetHTML');
+var targetHTML = require('gulp-targethtml');
 var uglify = require('gulp-uglify');
 var usemin = require('gulp-usemin');
 
