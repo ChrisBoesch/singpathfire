@@ -1,11 +1,10 @@
-build/
-build-debug/
-node_modules/
-e2e/
-dist/
-coverage/
+build/**
+build-debug/**
+node_modules/**
+e2e/**
+dist/**
+coverage/**
 tools/*.log
 tools/*.pid
-gulpfile.js
 phantomjsdriver.log
 npm-debug.log
