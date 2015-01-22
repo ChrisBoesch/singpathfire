@@ -51,14 +51,13 @@
 
           <ul class="nav navbar-nav navbar-right">
             <li>
-              <p class="navbar-text" ng-if="navBar.user.loading">Loading current user info...</p>
-              <p class="navbar-text" ng-if="navBar.user.data.name">Signed in as {{navBar.user.data.name}}</p>
+              <p class="navbar-text" ng-if="navBar.auth.user.google">Signed in as {{navBar.auth.user.google.displayName}}</p>
             </li>
-            <li ng-if="navBar.user.data">
-              <a href="" ng-click="navBar.login()" ng-if="!navBar.user.data.isLoggedIn">
+            <li>
+              <a href="" ng-click="navBar.login()" ng-if="!navBar.auth.user.google">
                 <i class="glyphicon glyphicon-off"></i> login
               </a>
-              <a href="" ng-click="navBar.logout()" ng-if="navBar.user.data.isLoggedIn">
+              <a href="" ng-click="navBar.logout()" ng-if="navBar.auth.user.google">
                 <i class="glyphicon glyphicon-off"></i> logout
               </a>
             </li>
@@ -83,7 +82,6 @@
   </footer>
 
   <!-- build:vendorJs(src) vendor.js -->
-  <script src="vendor/es5-shim/es5-shim.js"></script>
   <script src="vendor/firebase/firebase.js"></script>
   <script src="vendor/moment/moment.js"></script>
   <script src="vendor/angular/angular.js"></script>
