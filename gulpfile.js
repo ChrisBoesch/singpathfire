@@ -21,10 +21,11 @@ var config = {
   vendorFiles: './src/vendor/**/*',
   partials: './src/app/components/**/*.html',
   build: {
-    debug: './build-debug',
-    e2e: './e2e',
     concat: './build',
+    debug: './build-debug',
+    dev: './build-dev',
     dist: './dist',
+    e2e: './build-e2e',
   },
   bootstrap: {
     assets: [
@@ -33,6 +34,24 @@ var config = {
     base: 'src/vendor/bootstrap/dist'
   }
 };
+
+
+/**
+ * Simply copy build and process index.html for targets
+ *
+ */
+function copyBuid(target) {
+  'use strict';
+
+  return gulp.src([config.index], {
+      base: config.src
+    })
+    .pipe(targetHTML(target))
+    .pipe(addsrc([config.appFiles, config.vendorFiles], {
+      base: config.src
+    }))
+    .pipe(gulp.dest(config.build[target]));
+}
 
 
 /**
@@ -78,6 +97,7 @@ function concatBuild(target) {
     .pipe(scriptsFilter.restore());
 }
 
+
 /**
  * Delete all build reportories (build/, dist/, debug/ and e2e/)
  *
@@ -91,22 +111,28 @@ gulp.task('clean', function(done) {
 
 });
 
+
 /**
- * Copy src/ to debug/ and remove any http mocking.
+ * Copy src/ to build-dev/ and tweak mocking.
  *
  */
-gulp.task('debug', ['clean'], function() {
+gulp.task('build:dev', ['clean'], function() {
   'use strict';
 
-  return gulp.src([config.index], {
-      base: config.src
-    })
-    .pipe(targetHTML('debug'))
-    .pipe(addsrc([config.appFiles, config.vendorFiles], {
-      base: config.src
-    }))
-    .pipe(gulp.dest(config.build.debug));
+  return copyBuid('dev');
 });
+
+
+/**
+ * Copy src/ to debug/ and remove any mocking.
+ *
+ */
+gulp.task('build:debug', ['clean'], function() {
+  'use strict';
+
+  return copyBuid('debug');
+});
+
 
 /**
  * Copy src/ to e2e/ and remove the mocked spf module. But unlike debug,
@@ -114,7 +140,7 @@ gulp.task('debug', ['clean'], function() {
  * to each e2e scenario to mock th http response.
  *
  */
-gulp.task('e2e', ['clean'], function() {
+gulp.task('build:e2e', ['clean'], function() {
   'use strict';
 
   return gulp.src([config.index], {
@@ -127,11 +153,12 @@ gulp.task('e2e', ['clean'], function() {
     .pipe(gulp.dest(config.build.e2e));
 });
 
+
 /**
  * Build the app into build/ by removing any mocking and by concataning
  * assets.
  */
-gulp.task('build', ['clean'], function() {
+gulp.task('build:concat', ['clean'], function() {
   'use strict';
 
   var scriptsFilterRev = gulpFilter(['*', '!index.html']);
@@ -145,6 +172,49 @@ gulp.task('build', ['clean'], function() {
     .pipe(gulp.dest(config.build.concat));
 
 });
+
+gulp.task('build', ['build:dev', 'build:debug', 'build:e2e', 'build:concat']);
+
+gulp.task('watch', ['build:dev', 'build:debug', 'build:e2e', 'build:concat'], function() {
+  'use strict';
+
+  return gulp.watch(
+    'src/**/*', ['build:dev', 'build:debug', 'build:e2e', 'build:concat']
+  );
+});
+
+gulp.task('watch:dev', ['build:dev'], function() {
+  'use strict';
+
+  return gulp.watch(
+    'src/**/*', ['build:dev']
+  );
+});
+
+gulp.task('watch:debug', ['build:debug',], function() {
+  'use strict';
+
+  return gulp.watch(
+    'src/**/*', ['build:debug',]
+  );
+});
+
+gulp.task('watch:e2e', ['build:e2e'], function() {
+  'use strict';
+
+  return gulp.watch(
+    'src/**/*', ['build:e2e']
+  );
+});
+
+gulp.task('watch:concat', ['build:concat'], function() {
+  'use strict';
+
+  return gulp.watch(
+    'src/**/*', ['build:concat']
+  );
+});
+
 
 /**
  * Like build but minify css and js files too.
@@ -175,13 +245,4 @@ gulp.task('dist', ['clean'], function() {
 
 });
 
-
-gulp.task('watch', ['debug', 'e2e', 'build'], function() {
-  'use strict';
-  return gulp.watch(
-    'src/**/*', ['debug', 'e2e', 'build']
-  );
-});
-
-
-gulp.task('default', ['debug', 'e2e', 'build']);
+gulp.task('default', ['build:concat']);

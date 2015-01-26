@@ -5,16 +5,15 @@
   'use strict';
 
   describe('spf', function() {
-    var $rootScope, $q;
-
-    beforeEach(module('spf'));
 
     /**
      * Test core singpath fire controllers.
      *
      */
     describe('controllers', function() {
-      var $controller;
+      var $controller, $rootScope, $q;
+
+      beforeEach(module('spf'));
 
       beforeEach(inject(function(_$rootScope_, _$q_, _$controller_) {
         $controller = _$controller_;
@@ -100,25 +99,37 @@
 
 
       describe('spfFirebase', function() {
-        var $window, Firebase, firebaseSpy, spfFirebase;
+        var provider, factory, Firebase, firebaseSpy, spfFirebase;
 
-        beforeEach(inject(function(_$window_, _spfFirebase_) {
-          $window = _$window_;
-          spfFirebase = _spfFirebase_;
-
+        beforeEach(module('spf', function(spfFirebaseProvider) {
+          provider = spfFirebaseProvider;
           firebaseSpy = jasmine.createSpy('Firebase');
-          $window.Firebase = Firebase = function(url) {
+          Firebase = function(url) {
             firebaseSpy(url);
+          };
+          factory = function() {
+            return provider.$get.slice(-1).pop()({
+              Firebase: Firebase
+            });
           };
         }));
 
-        it('should return a new Firebase object', function() {
+        it('should return true on method call', inject(function() {
+          spfFirebase = factory();
           expect(spfFirebase().constructor).toBe(Firebase);
-        });
+        }));
 
         it('should return ref to singpath database', function() {
+          spfFirebase = factory();
           spfFirebase();
           expect(firebaseSpy).toHaveBeenCalledWith('https://singpath.firebaseio.com/');
+        });
+
+        it('should allow to configure the ref baseurl', function() {
+          provider.setBaseUrl('https://singpath-dev.firebaseio.com/');
+          spfFirebase = factory();
+          spfFirebase();
+          expect(firebaseSpy).toHaveBeenCalledWith('https://singpath-dev.firebaseio.com/');
         });
 
       });
@@ -126,6 +137,8 @@
 
       describe('spfAuth', function() {
         var auth, spfFirebase;
+
+        beforeEach(module('spf'));
 
         beforeEach(function() {
           var $firebaseAuth;
@@ -328,6 +341,8 @@
 
       describe('spfAlert', function() {
         var $alert, spfAlert;
+
+        beforeEach(module('spf'));
 
         beforeEach(function() {
           module(function($provide) {

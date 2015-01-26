@@ -10,11 +10,12 @@
     "dist": "./node_modules/.bin/gulp dist",
     "lint": "./node_modules/.bin/jshint src/app",
     "postinstall": "./node_modules/.bin/webdriver-manager update",
-    "start": "./node_modules/.bin/http-server ./src -p 8888 -o",
-    "start-build": "./node_modules/.bin/gulp && ./node_modules/.bin/http-server ./build -p 8887 -o",
-    "start-build-debug": "./node_modules/.bin/gulp && ./node_modules/.bin/http-server ./build-debug -p 8886 -o",
-    "start-dist": "./node_modules/.bin/gulp dist && ./node_modules/.bin/http-server ./dist -p 8885 -o",
-    "start-e2e": "./node_modules/.bin/gulp && ./node_modules/.bin/http-server ./e2e -p 8884 -o",
+    "start": "./bin/server.js --root=./src --port=8888 -o",
+    "start-build": "./node_modules/.bin/gulp && ./bin/server.js --root=./build --port=8885",
+    "start-build-debug": "./node_modules/.bin/gulp build:debug && ./bin/server.js --root=./build-debug --port=8886",
+    "start-build-dev": "./node_modules/.bin/gulp build:dev && ./bin/server.js --root=./build-dev --port=8887",
+    "start-build-e2e": "./node_modules/.bin/gulp build:e2e && ./bin/server.js --root=./build-e2e --port=8884",
+    "start-dist": "./node_modules/.bin/gulp dist && ./bin/server.js --root=./dist --port=8883",
     "test": "./node_modules/karma/bin/karma start config/karma.js",
     "test-e2e": "(./tools/init-protractor.sh status || ./tools/init-protractor.sh start) && ./node_modules/.bin/protractor config/protractor.js",
     "watch": "./node_modules/.bin/gulp watch"
@@ -31,6 +32,8 @@
   "homepage": "https://github.com/ChrisBoesch/singpathfire",
   "devDependencies": {
     "del": "^1.1.1",
+    "express": "^4.11.1",
+    "firebase-token-generator": "^2.0.0",
     "firebase-tools": "^1.1.4",
     "gulp": "^3.8.10",
     "gulp-add-src": "^0.2.0",
@@ -46,13 +49,21 @@
     "gulp-usemin": "^0.3.11",
     "http-server": "^0.7.4",
     "jasmine-core": "^2.1.3",
+    "js-yaml": "^3.2.5",
     "jshint": "^2.5.11",
     "karma": "^0.12.31",
     "karma-jasmine": "^0.3.5",
     "karma-phantomjs-launcher": "^0.1.4",
+    "minimist": "^1.1.0",
     "phantomjs": "^1.9.13",
     "protractor": "1.3.x",
+    "q": "^1.1.2",
+    "request": "^2.51.0",
     "rimraf": "^2.2.8",
-    "streamqueue": "^0.1.1"
+    "streamqueue": "^0.1.1",
+    "url-join": "0.0.1"
+  },
+  "dependencies": {
+    "firebase-token-generator": "^2.0.0"
   }
 }

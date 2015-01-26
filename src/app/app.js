@@ -48,16 +48,21 @@
   /**
    * spfFirebase return a Firebase reference to singpath database.
    *
-   * TODO: defines a configurable mode. By default it would return
-   * a ref. to the proper database. In e2e mode it reference a testing
-   * database.
-   *
    */
-  factory('spfFirebase', ['$window', function spfFirebaseFactory($window) {
-    return function spfFirebase() {
-      return new $window.Firebase('https://singpath.firebaseio.com/');
+  provider('spfFirebase', function SpfFirebaseProvider() {
+    var baseUrl = 'https://singpath.firebaseio.com/';
+
+    this.setBaseUrl = function(url){
+      baseUrl = url;
     };
-  }]).
+
+    this.$get = ['$window', function spfFirebaseFactory($window) {
+      return function spfFirebase() {
+        return new $window.Firebase(baseUrl);
+      };
+    }];
+
+  }).
 
 
   /**
