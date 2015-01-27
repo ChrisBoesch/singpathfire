@@ -40,8 +40,10 @@ var config = {
  * Simply copy build and process index.html for targets
  *
  */
-function copyBuid(target) {
+function copyBuid(dest, target) {
   'use strict';
+
+  target = target || dest;
 
   return gulp.src([config.index], {
       base: config.src
@@ -50,7 +52,7 @@ function copyBuid(target) {
     .pipe(addsrc([config.appFiles, config.vendorFiles], {
       base: config.src
     }))
-    .pipe(gulp.dest(config.build[target]));
+    .pipe(gulp.dest(config.build[dest]));
 }
 
 
@@ -58,7 +60,7 @@ function copyBuid(target) {
  * Stream that build and dist will share
  *
  */
-function concatBuild(target) {
+function concatBuild() {
   'use strict';
 
   var appJsFilter = gulpFilter(['app.js']);
@@ -68,7 +70,7 @@ function concatBuild(target) {
   var concatScripts = gulp.src([config.index], {
       base: config.src
     })
-    .pipe(targetHTML(target))
+    .pipe(targetHTML('live'))
     .pipe(usemin());
 
   // Compile partials html templates to js
@@ -130,7 +132,7 @@ gulp.task('build:dev', ['clean'], function() {
 gulp.task('build:debug', ['clean'], function() {
   'use strict';
 
-  return copyBuid('debug');
+  return copyBuid('debug', 'live');
 });
 
 

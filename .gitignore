@@ -7,5 +7,5 @@ dist/**
 node_modules/**
 npm-debug.log
 phantomjsdriver.log
-tools/*.log
-tools/*.pid
+bin/*.log
+bin/*.pid

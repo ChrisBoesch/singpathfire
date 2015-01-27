@@ -1,15 +1,27 @@
+/**
+ * It should be served by ./bin/server who will provide `firebaseUrl`.
+ *
+ */
 exports.module = function(angular, firebaseUrl) {
   'use strict';
 
-  angular.module('spfMocked', ['spf', 'ngMockE2E']).config([
+  angular.module('spfMocked', ['spf', 'ngMockE2E']).
+
+  config([
     'spfFirebaseProvider',
     function(spfFirebaseProvider) {
       spfFirebaseProvider.setBaseUrl(firebaseUrl);
     }
-  ]).run([
+  ]).
+
+  run([
     '$httpBackend',
     function($httpBackend) {
+      // Requests to mock
 
+
+      // Anything else should pass.
+      //
       $httpBackend.whenGET(/.*/).passThrough();
       $httpBackend.whenPOST(/.*/).passThrough();
       $httpBackend.whenPUT(/.*/).passThrough();

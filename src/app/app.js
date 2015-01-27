@@ -24,7 +24,7 @@
    *
    */
   constant('routes', {
-    'home': '/'
+    classMentor: '/class-mentors'
   }).
 
   /**
@@ -37,7 +37,7 @@
     'routes',
     function($routeProvider, cfpLoadingBarProvider, routes) {
       $routeProvider.otherwise({
-        redirectTo: routes.home
+        redirectTo: routes.classMentor
       });
 
       cfpLoadingBarProvider.includeSpinner = false;

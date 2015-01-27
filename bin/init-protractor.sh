@@ -5,9 +5,6 @@
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 PATH="${DIR}/../bin:${DIR}/../node_modules/.bin:${PATH}"
-SELENIUM=${DIR}/../node_modules/protractor/selenium/selenium-server-standalone-*.jar 
-
-SELENIUM_LOG="${DIR}/selenium.log"
 APP_LOG="${DIR}/app-e2e.log"
 
 
@@ -52,32 +49,24 @@ function stop_server() {
 
 
 function start_servers() {
-	gulp e2e
-
-	echo "Starting selenium on port 4444..."
-	java -jar $SELENIUM > $SELENIUM_LOG 2>&1 &
-	SELENIUM_PID=$!
-	echo -n $SELENIUM_PID > "${DIR}/selenium.pid"
+	gulp build:e2e
 
 	echo "Starting app server on port 5555..."
-	./bin/server.js --root=."${DIR}/../e2e/" --port=5555 > $APP_LOG &
+	${DIR}/server.js --root="${DIR}/../build-e2e/" --port=5555 > $APP_LOG &
 	HTTP_SERVER_PID=$!
 	echo -n $HTTP_SERVER_PID > "${DIR}/app.pid"
 
 	wait_for_server 5555
-	wait_for_server 4444
 }
 
 
 function stop_servers() {
-	stop_server 'selenium'
 	stop_server 'app'
 	exit 0
 }
 
 
 function show_status() {
-	server_status "selenium" 4444
 	server_status "app server" 5555
 }
 
