@@ -98,6 +98,58 @@
     describe('services', function() {
 
 
+      describe('crypto', function() {
+
+        describe('password', function() {
+          var provider, crypto;
+
+          beforeEach(module('spf', function(cryptoProvider) {
+            provider = cryptoProvider;
+          }));
+
+          beforeEach(inject(function(_crypto_) {
+            crypto = _crypto_;
+          }));
+
+          it('should create a hash using 256b hash (128b salt, 2024 iteration', function() {
+            var hash = crypto.password.newHash('foo');
+
+            expect(hash.hasher).toBe('PBKDF2');
+            expect(hash.prf).toBe('SHA256');
+            expect(hash.value.length).toBe(256 / 8 * 2); // 256 bit hex encoded
+            expect(hash.salt.length).toBe(128 / 8 * 2); // 64 bit hex encoded
+            expect(hash.iterations).toBe(2024);
+          });
+
+          it('should let you configure the hasher', function() {
+            var hash;
+
+            provider.setSaltSize(128 / 8);
+            provider.setHashKeySize(128 / 32);
+            provider.setIterations(100);
+
+            hash = crypto.password.newHash('foo');
+
+            expect(hash.value.length).toBe(128 / 8 * 2); // 256 bit hex encoded
+            expect(hash.salt.length).toBe(128 / 8 * 2); // 64 bit hex encoded
+            expect(hash.iterations).toBe(100);
+          });
+
+          it('should be able to create hash from salts and options', function() {
+            var hash = crypto.password.fromSalt('password', '11111111', {
+              keySize: 128 / 32,
+              iterations: 10,
+              prf: 'SHA1'
+            });
+
+            expect(hash).toBe('1a9e75789b45e1e072d420e2995ad5f9');
+          });
+
+        });
+
+      });
+
+
       describe('spfFirebase', function() {
         var provider, factory, Firebase, firebaseSpy, spfFirebase;
 

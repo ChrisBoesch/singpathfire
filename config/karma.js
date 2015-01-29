@@ -17,6 +17,11 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
+      'src/vendor/crypto-js/src/core.js',
+      'src/vendor/crypto-js/src/sha1.js',
+      'src/vendor/crypto-js/src/sha256.js',
+      'src/vendor/crypto-js/src/hmac.js',
+      'src/vendor/crypto-js/src/pbkdf2.js',
       'src/vendor/firebase/firebase.js',
       'src/vendor/moment/moment.js',
       'src/vendor/angular/angular.js',

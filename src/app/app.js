@@ -161,6 +161,87 @@
     }
   ]).
 
+  provider('crypto', [
+    function cryptoProvider() {
+      var saltSize = 128 / 8;
+      var hashOpts = {
+        keySize: 256 / 32,
+        iterations: 2024
+      };
+
+      this.setSaltSize = function(size) {
+        saltSize = size;
+      };
+
+      this.setHashKeySize = function(keySize) {
+        hashOpts.keySize = keySize;
+      };
+
+      this.setIterations = function(iterations) {
+        hashOpts.iterations = iterations;
+      };
+
+      this.$get = [
+        '$window',
+        function cryptoFactory($window) {
+          var CryptoJS = $window.CryptoJS;
+          var algo = CryptoJS.algo;
+          var pbkdf2 = CryptoJS.PBKDF2;
+          var hex = CryptoJS.enc.Hex;
+          var prf = 'SHA256';
+
+          return {
+            password: {
+              /**
+               * Return a hash for the password and options allowing
+               * to rebuild the same against the same password.
+               *
+               * The options will include the hashing algorithm name, the
+               * salt an other parameters.
+               *
+               */
+              newHash: function(password) {
+                var salt = CryptoJS.lib.WordArray.random(saltSize);
+                var hash = pbkdf2(password, salt, {
+                  keySize: hashOpts.keySize,
+                  iterations: hashOpts.iterations,
+                  hasher: algo[prf]
+                });
+
+                return {
+                  value: hex.stringify(hash),
+                  salt: hex.stringify(salt),
+                  iterations: hashOpts.iterations,
+                  keySize: hashOpts.keySize,
+                  hasher: 'PBKDF2',
+                  prf: prf
+                };
+              },
+
+              /**
+               * Return a hash built from the password, the hash and the
+               * hashing options.
+               *
+               * The salt should be hex encoded.
+               *
+               */
+              fromSalt: function(password, hexSalt, options) {
+                var salt = hex.parse(hexSalt);
+                var h = options.prf || prf;
+                var hash = pbkdf2(password, salt, {
+                  keySize: options.keySize || hashOpts.keySize,
+                  iterations: options.iterations || hashOpts.iterations,
+                  hasher: algo[h]
+                });
+                return hex.stringify(hash);
+              }
+            }
+          };
+        }
+      ];
+    }
+  ]).
+
   /**
    * Controler for the header novigation bar.
    *
