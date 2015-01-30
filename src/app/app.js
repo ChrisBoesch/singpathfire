@@ -84,6 +84,20 @@
 
   }).
 
+  /**
+   * Like spfFirebaseRef by return an angularFire sync object.
+   *
+   */
+  factory('spfFirebaseSync', [
+    '$firebase',
+    'spfFirebaseRef',
+    function spfFirebaseSyncFactory($firebase, spfFirebaseRef) {
+      return function spfFirebaseSync() {
+        return $firebase(spfFirebaseRef.apply(null, arguments));
+      };
+    }
+  ]).
+
 
   /**
    * Returns an object with `user` (Firebase auth user data) property,

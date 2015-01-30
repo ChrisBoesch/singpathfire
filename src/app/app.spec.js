@@ -150,6 +150,37 @@
       });
 
 
+      describe('spfFirebaseSync', function() {
+        var $firebase, spfFirebaseRef, ref, sync;
+
+        beforeEach(module('spf'));
+
+        beforeEach(function() {
+          ref = jasmine.createSpy('ref');
+          sync = jasmine.createSpy('sync');
+          $firebase = jasmine.createSpy('$firebase').and.returnValue(sync);
+          spfFirebaseRef = jasmine.createSpy('spfFirebaseRef').and.returnValue(ref);
+
+          module(function($provide) {
+            $provide.value('$firebase', $firebase);
+            $provide.value('spfFirebaseRef', spfFirebaseRef);
+          });
+        });
+
+        it('should create an angularFire object', inject(function(spfFirebaseSync) {
+          expect(spfFirebaseSync()).toBe(sync);
+          expect($firebase).toHaveBeenCalledWith(ref);
+          expect(spfFirebaseRef).toHaveBeenCalledWith();
+        }));
+
+        it('should create an angularFire object with ref to child', inject(function(spfFirebaseSync) {
+          spfFirebaseSync('foo', 'bar');
+          expect(spfFirebaseRef).toHaveBeenCalledWith('foo', 'bar');
+        }));
+
+      });
+
+
       describe('spfFirebaseRef', function() {
         var provider, factory, Firebase, firebaseSpy, spfFirebaseRef, ref;
 
