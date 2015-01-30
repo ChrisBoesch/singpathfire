@@ -8,9 +8,9 @@ exports.module = function(angular, firebaseUrl) {
   angular.module('spfMocked', ['spf', 'ngMockE2E']).
 
   config([
-    'spfFirebaseProvider',
-    function(spfFirebaseProvider) {
-      spfFirebaseProvider.setBaseUrl(firebaseUrl);
+    'spfFirebaseRefProvider',
+    function(spfFirebaseRefProvider) {
+      spfFirebaseRefProvider.setBaseUrl(firebaseUrl);
     }
   ]).
 

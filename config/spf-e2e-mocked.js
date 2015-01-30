@@ -10,9 +10,9 @@ exports.module = function(angular, config) {
   constant('firebaseConfig', config).
 
   config([
-    'spfFirebaseProvider',
-    function(spfFirebaseProvider) {
-      spfFirebaseProvider.setBaseUrl(config.url);
+    'spfFirebaseRefProvider',
+    function(spfFirebaseRefProvider) {
+      spfFirebaseRefProvider.setBaseUrl(config.url);
     }
   ]).
 

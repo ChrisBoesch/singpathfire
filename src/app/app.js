@@ -46,19 +46,39 @@
 
 
   /**
-   * spfFirebase return a Firebase reference to singpath database.
+   * spfFirebaseRef return a Firebase reference to singpath database,
+   * at a specific path; e.g:
+   *
+   *    // return ref to "https://singpath.firebaseio.com/auth/users/google:12345"
+   *    spfFirebaseRef('auth/users', 'google:12345');
+   *
+   * The base url is configurable with `spfFirebaseProvider.setBaseUrl`:
+   *
+   *    angular.module('spf').config([
+   *      'spfFirebaseRefProvider',
+   *      function(spfFirebaseRefProvider){
+   *          spfFirebaseRefProvider.setBaseUrl(newBaseUrl);
+   *      }
+   *    ])
    *
    */
-  provider('spfFirebase', function SpfFirebaseProvider() {
+  provider('spfFirebaseRef', function SpfFirebaseProvider() {
     var baseUrl = 'https://singpath.firebaseio.com/';
 
-    this.setBaseUrl = function(url){
+    this.setBaseUrl = function(url) {
       baseUrl = url;
     };
 
-    this.$get = ['$window', function spfFirebaseFactory($window) {
-      return function spfFirebase() {
-        return new $window.Firebase(baseUrl);
+    this.$get = ['$window', '$log', function spfFirebaseRefFactory($window, $log) {
+      return function spfFirebaseRef() {
+        var ref = new $window.Firebase(baseUrl);
+
+        $log.info('spf will connect to ' + baseUrl + ' singpath database.');
+        for (var i = 0; i < arguments.length; i++) {
+          ref = ref.child(arguments[i]);
+        }
+
+        return ref;
       };
     }];
 
@@ -72,9 +92,9 @@
   factory('spfAuth', [
     '$q',
     '$firebaseAuth',
-    'spfFirebase',
-    function($q, $firebaseAuth, spfFirebase) {
-      var auth = $firebaseAuth(spfFirebase());
+    'spfFirebaseRef',
+    function($q, $firebaseAuth, spfFirebaseRef) {
+      var auth = $firebaseAuth(spfFirebaseRef());
 
       return {
         // The current user auth data (null is not authenticated).

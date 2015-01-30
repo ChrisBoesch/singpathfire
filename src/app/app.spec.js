@@ -150,57 +150,69 @@
       });
 
 
-      describe('spfFirebase', function() {
-        var provider, factory, Firebase, firebaseSpy, spfFirebase;
+      describe('spfFirebaseRef', function() {
+        var provider, factory, Firebase, firebaseSpy, spfFirebaseRef, ref;
 
-        beforeEach(module('spf', function(spfFirebaseProvider) {
-          provider = spfFirebaseProvider;
+        beforeEach(module('spf', function(spfFirebaseRefProvider) {
+          var log = jasmine.createSpyObj('$log', ['info']);
+          provider = spfFirebaseRefProvider;
           firebaseSpy = jasmine.createSpy('Firebase');
+          ref = jasmine.createSpyObj('ref', ['child']);
+          ref.child.and.returnValue(ref);
           Firebase = function(url) {
             firebaseSpy(url);
+            this.child = ref.child.bind(ref);
           };
           factory = function() {
             return provider.$get.slice(-1).pop()({
               Firebase: Firebase
-            });
+            }, log);
           };
         }));
 
-        it('should return true on method call', inject(function() {
-          spfFirebase = factory();
-          expect(spfFirebase().constructor).toBe(Firebase);
+        it('should return a Firebase ref', inject(function() {
+          spfFirebaseRef = factory();
+          expect(spfFirebaseRef().constructor).toBe(Firebase);
         }));
 
         it('should return ref to singpath database', function() {
-          spfFirebase = factory();
-          spfFirebase();
+          spfFirebaseRef = factory();
+          spfFirebaseRef();
           expect(firebaseSpy).toHaveBeenCalledWith('https://singpath.firebaseio.com/');
         });
 
         it('should allow to configure the ref baseurl', function() {
           provider.setBaseUrl('https://singpath-dev.firebaseio.com/');
-          spfFirebase = factory();
-          spfFirebase();
+          spfFirebaseRef = factory();
+          spfFirebaseRef();
           expect(firebaseSpy).toHaveBeenCalledWith('https://singpath-dev.firebaseio.com/');
+        });
+
+        it('should allow to point to a specific child path', function() {
+          spfFirebaseRef = factory();
+          spfFirebaseRef('auth', 'users');
+          expect(ref.child.calls.count()).toBe(2);
+          expect(ref.child.calls.argsFor(0)).toEqual(['auth']);
+          expect(ref.child.calls.argsFor(1)).toEqual(['users']);
         });
 
       });
 
 
       describe('spfAuth', function() {
-        var auth, spfFirebase;
+        var auth, spfFirebaseRef;
 
         beforeEach(module('spf'));
 
         beforeEach(function() {
           var $firebaseAuth;
 
-          spfFirebase = jasmine.createSpy('spfFirebase');
+          spfFirebaseRef = jasmine.createSpy('spfFirebaseRef');
           auth = jasmine.createSpyObj('auth', ['$getAuth', '$authWithOAuthPopup', '$authWithOAuthRedirect', '$unauth']);
           $firebaseAuth = jasmine.createSpy('$firebaseAuth').and.returnValue(auth);
 
           module(function($provide) {
-            $provide.value('spfFirebase', spfFirebase);
+            $provide.value('spfFirebaseRef', spfFirebaseRef);
             $provide.value('$firebaseAuth', $firebaseAuth);
           });
 
