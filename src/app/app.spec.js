@@ -150,6 +150,73 @@
       });
 
 
+      describe('spfDataStore', function() {
+
+        beforeEach(module('spf'));
+
+        describe('auth', function() {
+          var spfFirebaseSync, spfAuth, sync, userObj;
+
+          beforeEach(function() {
+            sync = jasmine.createSpyObj('$angularfire', ['$asObject']);
+            userObj = jasmine.createSpyObj('$firebaseObject', ['$loaded', '$save']);
+            spfFirebaseSync = jasmine.createSpy().and.returnValue(sync);
+            sync.$asObject.and.returnValue(userObj);
+            spfAuth = {
+              user: {
+                uid: 'custome:1',
+                google: {
+                  displayName: 'Bob Smith'
+                }
+              }
+            };
+
+            module(function($provide) {
+              $provide.value('spfFirebaseSync', spfFirebaseSync);
+              $provide.value('spfAuth', spfAuth);
+            });
+          });
+
+          it('should return user data', function() {
+            inject(function(spfDataStore) {
+              expect(spfDataStore.auth.user()).toBe(userObj);
+            });
+          });
+
+          it('should return undefined if the user is not logged in', function() {
+            inject(function(spfDataStore) {
+              spfAuth.user = null;
+              expect(spfDataStore.auth.user()).toBeUndefined();
+            });
+          });
+
+          it('should setup user date', function() {
+            inject(function($rootScope, $q, spfDataStore) {
+              var result;
+
+              userObj.$loaded.and.returnValue($q.when(userObj));
+              userObj.$save.and.returnValue($q.when(true));
+              userObj.$value = null;
+
+              spfDataStore.auth.register(userObj).then(function(resp) {
+                result = resp;
+              });
+
+              $rootScope.$apply();
+              expect(result).toBe(userObj);
+              expect(userObj.$value).toEqual({
+                id: spfAuth.user.uid,
+                nickName: spfAuth.user.google.displayName,
+                displayName: spfAuth.user.google.displayName
+              });
+            });
+          });
+
+        });
+
+      });
+
+
       describe('spfFirebaseSync', function() {
         var $firebase, spfFirebaseRef, ref, sync;
 

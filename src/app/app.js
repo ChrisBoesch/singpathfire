@@ -85,7 +85,7 @@
   }).
 
   /**
-   * Like spfFirebaseRef by return an angularFire sync object.
+   * Like spfFirebaseRef by return an $firebase object.
    *
    */
   factory('spfFirebaseSync', [
@@ -149,6 +149,67 @@
         }
 
       };
+    }
+  ]).
+
+  /**
+   * Service to interact with singpath firebase db
+   *
+   */
+  factory('spfDataStore', [
+    '$q',
+    'spfFirebaseSync',
+    'spfAuth',
+    function spfDataStoreFactory($q, spfFirebaseSync, spfAuth) {
+      var api =  {
+        auth: {
+
+          /**
+           * Return angularFire $firebaseObject for the current user data.
+           *
+           * Returns `undefined` if the the user is not logged in.
+           *
+           */
+          user: function() {
+            if (!spfAuth.user || !spfAuth.user.uid) {
+              return;
+            }
+            return spfFirebaseSync('auth/users', spfAuth.user.uid).$asObject();
+          },
+
+          /**
+           * Setup initial data for the current user.
+           *
+           * Should run if 'auth.user().$value is `null`.
+           *
+           * Returns a promise resolving to the user data when
+           * they become available.
+           *
+           */
+          register: function(userData) {
+            if (angular.isUndefined(userData)) {
+              return $q.reject(new Error('A user should be logged in to register'));
+            }
+
+            return userData.$loaded().then(function(data){
+              if (data.$value !== null) {
+                return;
+              }
+
+              data.$value = {
+                id: spfAuth.user.uid,
+                nickName: spfAuth.user.google.displayName,
+                displayName: spfAuth.user.google.displayName
+              };
+              return data.$save();
+            }).then(function(){
+              return userData;
+            });
+          }
+        }
+      };
+
+      return api;
     }
   ]).
 
