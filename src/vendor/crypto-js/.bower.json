@@ -10,6 +10,5 @@
   },
   "_source": "git://github.com/evanvosberg/crypto-js.git",
   "_target": "~3.1.2",
-  "_originalSource": "git://github.com/evanvosberg/crypto-js",
-  "_direct": true
+  "_originalSource": "git://github.com/evanvosberg/crypto-js"
 }
