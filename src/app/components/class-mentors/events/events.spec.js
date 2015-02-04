@@ -1,5 +1,5 @@
 /* jshint camelcase: false*/
-/* global describe, beforeEach, module, it, inject, expect, jasmine */
+/* global describe, beforeEach, module, inject,  jasmine */
 
 (function() {
   'use strict';
@@ -16,18 +16,14 @@
     }));
 
 
-    describe('ClassMemtorsHomeCtrl', function() {
+    describe('ClassMentorsEventList', function() {
       var auth, ctrl;
 
       beforeEach(function() {
         auth = jasmine.createSpyObj('spfAuth', ['login', 'logout']);
-        ctrl = $controller('ClassMemtorsHomeCtrl', {
+        ctrl = $controller('ClassMentorsEventList', {
           spfAuth: auth,
         });
-      });
-
-      it('Should fail', function() {
-        expect(ctrl.auth).toBe(auth);
       });
 
     });

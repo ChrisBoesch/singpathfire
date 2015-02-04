@@ -1,0 +1,15 @@
+.bs-sidenav {
+    margin-top: 60px;
+}
+
+.bs-sidenav a {
+    text-align: right;
+}
+
+.bs-sidenav .active a {
+    padding-right: 13px;
+    font-weight: 700;
+    color: #337ab7;
+    background-color: transparent;
+    border-right: 2px solid #337ab7;
+}

@@ -14,6 +14,7 @@
     'firebase',
     'mgcrea.ngStrap',
     'ngAnimate',
+    'ngMessages',
     'ngRoute'
   ]).
 
@@ -24,7 +25,10 @@
    *
    */
   constant('routes', {
-    classMentor: '/class-mentors'
+    classMentor: {
+      home: '/class-mentors',
+      events: '/class-mentors'
+    }
   }).
 
   /**
@@ -37,20 +41,109 @@
     'routes',
     function($routeProvider, cfpLoadingBarProvider, routes) {
       $routeProvider.otherwise({
-        redirectTo: routes.classMentor
+        redirectTo: routes.classMentor.home
       });
 
       cfpLoadingBarProvider.includeSpinner = false;
     }
   ]).
 
+  config([
+    '$provide',
+    function($provide) {
+      $provide.decorator('$firebase', [
+        '$delegate',
+        '$timeout',
+        'cfpLoadingBar',
+        function($delegate, $timeout, cfpLoadingBar) {
+          var latencyThreshold = 100;
+          var requests = 0;
+          var completedRequest = 0;
+          var timeout = null;
+          var started = false;
+
+          function start() {
+            if (started) {
+              cfpLoadingBar.start();
+              return;
+            }
+
+            if (timeout) {
+              return;
+            }
+
+            timeout = setTimeout(function() {
+              if (requests) {
+                cfpLoadingBar.start();
+                started = true;
+                timeout = null;
+              }
+            }, latencyThreshold);
+          }
+
+          function incr() {
+            requests += 1;
+            start();
+          }
+
+          function complete() {
+            completedRequest += 1;
+            if (requests === completedRequest) {
+              cfpLoadingBar.complete();
+              requests = completedRequest = 0;
+              started = false;
+              if (timeout) {
+                $timeout.cancel(timeout);
+                timeout = null;
+              }
+            }
+          }
+
+
+          ['$asArray', '$asObject'].map(function(k) {
+            var _super = $delegate.prototype[k];
+            $delegate.prototype[k] = function() {
+              var result = _super.apply(this, arguments);
+
+              incr();
+              result.$loaded().finally(complete);
+
+              return result;
+            };
+          });
+
+          ['$push', '$remove', '$set', '$update'].map(function(k) {
+            var _super = $delegate.prototype[k];
+            $delegate.prototype[k] = function() {
+              var result = _super.apply(this, arguments);
+
+              incr();
+              result.finally(complete);
+
+              return result;
+            };
+          });
+
+
+          return $delegate;
+        }
+      ]);
+    }
+  ]).
 
   /**
    * spfFirebaseRef return a Firebase reference to singpath database,
-   * at a specific path; e.g:
+   * at a specific path, with a specific query; e.g:
    *
-   *    // return ref to "https://singpath.firebaseio.com/auth/users/google:12345"
-   *    spfFirebaseRef('auth/users', 'google:12345');
+   *    // ref to "https://singpath.firebaseio.com/"
+   *    spfFirebaseRef);
+   *
+   *    // ref to "https://singpath.firebaseio.com/auth/users/google:12345"
+   *    spfFirebaseRef(['auth/users', 'google:12345']);
+   *
+   *    // ref to "https://singpath.firebaseio.com/events?limitTo=50"
+   *    spfFirebaseRef(['events', 'google:12345'], {limitTo: 50});
+   *
    *
    * The base url is configurable with `spfFirebaseProvider.setBaseUrl`:
    *
@@ -70,14 +163,22 @@
     };
 
     this.$get = ['$window', '$log', function spfFirebaseRefFactory($window, $log) {
-      return function spfFirebaseRef() {
+      return function spfFirebaseRef(paths, options) {
         var ref = new $window.Firebase(baseUrl);
 
-        $log.info('spf will connect to ' + baseUrl + ' singpath database.');
-        for (var i = 0; i < arguments.length; i++) {
-          ref = ref.child(arguments[i]);
-        }
+        $log.debug('singpath base URL: "' + baseUrl + '".');
 
+        paths = paths || [];
+        ref = paths.reduce(function(ref, p) {
+          return ref.child(p);
+        }, ref);
+
+        options = options || {};
+        Object.keys(options).forEach(function(k) {
+          ref[k](options[k]);
+        });
+
+        $log.debug('singpath ref path: "' + ref.path.toString() + '".');
         return ref;
       };
     }];
@@ -146,6 +247,13 @@
         logout: function() {
           auth.$unauth();
           this.user = undefined;
+        },
+
+        /**
+         * Register a callback for the authentication event.
+         */
+        onAuth: function(fn, ctx) {
+          return auth.$onAuth(fn, ctx);
         }
 
       };
@@ -158,23 +266,49 @@
    */
   factory('spfDataStore', [
     '$q',
+    'spfFirebaseRef',
     'spfFirebaseSync',
     'spfAuth',
-    function spfDataStoreFactory($q, spfFirebaseSync, spfAuth) {
-      var api =  {
+    'crypto',
+    function spfDataStoreFactory($q, spfFirebaseRef, spfFirebaseSync, spfAuth, crypto) {
+      var userData, userDataPromise, api;
+
+      api = {
         auth: {
 
+          _user: function() {
+            return spfFirebaseSync(['auth/users', spfAuth.user.uid]).$asObject();
+          },
+
           /**
-           * Return angularFire $firebaseObject for the current user data.
+           * Returns a promise resolving to an angularFire $firebaseObject
+           * for the current user data.
            *
-           * Returns `undefined` if the the user is not logged in.
+           * The promise will be rejected if the is not authenticated.
            *
            */
           user: function() {
             if (!spfAuth.user || !spfAuth.user.uid) {
-              return;
+              return $q.reject(new Error('the user is not authenticated.'));
             }
-            return spfFirebaseSync('auth/users', spfAuth.user.uid).$asObject();
+
+            if (userData) {
+              return $q.when(userData);
+            }
+
+            if (userDataPromise) {
+              return $q.when(userDataPromise);
+            }
+
+            userDataPromise = api.auth._user().$loaded().then(
+              api.auth.register
+            ).then(function(data) {
+              userData = data;
+              userDataPromise = null;
+              return data;
+            });
+
+            return userDataPromise;
           },
 
           /**
@@ -191,20 +325,95 @@
               return $q.reject(new Error('A user should be logged in to register'));
             }
 
-            return userData.$loaded().then(function(data){
-              if (data.$value !== null) {
-                return;
-              }
+            // $value will be undefined and not null when the userData object
+            // is set.
+            if (userData.$value !== null) {
+              return $q.when(userData);
+            }
 
-              data.$value = {
-                id: spfAuth.user.uid,
-                nickName: spfAuth.user.google.displayName,
-                displayName: spfAuth.user.google.displayName
-              };
-              return data.$save();
-            }).then(function(){
+            userData.$value = {
+              id: spfAuth.user.uid,
+              nickName: spfAuth.user.google.displayName,
+              displayName: spfAuth.user.google.displayName,
+              createdAt: {
+                '.sv': 'timestamp'
+              }
+            };
+
+            return userData.$save().then(function() {
               return userData;
             });
+          }
+        },
+
+        classMentor: {
+          events: {
+            list: function() {
+              return spfFirebaseSync(['classMentors/events'], {
+                orderByChild: 'timestamp',
+                limitToLast: 50
+              }).$asArray();
+            },
+
+            create: function(collection, data, password) {
+              var hash, eventId;
+
+              if (!spfAuth.user || !spfAuth.user.uid) {
+                return $q.reject(new Error('A user should be logged in to create an event.'));
+              }
+
+              if (!password) {
+                return $q.reject(new Error('An event should have a password.'));
+              }
+
+              return collection.$add(data).then(function(ref) {
+                eventId = ref.key();
+                hash = crypto.password.newHash(password);
+                var opts = {
+                  hash: hash.value,
+                  options: hash.options
+                };
+                return spfFirebaseSync(['classMentors/eventPasswords']).$set(eventId, opts);
+              }).then(function() {
+                return eventId;
+              });
+            },
+
+            join: function(eventId, pw) {
+              if (!spfAuth.user || !spfAuth.user.uid) {
+                return $q.reject(new Error('A user should be logged in to create an event.'));
+              }
+
+              var paths = {
+                hashOptions: ['classMentors/eventPasswords', eventId, 'options'],
+                application: ['classMentors/eventApplications', eventId, spfAuth.user.uid],
+                participation: ['classMentors/eventParticipants', eventId, spfAuth.user.uid]
+              };
+
+              // The owner can join without password.
+              if (pw === null) {
+                return spfFirebaseSync(paths.participation).$set(true);
+              }
+
+              return spfFirebaseSync(paths.hashOptions).$asObject().$loaded().then(function(options) {
+                var hash = crypto.password.fromSalt(pw, options.$value.salt, options.$value);
+                return spfFirebaseSync(paths.application).$set(hash.value);
+              }).then(function() {
+                return spfFirebaseSync(paths.participation).$set(true);
+              });
+            }
+          },
+
+          leave: function(eventId) {
+            if (!spfAuth.user || !spfAuth.user.uid) {
+              return $q.reject(new Error('A user should be logged in to create an event.'));
+            }
+
+            return spfFirebaseSync([
+              'classMentors/eventParticipants',
+              eventId,
+              spfAuth.user.uid
+            ]).$set(false);
           }
         }
       };
@@ -234,23 +443,17 @@
    *
    */
   factory('spfAlert', [
-    '$alert',
-    function spfAlertFactory($alert) {
+    '$window',
+    function spfAlertFactory($window) {
+      var ctx = $window.alertify;
       var spfAlert = function(type, content) {
-        type = type || 'Info';
-        return $alert({
-          content: content,
-          duration: 5,
-          placement: 'top-right',
-          title: type,
-          type: type.toLowerCase()
-        });
+        ctx.log(content, type.toLowerCase());
       };
 
-      spfAlert.success = spfAlert.bind({}, 'Success');
-      spfAlert.info = spfAlert.bind({}, 'Info');
-      spfAlert.warning = spfAlert.bind({}, 'Warning');
-      spfAlert.danger = spfAlert.bind({}, 'Danger');
+      spfAlert.success = spfAlert.bind(ctx, 'success');
+      spfAlert.info = spfAlert.bind(ctx);
+      spfAlert.warning = spfAlert.bind(ctx, 'error');
+      spfAlert.danger = spfAlert.bind(ctx, 'error');
 
       return spfAlert;
     }
@@ -305,11 +508,13 @@
 
                 return {
                   value: hex.stringify(hash),
-                  salt: hex.stringify(salt),
-                  iterations: hashOpts.iterations,
-                  keySize: hashOpts.keySize,
-                  hasher: 'PBKDF2',
-                  prf: prf
+                  options: {
+                    salt: hex.stringify(salt),
+                    iterations: hashOpts.iterations,
+                    keySize: hashOpts.keySize,
+                    hasher: 'PBKDF2',
+                    prf: prf
+                  }
                 };
               },
 
@@ -337,35 +542,60 @@
     }
   ]).
 
-  /**
-   * Controler for the header novigation bar.
-   *
-   * Set an auth property bound to spfAuth. Its user property can used
-   * to display the state of the authentication and the user display name
-   * when the user is logged in.
-   *
-   * The ctrl set a login and logout property to autenticate/unauthenticate
-   * the current user.
-   *
-   */
-  controller('SpfNavBarCtrl', [
-    '$q',
-    'spfAlert',
-    'spfAuth',
-    function($q, spfAlert, spfAuth) {
-      this.auth = spfAuth;
+  directive('spfBsValidClass', [
 
-      this.login = function() {
-        return spfAuth.login().catch(function(e) {
-          spfAlert.warning('You failed to authenticate with Google');
-          return $q.reject(e);
-        });
+    function spfBsValidClassFactory() {
+      return {
+        restrict: 'A',
+        scope: false,
+        require: 'ngModel',
+        // arguments: scope, iElement, iAttrs, controller
+        link: function spfBsValidClassPostLink(s, iElement, a, model) {
+          var formControl, setPristine = model.$setPristine;
+
+          function findFormController(input, className) {
+            var formControl = input;
+            while (formControl.length > 0) {
+              formControl = formControl.parent();
+              if (formControl.hasClass(className)) {
+                return formControl;
+              }
+            }
+          }
+
+          formControl = findFormController(iElement, 'form-group');
+          if (!formControl) {
+            formControl = findFormController(iElement, 'radio');
+          }
+
+          if (!formControl) {
+            return;
+          }
+
+          model.$setPristine = function augmentedSetPristine() {
+            formControl.removeClass('has-error');
+            formControl.removeClass('has-success');
+            return setPristine.apply(model, arguments);
+          };
+
+          model.$viewChangeListeners.push(function spfBsValidClassOnChange() {
+
+            if (model.$pristine) {
+              formControl.removeClass('has-error');
+              formControl.removeClass('has-success');
+              return;
+            }
+
+            if (model.$valid) {
+              formControl.removeClass('has-error');
+              formControl.addClass('has-success');
+            } else {
+              formControl.addClass('has-error');
+              formControl.removeClass('has-success');
+            }
+          });
+        }
       };
-
-      this.logout = function() {
-        return spfAuth.logout();
-      };
-
     }
   ])
 

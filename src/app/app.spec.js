@@ -114,11 +114,11 @@
           it('should create a hash using 256b hash (128b salt, 2024 iteration', function() {
             var hash = crypto.password.newHash('foo');
 
-            expect(hash.hasher).toBe('PBKDF2');
-            expect(hash.prf).toBe('SHA256');
+            expect(hash.options.hasher).toBe('PBKDF2');
+            expect(hash.options.prf).toBe('SHA256');
             expect(hash.value.length).toBe(256 / 8 * 2); // 256 bit hex encoded
-            expect(hash.salt.length).toBe(128 / 8 * 2); // 64 bit hex encoded
-            expect(hash.iterations).toBe(2024);
+            expect(hash.options.salt.length).toBe(128 / 8 * 2); // 64 bit hex encoded
+            expect(hash.options.iterations).toBe(2024);
           });
 
           it('should let you configure the hasher', function() {
@@ -131,8 +131,8 @@
             hash = crypto.password.newHash('foo');
 
             expect(hash.value.length).toBe(128 / 8 * 2); // 256 bit hex encoded
-            expect(hash.salt.length).toBe(128 / 8 * 2); // 64 bit hex encoded
-            expect(hash.iterations).toBe(100);
+            expect(hash.options.salt.length).toBe(128 / 8 * 2); // 64 bit hex encoded
+            expect(hash.options.iterations).toBe(100);
           });
 
           it('should be able to create hash from salts and options', function() {
@@ -241,8 +241,8 @@
         }));
 
         it('should create an angularFire object with ref to child', inject(function(spfFirebaseSync) {
-          spfFirebaseSync('foo', 'bar');
-          expect(spfFirebaseRef).toHaveBeenCalledWith('foo', 'bar');
+          spfFirebaseSync(['foo', 'bar'], {limitToLast: 50});
+          expect(spfFirebaseRef).toHaveBeenCalledWith(['foo', 'bar'], {limitToLast: 50});
         }));
 
       });
@@ -254,19 +254,24 @@
         beforeEach(module('spf', function(spfFirebaseRefProvider) {
           var log = jasmine.createSpyObj('$log', ['info']);
           provider = spfFirebaseRefProvider;
-          firebaseSpy = jasmine.createSpy('Firebase');
-          ref = jasmine.createSpyObj('ref', ['child']);
-          ref.child.and.returnValue(ref);
-          Firebase = function(url) {
-            firebaseSpy(url);
-            this.child = ref.child.bind(ref);
-          };
           factory = function() {
             return provider.$get.slice(-1).pop()({
               Firebase: Firebase
             }, log);
           };
         }));
+
+        beforeEach(function(){
+          firebaseSpy = jasmine.createSpy('Firebase');
+          ref = jasmine.createSpyObj('ref', ['child', 'orderBy', 'limitToLast']);
+          ref.child.and.returnValue(ref);
+          ref.orderBy.and.returnValue(ref);
+          ref.limitToLast.and.returnValue(ref);
+          Firebase = function(url) {
+            firebaseSpy(url);
+            this.child = ref.child.bind(ref);
+          };
+        });
 
         it('should return a Firebase ref', inject(function() {
           spfFirebaseRef = factory();
@@ -288,10 +293,22 @@
 
         it('should allow to point to a specific child path', function() {
           spfFirebaseRef = factory();
-          spfFirebaseRef('auth', 'users');
+          spfFirebaseRef(['auth', 'users']);
           expect(ref.child.calls.count()).toBe(2);
           expect(ref.child.calls.argsFor(0)).toEqual(['auth']);
           expect(ref.child.calls.argsFor(1)).toEqual(['users']);
+        });
+
+        it('should allow to point to a specific query options', function() {
+          expect(ref.child.calls.count()).toBe(0);
+          spfFirebaseRef = factory();
+          spfFirebaseRef(['events'], {
+            orderBy: 'timestamps',
+            limitToLast: 50
+          });
+
+          expect(ref.orderBy).toHaveBeenCalledWith('timestamps');
+          expect(ref.limitToLast).toHaveBeenCalledWith(50);
         });
 
       });
