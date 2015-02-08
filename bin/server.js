@@ -11,7 +11,6 @@
  * They would still need to rely on the same firebase security rules.
  *
  */
-var path = require('path');
 var q = require('q');
 var express = require('express');
 var app = express();
@@ -25,7 +24,7 @@ var fileServerOptions = {
 };
 var port = parseInt(argv.port || 3000, 10);
 var host = argv.host || 'localhost';
-var firebaseKeyPath = argv.keypath || path.join(__dirname, '../../config/secret-keys.yaml');
+var firebaseKeyPath = argv.keypath || 'config/secret-keys.yaml';
 var firebaseServer = argv.keypath || 'dev';
 
 var _firebaseConfig = null;
@@ -40,7 +39,7 @@ function getFirebaseConfig() {
     return q(_firebaseConfig);
   }
 
-  return sessions.create(firebaseKeyPath, firebaseServer).then(function(config){
+  return sessions.create(firebaseServer, firebaseKeyPath).then(function(config){
     console.log('firebase session:' + config.url);
     _firebaseConfig = config;
     return config;

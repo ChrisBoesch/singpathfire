@@ -22,73 +22,6 @@
       }));
 
 
-      /**
-       * Test SpfNavBarCtrl.
-       */
-      describe('SpfNavBarCtrl', function() {
-        var ctrl, alert, auth;
-
-        beforeEach(function() {
-          auth = jasmine.createSpyObj('spfAuth', ['login', 'logout']);
-          alert = jasmine.createSpy('spfAlert');
-          ['info', 'success', 'warning', 'danger'].map(function(k) {
-            alert[k] = jasmine.createSpy(k);
-          });
-          ctrl = $controller('SpfNavBarCtrl', {
-            spfAuth: auth,
-            spfAlert: alert
-          });
-
-        });
-
-        it('should have auth attribute', function() {
-          expect(ctrl.auth).toBe(auth);
-        });
-
-        it('should login users', function() {
-          var resp = {
-            uid: '1234'
-          };
-          var result;
-
-          auth.login.and.returnValue($q.when(resp));
-
-          ctrl.login().then(function(resp) {
-            result = resp;
-          });
-          $rootScope.$apply();
-
-          expect(result).toBe(resp);
-        });
-
-        it('should alert users when login fails', function() {
-          var e = new Error('I want it to fail');
-
-          auth.login.and.returnValue($q.reject(e));
-
-          ctrl.login();
-          $rootScope.$apply();
-
-          expect(alert.warning).toHaveBeenCalled();
-        });
-
-        it('should reject login promise on error', function() {
-          var e = new Error('I want it to fail');
-          var result;
-
-          auth.login.and.returnValue($q.reject(e));
-
-          ctrl.login().catch(function(e) {
-            result = e;
-          });
-          $rootScope.$apply();
-
-          expect(result).toBe(e);
-        });
-
-      });
-
-
     });
 
 
@@ -177,16 +110,35 @@
             });
           });
 
-          it('should return user data', function() {
-            inject(function(spfDataStore) {
-              expect(spfDataStore.auth.user()).toBe(userObj);
+          it('should resolved to user data', function() {
+            inject(function($q, $rootScope, spfDataStore) {
+              var result;
+
+              userObj.$loaded.and.returnValue($q.when(userObj));
+              spfDataStore.auth.user().then(function(_result_) {
+                result = _result_;
+              });
+              $rootScope.$apply();
+
+              expect(result).toBe(userObj);
+              expect(userObj.$save).not.toHaveBeenCalled();
             });
           });
 
           it('should return undefined if the user is not logged in', function() {
-            inject(function(spfDataStore) {
+            inject(function($rootScope, spfDataStore) {
+              var result, error;
+
               spfAuth.user = null;
-              expect(spfDataStore.auth.user()).toBeUndefined();
+              spfDataStore.auth.user().then(function(_result_) {
+                result = _result_;
+              }, function(e) {
+                error = e;
+              });
+
+              $rootScope.$apply();
+              expect(result).toBeUndefined();
+              expect(error).toBeDefined();
             });
           });
 
@@ -198,8 +150,8 @@
               userObj.$save.and.returnValue($q.when(true));
               userObj.$value = null;
 
-              spfDataStore.auth.register(userObj).then(function(resp) {
-                result = resp;
+              spfDataStore.auth.user().then(function(_result_) {
+                result = _result_;
               });
 
               $rootScope.$apply();
@@ -207,8 +159,10 @@
               expect(userObj.$value).toEqual({
                 id: spfAuth.user.uid,
                 nickName: spfAuth.user.google.displayName,
-                displayName: spfAuth.user.google.displayName
+                displayName: spfAuth.user.google.displayName,
+                createdAt: {'.sv': 'timestamp'}
               });
+              expect(userObj.$save).toHaveBeenCalled();
             });
           });
 
@@ -252,7 +206,7 @@
         var provider, factory, Firebase, firebaseSpy, spfFirebaseRef, ref;
 
         beforeEach(module('spf', function(spfFirebaseRefProvider) {
-          var log = jasmine.createSpyObj('$log', ['info']);
+          var log = jasmine.createSpyObj('$log', ['info', 'debug']);
           provider = spfFirebaseRefProvider;
           factory = function() {
             return provider.$get.slice(-1).pop()({
@@ -267,9 +221,11 @@
           ref.child.and.returnValue(ref);
           ref.orderBy.and.returnValue(ref);
           ref.limitToLast.and.returnValue(ref);
+          ref.path = {};
           Firebase = function(url) {
             firebaseSpy(url);
             this.child = ref.child.bind(ref);
+            this.path = {};
           };
         });
 
@@ -519,15 +475,19 @@
 
 
       describe('spfAlert', function() {
-        var $alert, spfAlert;
+        var log, spfAlert;
 
         beforeEach(module('spf'));
 
         beforeEach(function() {
           module(function($provide) {
-            $alert = jasmine.createSpy();
-            $alert.and.returnValue(null);
-            $provide.value('$alert', $alert);
+            log = jasmine.createSpy();
+            log.and.returnValue(null);
+            $provide.value('$window', {
+              alertify: {
+                log: log
+              }
+            });
           });
 
           inject(function(_spfAlert_) {
@@ -536,19 +496,15 @@
         });
 
         it('should alert users', function() {
-          spfAlert('Title', 'Content');
-          expect($alert.calls.mostRecent().args[0].content).toBe('Content');
-          expect($alert.calls.mostRecent().args[0].title).toBe('Title');
-          expect($alert.calls.mostRecent().args[0].type).toBe('title');
+          spfAlert('Type', 'Content');
+          expect(log).toHaveBeenCalledWith('Content', 'type');
         });
 
         describe('spfAlert.success', function() {
 
           it('should send a notification of type "success"', function() {
             spfAlert.success('Content');
-            expect($alert.calls.mostRecent().args[0].content).toBe('Content');
-            expect($alert.calls.mostRecent().args[0].title).toBe('Success');
-            expect($alert.calls.mostRecent().args[0].type).toBe('success');
+            expect(log).toHaveBeenCalledWith('Content', 'success');
           });
 
         });
@@ -557,9 +513,7 @@
 
           it('should send a notification of type "info"', function() {
             spfAlert.info('Content');
-            expect($alert.calls.mostRecent().args[0].content).toBe('Content');
-            expect($alert.calls.mostRecent().args[0].title).toBe('Info');
-            expect($alert.calls.mostRecent().args[0].type).toBe('info');
+            expect(log).toHaveBeenCalledWith('Content', undefined);
           });
 
         });
@@ -568,20 +522,26 @@
 
           it('should send a notification of type "warning"', function() {
             spfAlert.warning('Content');
-            expect($alert.calls.mostRecent().args[0].content).toBe('Content');
-            expect($alert.calls.mostRecent().args[0].title).toBe('Warning');
-            expect($alert.calls.mostRecent().args[0].type).toBe('warning');
+            expect(log).toHaveBeenCalledWith('Content', 'error');
           });
 
         });
+
 
         describe('spfAlert.danger', function() {
 
           it('should send a notification of type "danger"', function() {
             spfAlert.danger('Content');
-            expect($alert.calls.mostRecent().args[0].content).toBe('Content');
-            expect($alert.calls.mostRecent().args[0].title).toBe('Danger');
-            expect($alert.calls.mostRecent().args[0].type).toBe('danger');
+            expect(log).toHaveBeenCalledWith('Content', 'error');
+          });
+
+        });
+
+        describe('spfAlert.error', function() {
+
+          it('should send a notification of type "error"', function() {
+            spfAlert.error('Content');
+            expect(log).toHaveBeenCalledWith('Content', 'error');
           });
 
         });

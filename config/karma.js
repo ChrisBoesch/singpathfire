@@ -17,16 +17,18 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
+      'src/vendor/alertifyjs/src/js/alertify.js',
       'src/vendor/crypto-js/src/core.js',
-      'src/vendor/crypto-js/src/sha1.js',
-      'src/vendor/crypto-js/src/sha256.js',
       'src/vendor/crypto-js/src/hmac.js',
       'src/vendor/crypto-js/src/pbkdf2.js',
+      'src/vendor/crypto-js/src/sha1.js',
+      'src/vendor/crypto-js/src/sha256.js',
       'src/vendor/firebase/firebase.js',
       'src/vendor/moment/moment.js',
       'src/vendor/angular/angular.js',
       'src/vendor/angular-animate/angular-animate.js',
       'src/vendor/angular-route/angular-route.js',
+      'src/vendor/angular-messages/angular-messages.js',
       'src/vendor/angular-loading-bar/build/loading-bar.js',
       'src/vendor/angular-strap/dist/angular-strap.js',
       'src/vendor/angular-strap/dist/angular-strap.tpl.js',

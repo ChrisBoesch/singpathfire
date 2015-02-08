@@ -8,7 +8,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width">
-    <title ng-bind="page.title" ng-init="page={title: 'Class Mentors', menu:  {'title': 'Menu', 'contentTemplate': 'app/components/class-mentors/menu/menu-view.html'}}">
+    <title ng-bind="page.title" ng-init="page={title: 'Singpath', menu:  {'title': 'Menu', 'contentTemplate': 'app/components/menu/menu-view.html'}}">
         Singpath
     </title>
 
@@ -28,8 +28,8 @@
     <!-- endbuild -->
     <!-- build:appCss(src) app.css -->
     <link rel="stylesheet" href="app/app.css">
-    <link rel="stylesheet" href="app/components/class-mentors/menu/menu.css">
-    <link rel="stylesheet" href="app/components/shared/navbar/navbar.css">
+    <link rel="stylesheet" href="app/components/menu/menu.css">
+    <link rel="stylesheet" href="app/components/navbar/navbar.css">
     <!-- Add Singpath Fire style sheets here.-->
 
     <!-- endbuild -->
@@ -37,7 +37,7 @@
 
 <body>
     <div id="wrap">
-        <div ng-include="'app/components/shared/navbar/navbar-view.html'"></div>
+        <div ng-include="'app/components/navbar/navbar-view.html'"></div>
 
         <div class="container">
             <div class="row">
@@ -82,10 +82,10 @@
     <!-- endbuild -->
 
     <!-- build:appJs(src) app.js -->
-    <script src="app/components/shared/polyfills/object.assign.js"></script>
+    <script src="app/components/polyfills/object.assign.js"></script>
     <script src="app/app.js"></script>
-    <script src="app/components/class-mentors/events/events.js"></script>
-    <script src="app/components/shared/navbar/navbar.js"></script>
+    <script src="app/components/events/events.js"></script>
+    <script src="app/components/navbar/navbar.js"></script>
     <!-- Add Singpath Fire scripts above -->
     <!-- endbuild -->
 

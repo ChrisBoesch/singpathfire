@@ -1,4 +1,4 @@
-# singpathfire
+# Class mentors
 
 An AngularFire-based version of SingPath
 

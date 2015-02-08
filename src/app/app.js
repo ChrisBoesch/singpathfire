@@ -21,14 +21,12 @@
   /**
    * Label paths - to be used by each component to configure their route.
    *
-   * See src/app/components for example.
+   * See src/app/components/events for example.
    *
    */
   constant('routes', {
-    classMentor: {
-      home: '/class-mentors',
-      events: '/class-mentors'
-    }
+    home: '/events',
+    events: '/events'
   }).
 
   /**
@@ -41,7 +39,7 @@
     'routes',
     function($routeProvider, cfpLoadingBarProvider, routes) {
       $routeProvider.otherwise({
-        redirectTo: routes.classMentor.home
+        redirectTo: routes.home
       });
 
       cfpLoadingBarProvider.includeSpinner = false;
@@ -163,7 +161,7 @@
     };
 
     this.$get = ['$window', '$log', function spfFirebaseRefFactory($window, $log) {
-      return function spfFirebaseRef(paths, options) {
+      return function spfFirebaseRef(paths, queryOptions) {
         var ref = new $window.Firebase(baseUrl);
 
         $log.debug('singpath base URL: "' + baseUrl + '".');
@@ -173,10 +171,10 @@
           return ref.child(p);
         }, ref);
 
-        options = options || {};
-        Object.keys(options).forEach(function(k) {
-          ref[k](options[k]);
-        });
+        queryOptions = queryOptions || {};
+        Object.keys(queryOptions).reduce(function(ref, k) {
+          return ref[k](queryOptions[k]);
+        }, ref);
 
         $log.debug('singpath ref path: "' + ref.path.toString() + '".');
         return ref;
@@ -300,15 +298,13 @@
               return $q.when(userDataPromise);
             }
 
-            userDataPromise = api.auth._user().$loaded().then(
+            return api.auth._user().$loaded().then(
               api.auth.register
             ).then(function(data) {
               userData = data;
               userDataPromise = null;
               return data;
             });
-
-            return userDataPromise;
           },
 
           /**
@@ -447,13 +443,15 @@
     function spfAlertFactory($window) {
       var ctx = $window.alertify;
       var spfAlert = function(type, content) {
-        ctx.log(content, type.toLowerCase());
+        type = type ? type.toLowerCase() : undefined;
+        ctx.log(content, type);
       };
 
       spfAlert.success = spfAlert.bind(ctx, 'success');
-      spfAlert.info = spfAlert.bind(ctx);
+      spfAlert.info = spfAlert.bind(ctx, null);
       spfAlert.warning = spfAlert.bind(ctx, 'error');
       spfAlert.danger = spfAlert.bind(ctx, 'error');
+      spfAlert.error = spfAlert.bind(ctx, 'error');
 
       return spfAlert;
     }
