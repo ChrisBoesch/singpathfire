@@ -208,6 +208,9 @@
     'spfFirebaseRef',
     function($q, $firebaseAuth, spfFirebaseRef) {
       var auth = $firebaseAuth(spfFirebaseRef());
+      var options = {
+        scope: 'email'
+      };
 
       return {
         // The current user auth data (null is not authenticated).
@@ -226,13 +229,13 @@
         login: function() {
           var self = this;
 
-          return auth.$authWithOAuthPopup('google').then(function(user) {
+          return auth.$authWithOAuthPopup('google', options).then(function(user) {
             self.user = user;
             return user;
           }, function(error) {
             // spfAlert.warning('You failed to authenticate with Google');
             if (error.code === 'TRANSPORT_UNAVAILABLE') {
-              return auth.$authWithOAuthRedirect('google');
+              return auth.$authWithOAuthRedirect('google', options);
             }
             return $q.reject(error);
           });
@@ -264,11 +267,12 @@
    */
   factory('spfDataStore', [
     '$q',
+    '$log',
     'spfFirebaseRef',
     'spfFirebaseSync',
     'spfAuth',
     'crypto',
-    function spfDataStoreFactory($q, spfFirebaseRef, spfFirebaseSync, spfAuth, crypto) {
+    function spfDataStoreFactory($q, $log, spfFirebaseRef, spfFirebaseSync, spfAuth, crypto) {
       var userData, userDataPromise, api;
 
       api = {
@@ -317,6 +321,8 @@
            *
            */
           register: function(userData) {
+            var gravatarBaseUrl = '//www.gravatar.com/avatar/';
+
             if (angular.isUndefined(userData)) {
               return $q.reject(new Error('A user should be logged in to register'));
             }
@@ -329,8 +335,10 @@
 
             userData.$value = {
               id: spfAuth.user.uid,
-              nickName: spfAuth.user.google.displayName,
               displayName: spfAuth.user.google.displayName,
+              fullName: spfAuth.user.google.displayName,
+              email: spfAuth.user.google.email,
+              gravatar: gravatarBaseUrl + crypto.md5(spfAuth.user.google.email),
               createdAt: {
                 '.sv': 'timestamp'
               }
@@ -338,6 +346,27 @@
 
             return userData.$save().then(function() {
               return userData;
+            });
+          },
+
+          publicId: function(userSync) {
+            if (!userSync || !userSync.publicId) {
+              return $q.reject(new Error('The user has set his/her user id.'));
+            }
+
+            return spfFirebaseSync(['auth/publicIds']).$set(userSync.publicId, userSync.$id).then(function() {
+              return spfFirebaseSync(['auth/usedPublicIds']).$set(userSync.publicId, true);
+            }, function(err) {
+              $log.info(err);
+              return $q(new Error('Failed to save public id. It might have already being used by an other user.'));
+            }).then(function() {
+              return userSync.$save();
+            });
+          },
+
+          isPublicIdAvailable: function(publicId) {
+            return spfFirebaseSync(['auth/usedPublicIds', publicId]).$asObject().$loaded().then(function(publicIdSync) {
+              return !publicIdSync.$value;
             });
           }
         },
@@ -487,6 +516,10 @@
           var prf = 'SHA256';
 
           return {
+            md5: function(message) {
+              return CryptoJS.MD5(message);
+            },
+
             password: {
               /**
                * Return a hash for the password and options allowing
