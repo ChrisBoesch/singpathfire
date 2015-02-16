@@ -1,0 +1,116 @@
+<div ng-if="!ctrl.profile">
+    <h1>Profile Setup</h1>
+
+    <form name="publicIdForm" ng-submit="ctrl.setPublicId(ctrl.currentUser)" class="form-horizontal">
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="public-id">Your username:</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" id="public-id" name="publicId" placeholder="Pick a unique name" ng-model="ctrl.currentUser.publicId" ng-required="true" ng-minlength="3" ng-maxlength="20" pattern="^[-\.a-zA-z0-9]+$" spf-bs-valid-class="true" />
+                <span ng-messages="publicIdForm.publicId.$error">
+                    <span class="help-block" ng-message="required">A user name is required.</span>
+                    <span class="help-block" ng-message="minlength">A user name shouldn't be shorten than 3 characters.</span>
+                    <span class="help-block" ng-message="maxlength">A user name shouldn't be longer than 20 characters.</span>
+                    <span class="help-block" ng-message="pattern">A user name should only be composed of letter, numbers, '.' and '-'</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="screen-name">Your screen name:</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" id="screen-name" name="screenName" placeholder="A screen name" ng-model="ctrl.currentUser.displayName" ng-required="true" ng-minlength="3" ng-maxlength="20" spf-bs-valid-class="true" />
+                <span class="text-warning" ng-messages="publicIdForm.screenName.$error">
+                    <span class="help-block" ng-message="required">A screen name is required.</span>
+                    <span class="help-block" ng-message="minlength">A screen name shouldn't be shorten than 3 characters.</span>
+                    <span class="help-block" ng-message="maxlength">A screen name shouldn't be longer than 20 characters.</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+                <button type="submit" class="btn btn-default" ng-disabled="publicIdForm.$invalid || ctrl.settingPublicId">
+                    Setup
+                </button>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+
+<div class="row" ng-if="ctrl.profile">
+    <div class="col-sm-4 profile">
+        <img ng-src="{{ctrl.profile.user.gravatar}}?s=200&amp;r=g&amp;d=mm" alt="user avatar" class="img-thumbnail">
+        <h2>
+            {{ctrl.profile.user.displayName}}
+        </h2>
+    </div>
+
+    <div class="col-sm-8">
+
+        <div oep-profile="ctrl.profile"  oep-service-id="codeCombat"></div>
+
+        <div id="register-codecombat" class="well clearfix" ng-if="!ctrl.profile.services.codeCombat.details.id">
+            <h2>Code Combat</h2>
+
+            <p>
+                <a href="http://codecombat.com/" target="_blank">Code Combat</a>, learn to Code JavaScript by Playing a Game.
+            </p>
+
+            <p ng-if="!ctrl.lookUp.codeCombat.id">
+                <a href="" ng-click="ctrl.lookUp.codeCombat.find()">Look up my Code Combat details</a>
+            </p>
+
+            <div ng-if="ctrl.lookUp.codeCombat.id">
+                <p>You are logged in as "{{ctrl.lookUp.codeCombat.name}}".</p>
+                <p class="row">
+                    <span class="col-xs-6">
+                        <button class="btn btn-primary btn-block" ng-click="ctrl.lookUp.codeCombat.save()">
+                            Save
+                        </button>
+                    </span>
+
+                    <span class="col-xs-6">
+                        <button class="btn btn-danger btn-block" ng-click="ctrl.lookUp.codeCombat.reset()">
+                            This is not me
+                        </button>
+                    </span>
+                </p>
+            </div>
+
+
+            <p class="text-warning" ng-messages="ctrl.lookUp.codeCombat.errors">
+                <span class="help-block" ng-message="isLoggedToCodeCombat">
+                    You're not logged on
+                    <a href="http://codecombat.com/" target="_blank">Code Combat</a>.
+                </span>
+                <span class="help-block" ng-message="hasACodeCombatName">
+                    You're Code Combat account doesn't have a user name. Head to your
+                    <a href="http://codecombat.com/account/settings" target="_blank">
+                        profile setting page
+                    </a>, add a user name and save your profile.
+                </span>
+            </p>
+
+        </div>
+
+        <div id="register-codeschool" class="well clearfix">
+            <h2>Code School</h2>
+
+            <p>
+                <a href="https://www.codeschool.com/" target="_blank">Code School</a> teaches web technologies in the comfort of your browser with video lessons, coding challenges, and screencasts. Registering is free, and the provides free content to try out.
+            </p>
+        </div>
+
+        <div id="register-codeschool" class="well clearfix">
+            <h2>Treehouse</h2>
+
+            <p>
+                Learn HTML, CSS, iPhone apps &amp; more at <a href="http://www.teamtreehouse.com/signup_code/singapore" target="_blank">Treehouse</a>. Treehouse offers a 14 days free trial.
+            </p>
+
+        </div>
+
+    </div>
+</div>

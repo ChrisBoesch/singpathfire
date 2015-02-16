@@ -1,3 +1,5 @@
+'use strict';
+
 var addsrc = require('gulp-add-src');
 var concat = require('gulp-concat');
 var del = require('del');
@@ -5,6 +7,7 @@ var gulp = require('gulp');
 var gulpFilter = require('gulp-filter');
 var minifyCSS = require('gulp-minify-css');
 var ngHtml2Js = require('gulp-ng-html2js');
+var rename = require('gulp-rename');
 var replace = require('gulp-replace');
 var rev = require('gulp-rev');
 var revReplace = require('gulp-rev-replace');
@@ -13,13 +16,23 @@ var targetHTML = require('gulp-targethtml');
 var uglify = require('gulp-uglify');
 var usemin = require('gulp-usemin');
 
+var apps = [
+  'badgetracker',
+  'classmentors',
+  'singpath'
+];
+
 var config = {
   src: './src',
-  watch: './gitxsrc/**/*',
-  index: './src/index.html',
-  appFiles: './src/app/**/*',
+  watch: './src/**/*',
+  apps: apps,
+  pages: './src/*.html',
+  appFiles: apps.map(function(app) {
+    return './src/' + app + '/**/*';
+  }),
   vendorFiles: './src/vendor/**/*',
-  partials: './src/app/components/**/*.html',
+  assetsFiles: './src/assets/**/*',
+  sharedFiles: './src/shared/**/*',
   build: {
     concat: './build',
     debug: './build-debug',
@@ -41,35 +54,33 @@ var config = {
  *
  */
 function copyBuid(dest, target) {
-  'use strict';
-
   target = target || dest;
 
-  return gulp.src([config.index], {
+  return gulp.src([config.pages], {
       base: config.src
     })
     .pipe(targetHTML(target))
-    .pipe(addsrc([config.appFiles, config.vendorFiles], {
+    .pipe(addsrc([config.vendorFiles, config.assetsFiles, config.sharedFiles].concat(config.appFiles), {
       base: config.src
     }))
     .pipe(gulp.dest(config.build[dest]));
 }
 
 
+
 /**
- * Stream that build and dist will share
+ * Stream that build and dist tasks will share
  *
  */
-function concatBuild() {
-  'use strict';
-
-  var appJsFilter = gulpFilter(['app.js']);
-  var scriptsFilter = gulpFilter(['*', '!index.html']);
+function concatBuild(appName) {
+  var appJsFilter = gulpFilter([appName + '/app.js']);
+  var scriptsFilter = gulpFilter([appName + '/*', '!/index.html']);
 
   // Concat scrips (css and js).
-  var concatScripts = gulp.src([config.index], {
+  var concatScripts = gulp.src([config.src + '/' + appName + '.html'], {
       base: config.src
     })
+    .pipe(rename('index.html'))
     .pipe(targetHTML('live'))
     .pipe(usemin());
 
@@ -78,9 +89,8 @@ function concatBuild() {
   var concatScriptsWithTemplate = streamqueue({
         objectMode: true
       },
-      concatScripts
-      .pipe(appJsFilter),
-      gulp.src([config.partials], {
+      concatScripts.pipe(appJsFilter),
+      gulp.src([config.src + '/' + appName + '**/*.html'], {
         base: config.src
       }).pipe(ngHtml2Js({
         moduleName: 'spf'
@@ -101,12 +111,53 @@ function concatBuild() {
 
 
 /**
+ * Stream shared by the 3 app concat build tasks.
+ *
+ */
+function buildApp(appName) {
+  var scriptsFilterRev = gulpFilter(['*', '!index.html']);
+
+  // Append a hash to all assets file
+  return concatBuild(appName)
+    .pipe(scriptsFilterRev)
+    .pipe(rev())
+    .pipe(scriptsFilterRev.restore())
+    .pipe(revReplace())
+    .pipe(gulp.dest(config.build.concat + '/' + appName));
+}
+
+/**
+ * Stream shared by the 3 app dist tasks
+ *
+ */
+function buildAppDist(appName) {
+  var jsFilter = gulpFilter(['*.js']);
+  var cssFilter = gulpFilter(['*.css']);
+  var scriptsFilterRev = gulpFilter(['*', '!index.html']);
+
+  // Append a hash to all assets file
+  return concatBuild(appName)
+    .pipe(jsFilter)
+    .pipe(uglify())
+    .pipe(jsFilter.restore())
+
+  .pipe(cssFilter)
+    .pipe(minifyCSS())
+    .pipe(cssFilter.restore())
+
+  .pipe(scriptsFilterRev)
+    .pipe(rev())
+    .pipe(scriptsFilterRev.restore())
+    .pipe(revReplace())
+
+  .pipe(gulp.dest(config.build.dist + '/' + appName));
+}
+
+/**
  * Delete all build reportories (build/, dist/, debug/ and e2e/)
  *
  */
 gulp.task('clean', function(done) {
-  'use strict';
-
   del(Object.keys(config.build).map(function(k) {
     return config.build[k];
   }), done);
@@ -119,8 +170,6 @@ gulp.task('clean', function(done) {
  *
  */
 gulp.task('build:dev', ['clean'], function() {
-  'use strict';
-
   return copyBuid('dev');
 });
 
@@ -130,8 +179,6 @@ gulp.task('build:dev', ['clean'], function() {
  *
  */
 gulp.task('build:debug', ['clean'], function() {
-  'use strict';
-
   return copyBuid('debug', 'live');
 });
 
@@ -143,75 +190,59 @@ gulp.task('build:debug', ['clean'], function() {
  *
  */
 gulp.task('build:e2e', ['clean'], function() {
-  'use strict';
-
-  return gulp.src([config.index], {
-      base: config.src
-    })
-    .pipe(targetHTML('e2e'))
-    .pipe(addsrc([config.appFiles, config.vendorFiles], {
-      base: config.src
-    }))
-    .pipe(gulp.dest(config.build.e2e));
+  return copyBuid('e2e');
 });
 
 
 /**
- * Build the app into build/ by removing any mocking and by concataning
- * assets.
+ * For each app, add a build:concat-<app name> task:
+ *
+ * - build:concat-badgetracker
+ * - build:concat-classmentors
+ * - build:concat-singpath
+ *
  */
-gulp.task('build:concat', ['clean'], function() {
-  'use strict';
-
-  var scriptsFilterRev = gulpFilter(['*', '!index.html']);
-
-  // Append a hash to all assets file
-  return concatBuild('build')
-    .pipe(scriptsFilterRev)
-    .pipe(rev())
-    .pipe(scriptsFilterRev.restore())
-    .pipe(revReplace())
-    .pipe(gulp.dest(config.build.concat));
-
+config.apps.map(function(appName) {
+  gulp.task('build:concat-' + appName, ['clean'], function() {
+    return buildApp(appName);
+  });
 });
+
+/**
+ * Build the apps into build/<app name> by removing any mocking and by concataning
+ * assets for each app.
+ */
+gulp.task('build:concat', ['clean'].concat(config.apps.map(function(appName) {
+  return 'build:concat-' + appName;
+})));
 
 gulp.task('build', ['build:dev', 'build:debug', 'build:e2e', 'build:concat']);
 
 gulp.task('watch', ['build:dev', 'build:debug', 'build:e2e', 'build:concat'], function() {
-  'use strict';
-
   return gulp.watch(
     'src/**/*', ['build:dev', 'build:debug', 'build:e2e', 'build:concat']
   );
 });
 
 gulp.task('watch:dev', ['build:dev'], function() {
-  'use strict';
-
   return gulp.watch(
     'src/**/*', ['build:dev']
   );
 });
 
-gulp.task('watch:debug', ['build:debug',], function() {
-  'use strict';
-
+gulp.task('watch:debug', ['build:debug', ], function() {
   return gulp.watch(
-    'src/**/*', ['build:debug',]
+    'src/**/*', ['build:debug', ]
   );
 });
 
 gulp.task('watch:e2e', ['build:e2e'], function() {
-  'use strict';
-
   return gulp.watch(
     'src/**/*', ['build:e2e']
   );
 });
 
 gulp.task('watch:concat', ['build:concat'], function() {
-  'use strict';
-
   return gulp.watch(
     'src/**/*', ['build:concat']
   );
@@ -219,32 +250,25 @@ gulp.task('watch:concat', ['build:concat'], function() {
 
 
 /**
+ * For each app, add a dist:<app name> task:
+ *
+ * - dist:badgetracker
+ * - dist:classmentors
+ * - dist:singpath
+ *
+ */
+config.apps.map(function(appName) {
+  gulp.task('dist:' + appName, ['clean'], function() {
+    return buildAppDist(appName);
+  });
+});
+
+/**
  * Like build but minify css and js files too.
  *
  */
-gulp.task('dist', ['clean'], function() {
-  'use strict';
-  var jsFilter = gulpFilter(['*.js']);
-  var cssFilter = gulpFilter(['*.css']);
-  var scriptsFilterRev = gulpFilter(['*', '!index.html']);
-
-  // Append a hash to all assets file
-  return concatBuild('dist')
-    .pipe(jsFilter)
-      .pipe(uglify())
-      .pipe(jsFilter.restore())
-
-    .pipe(cssFilter)
-      .pipe(minifyCSS())
-      .pipe(cssFilter.restore())
-
-    .pipe(scriptsFilterRev)
-      .pipe(rev())
-      .pipe(scriptsFilterRev.restore())
-      .pipe(revReplace())
-
-    .pipe(gulp.dest(config.build.dist));
-
-});
+gulp.task('dist', ['clean'].concat(config.apps.map(function(appName){
+  return 'dist:' + appName;
+})));
 
 gulp.task('default', ['build:concat']);

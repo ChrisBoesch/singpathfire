@@ -14,8 +14,6 @@
 var q = require('q');
 var express = require('express');
 var app = express();
-var spfMocked = require('../config/spf-mocked.js');
-var spfE2EMocked = require('../config/spf-e2e-mocked.js');
 var sessions = require('./../lib/firebase-session');
 
 var argv = require('minimist')(process.argv);
@@ -29,6 +27,26 @@ var firebaseServer = argv.keypath || 'dev';
 
 var _firebaseConfig = null;
 
+var spfMocked = require('../config/spf-mocked.js');
+var spfE2EMocked = require('../config/spf-e2e-mocked.js');
+var oepMocked = require('../config/oep-mocked.js');
+var oepE2EMocked = require('../config/oep-e2e-mocked.js');
+var clmMocked = require('../config/clm-mocked.js');
+var clmE2EMocked = require('../config/clm-e2e-mocked.js');
+var moduleNames = {
+  'oep': {
+    'demo': oepMocked,
+    'e2e': oepE2EMocked
+  },
+  'spf': {
+    'demo': spfMocked,
+    'e2e': spfE2EMocked
+  },
+  'clm': {
+    'demo': clmMocked,
+    'e2e': clmE2EMocked
+  }
+};
 
 // return firebase config, initiate them if necessary.
 //
@@ -40,11 +58,11 @@ function getFirebaseConfig() {
   }
 
   return sessions.create(firebaseServer, firebaseKeyPath).then(function(config){
-    console.log('firebase session:' + config.url);
+    console.log('[info] Created firebase session:' + config.url);
     _firebaseConfig = config;
     return config;
   }).catch(function(err){
-    console.log('failed to create session', err);
+    console.log('[error] Failed to create session', err);
     throw err;
   });
 }
@@ -85,24 +103,35 @@ app.use(function(req, res, next) {
 });
 
 
-app.get('/config/spf-mocked.js', function(req, res, next) {
+app.get('/config/:moduleName-mocked.js', function(req, res, next) {
+  if (!moduleNames[req.params.moduleName]) {
+    next();
+    return;
+  }
+
   getFirebaseConfig().then(function(config){
     res.set('Content-Type', 'application/javascript');
-    res.send('(' + spfMocked.module.toString() + ')(angular, ' + JSON.stringify(config.url) + ');');
+    res.send('(' + moduleNames[req.params.moduleName].demo.module.toString() + ')(angular, ' + JSON.stringify(config.url) + ');');
   }).catch(next);
 });
 
 
-app.get('/config/spf-e2e-mocked.js', function(req, res, next) {
+app.get('/config/:moduleName-e2e-mocked.js', function(req, res, next) {
+  if (!moduleNames[req.params.moduleName]) {
+    next();
+    return;
+  }
+
   getFirebaseConfig().then(function(config){
     res.set('Content-Type', 'application/javascript');
-    res.send('(' + spfE2EMocked.module.toString() + ')(angular, ' + JSON.stringify(config) + ');');
+    res.send('(' + moduleNames[req.params.moduleName].e2e.module.toString() + ')(angular, ' + JSON.stringify(config) + ');');
   }).catch(next);
 });
 
 
 app.get(/.*/, function(req, res, next) {
   var relativePath = req.path.slice(-1) === '/' ? req.path.slice(1) + 'index.html' : req.path;
+  relativePath = relativePath === 'index.html' ? 'singpath.html' : relativePath;
 
   res.sendFile(relativePath, fileServerOptions, function(err) {
     if (err) {

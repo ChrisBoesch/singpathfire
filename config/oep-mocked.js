@@ -5,7 +5,7 @@
 exports.module = function(angular, firebaseUrl) {
   'use strict';
 
-  angular.module('spfMocked', ['spf', 'ngMockE2E', 'spf.shared']).
+  angular.module('oepMocked', ['oep', 'ngMockE2E', 'spf.shared']).
 
   config([
     'spfFirebaseRefProvider',

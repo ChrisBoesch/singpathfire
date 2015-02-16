@@ -19,6 +19,7 @@ module.exports = function(config) {
     files: [
       'src/vendor/alertifyjs/src/js/alertify.js',
       'src/vendor/crypto-js/src/core.js',
+      'src/vendor/crypto-js/src/md5.js',
       'src/vendor/crypto-js/src/hmac.js',
       'src/vendor/crypto-js/src/pbkdf2.js',
       'src/vendor/crypto-js/src/sha1.js',
@@ -34,16 +35,27 @@ module.exports = function(config) {
       'src/vendor/angular-strap/dist/angular-strap.tpl.js',
       'src/vendor/angularfire/dist/angularfire.js',
       'src/vendor/angular-mocks/angular-mocks.js',
-      'src/app/app.js',
-      'src/app/app-fixtures.js',
-      'src/app/components/**/*.js',
-      'src/app/**/*.spec.js'
+      'src/badgetracker/app.js',
+      'src/classmentors/app.js',
+      'src/shared/app.js',
+      'src/singpath/app.js',
+      'src/badgetracker/**/*.js',
+      'src/classmentors/**/*.js',
+      'src/shared/**/*.js',
+      'src/singpath/**/*.js'
     ],
 
 
     // list of files to exclude
     exclude: [
-      'src/app/**/*.e2e.js'
+      'src/badgetracker/**/*.e2e.js',
+      'src/classmentors/**/*.e2e.js',
+      'src/shared/**/*.e2e.js',
+      'src/singpath/**/*.e2e.js',
+      'src/badgetracker/*.-mock.js',
+      'src/classmentors/*.-mock.js',
+      'src/shared/*.-mock.js',
+      'src/singpath/*.-mock.js'
     ],
 
 
