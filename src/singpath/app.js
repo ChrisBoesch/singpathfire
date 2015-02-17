@@ -26,8 +26,7 @@
    *
    */
   constant('routes', {
-    home: '/events',
-    events: '/events'
+    home: '/'
   }).
 
   /**

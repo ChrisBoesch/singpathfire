@@ -7,65 +7,60 @@
     '$routeProvider',
     'routes',
     function($routeProvider, routes) {
-      $routeProvider.when(routes.editProfile, {
+      $routeProvider.
+
+      when(routes.editProfile, {
         templateUrl: 'badgetracker/components/profiles/profiles-view-edit.html',
         controller: 'OepProfileCtrl',
         controllerAs: 'ctrl',
         resolve: {
           'initialData': [
-            'oepProfileInitialDataResolver',
-            function(oepProfileInitialDataResolver) {
-              return oepProfileInitialDataResolver();
+            'oepEditProfileInitialDataResolver',
+            function(oepEditProfileInitialDataResolver) {
+              return oepEditProfileInitialDataResolver();
             }
           ]
         }
-      });
+      }).
+
+      when(routes.profile, {
+        templateUrl: 'badgetracker/components/profiles/profiles-view-show.html',
+        controller: 'OepProfileCtrl',
+        controllerAs: 'ctrl',
+        resolve: {
+          'initialData': [
+            'oepShowProfileInitialDataResolver',
+            function(oepShowProfileInitialDataResolver) {
+              return oepShowProfileInitialDataResolver();
+            }
+          ]
+        }
+      })
+
+      ;
 
     }
   ]).
 
   /**
-   * Use to resolve `initialData` of `OepProfileCtrl`.
-   *
+   * Used to resolve `initialData` of `OepProfileCtrl` the logged in user profile.
    *
    */
-  factory('oepProfileInitialDataResolver', [
+  factory('oepEditProfileInitialDataResolver', [
     '$q',
-    '$location',
+    '$route',
     'routes',
     'spfAuth',
     'spfAuthData',
     'oepDataStore',
-    function oepProfileInitialDataResolverFactory($q, $location, routes, spfAuth, spfAuthData, oepDataStore) {
-      return function oepProfileInitialDataResolver() {
-        // var publicId = $route.current.params.publicId;
+    function oepEditProfileInitialDataResolverFactory($q, $route, routes, spfAuth, spfAuthData, oepDataStore) {
+      return function oepEditProfileInitialDataResolver() {
         var userPromise = spfAuthData.user();
-        // var registeredServicesPromise;
         var profilePromise;
-        // var errNoPublicId = new Error('The user has not set his public id');
+        var errLoggedOff = new Error('The user should be logged in to edit her/his profile.');
 
-        // // If we are looking for the profile of some other user,
-        // // the profile has to exist.
-        // if (publicId) {
-        //   profilePromise = oepDataStore.profile(publicId).then(function(profile) {
-        //     if (profile.$value === null) {
-        //       return $q.reject(new Error('Could not found the profile for ' + publicId));
-        //     }
-        //     return profile;
-        //   });
-
-        //   return $q.all({
-        //     auth: spfAuth,
-        //     currentUser: userPromise,
-        //     profile: profilePromise
-        //   });
-        // }
-
-        // If we are looking at the current user profile,
-        // the user needs to be logged in...
         if (!spfAuth.user || !spfAuth.user.uid) {
-          $location.path(routes.ranking);
-          return $q.reject();
+          return $q.reject(errLoggedOff);
         }
 
         // ... And the profile might not exist yet. We need to let the view
@@ -83,6 +78,45 @@
 
             return profile;
           });
+        });
+
+        return $q.all({
+          auth: spfAuth,
+          currentUser: userPromise,
+          profile: profilePromise
+        });
+      };
+    }
+  ]).
+
+  /**
+   * Used to resolve `initialData` of `OepProfileCtrl` for a public profile.
+   *
+   */
+  factory('oepShowProfileInitialDataResolver', [
+    '$q',
+    '$route',
+    'routes',
+    'spfAuth',
+    'spfAuthData',
+    'oepDataStore',
+    function oepShowProfileInitialDataResolverFactory($q, $route, routes, spfAuth, spfAuthData, oepDataStore) {
+      return function oepShowProfileInitialDataResolver() {
+        var publicId = $route.current.params.publicId;
+        var userPromise = spfAuthData.user();
+        var profilePromise;
+        var errNoPublicId = new Error('Unexpected error: the public id is missing');
+        var errNoProfile = new Error('Could not found the profile for ' + publicId);
+
+        if (!publicId) {
+          return $q.reject(errNoPublicId);
+        }
+
+        profilePromise = oepDataStore.profile(publicId).then(function(profile) {
+          if (profile.$value === null) {
+            return $q.reject(errNoProfile);
+          }
+          return profile;
         });
 
         return $q.all({
@@ -156,9 +190,9 @@
             return oepDataStore.services.codeCombat.saveDetails(self.currentUser, {
               id: self.lookUp.codeCombat.id,
               name: self.lookUp.codeCombat.name
-            }).then(function(){
+            }).then(function() {
               spfAlert.success('Code Combat user name saved.');
-            }).catch(function(err){
+            }).catch(function(err) {
               spfAlert.error(err.toString());
             });
           },

@@ -106,6 +106,31 @@
   ]).
 
   /**
+   * Listen for routing error to alert the user of the error and
+   * redirect to the default route if not is selected.
+   *
+   * No route will be selected if the user reload the page in an invalid state
+   * for her/his last route. It that case the app should redirect the user
+   * to the home route.
+   *
+   */
+  run([
+    '$rootScope',
+    '$location',
+    'routes',
+    'spfAlert',
+    function($rootScope, $location, routes, spfAlert) {
+      $rootScope.$on('$routeChangeError', function(e, failedRoute, currentRoute, err){
+        spfAlert.error(err.message || err.toString());
+
+        if (currentRoute === undefined) {
+          $location.path(routes.home);
+        }
+      });
+    }
+  ]).
+
+  /**
    * spfFirebaseRef return a Firebase reference to singpath database,
    * at a specific path, with a specific query; e.g:
    *
@@ -250,6 +275,12 @@
     'spfCrypto',
     function spfAuthDataFactory($q, $log, spfFirebaseRef, spfFirebaseSync, spfAuth, spfCrypto) {
       var userData, userDataPromise, spfAuthData;
+
+      spfAuth.onAuth(function(auth){
+        if (!auth) {
+          userData = userDataPromise = undefined;
+        }
+      });
 
       spfAuthData = {
 
