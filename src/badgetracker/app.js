@@ -127,6 +127,10 @@
                     '.sv': 'timestamp'
                   }
                 });
+              }).then(function(profile){
+                return $http.post('/api/badges/track/' + userSync.publicId + '/codecombat').then(function(){
+                  return profile;
+                });
               });
             }
           }
