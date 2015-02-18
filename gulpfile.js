@@ -45,16 +45,22 @@ var config = {
       'src/vendor/bootstrap/dist/fonts/*',
     ],
     base: 'src/vendor/bootstrap/dist'
+  },
+  // only used for build:concat and dist
+  dest: argv.dest ? path.resolve(argv.dest) : null,
+  noduleNames: {
+    singpath: 'spf',
+    classmentors: 'clm',
+    badgetracker: 'oep'
   }
 };
-
 
 /**
  * Simply copy build and process index.html for targets
  *
  */
-function copyBuid(dest, target) {
-  target = target || dest;
+function copyBuid(target, dest) {
+  dest = dest || config.build[target];
 
   return gulp.src([config.pages], {
       base: config.src
@@ -73,8 +79,8 @@ function copyBuid(dest, target) {
  *
  */
 function concatBuild(appName) {
-  var appJsFilter = gulpFilter([appName + '/app.js']);
-  var scriptsFilter = gulpFilter([appName + '/*', '!/index.html']);
+  var appJsFilter = gulpFilter(['app.js']);
+  var scriptsFilter = gulpFilter(['*.js', '*.css']);
 
   // Concat scrips (css and js).
   var concatScripts = gulp.src([config.src + '/' + appName + '.html'], {
@@ -90,10 +96,14 @@ function concatBuild(appName) {
         objectMode: true
       },
       concatScripts.pipe(appJsFilter),
-      gulp.src([config.src + '/' + appName + '**/*.html'], {
+      gulp.src([
+        config.src + '/' + appName + '/**/*.html',
+        config.src + '/shared/**/*.html'
+      ], {
         base: config.src
-      }).pipe(ngHtml2Js({
-        moduleName: 'spf'
+      })
+      .pipe(ngHtml2Js({
+        moduleName: config.noduleNames[appName]
       }))
     )
     .pipe(concat('app.js'))

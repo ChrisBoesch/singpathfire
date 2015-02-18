@@ -100,7 +100,8 @@
                 displayName: 'Bob Smith',
                 email: 'bob@example.com'
               }
-            }
+            },
+            onAuth: angular.noop
           };
 
           module(function($provide) {
@@ -242,7 +243,7 @@
         it('should return ref to singpath database', function() {
           spfFirebaseRef = factory();
           spfFirebaseRef();
-          expect(firebaseSpy).toHaveBeenCalledWith('https://singpath.firebaseio.com/');
+          expect(firebaseSpy).toHaveBeenCalledWith('https://singpath-play.firebaseio.com/');
         });
 
         it('should allow to configure the ref baseurl', function() {

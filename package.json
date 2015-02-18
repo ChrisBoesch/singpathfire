@@ -8,7 +8,7 @@
     "build": "./node_modules/.bin/gulp",
     "clean": "./bin/init-protractor.sh stop && ./node_modules/.bin/gulp clean",
     "dist": "./node_modules/.bin/gulp dist",
-    "lint": "./node_modules/.bin/jshint src/app",
+    "lint": "./node_modules/.bin/jshint --exclude=src/vendor/ src/",
     "postinstall": "./node_modules/.bin/webdriver-manager update",
     "serve-build": "./node_modules/.bin/gulp && ./bin/server.js --root=./build --port=8886",
     "serve-build-debug": "./node_modules/.bin/gulp build:debug && ./bin/server.js --root=./build-debug --port=8886",

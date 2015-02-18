@@ -11,6 +11,10 @@
     'mgcrea.ngStrap'
   ]).
 
+  constant('routes', {
+    home: '/'
+  }).
+
   /**
    * Configure cfpLoadingBar options.
    *
@@ -155,7 +159,7 @@
    *
    */
   provider('spfFirebaseRef', function OepFirebaseProvider() {
-    var baseUrl = 'https://singpath.firebaseio.com/';
+    var baseUrl = 'https://singpath-play.firebaseio.com/';
 
     this.setBaseUrl = function(url) {
       baseUrl = url;
