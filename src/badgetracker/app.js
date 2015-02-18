@@ -89,7 +89,7 @@
             errNoName: new Error('The user hasn\'t set a name.'),
 
             currentUser: function() {
-              return $http.jsonp('http://codecombat.com/auth/whoami?callback=JSON_CALLBACK').then(function(resp) {
+              return $http.jsonp('//codecombat.com/auth/whoami?callback=JSON_CALLBACK').then(function(resp) {
                 if (resp.data.anonymous) {
                   return $q.reject(api.services.codeCombat.errLoggedOff);
                 }
@@ -105,7 +105,7 @@
                   levels: resp.data.earned.levels
                 };
               }, function(e) {
-                $log.error('Failed request to http://codecombat.com/auth/whoami: ' + e.toString());
+                $log.error('Failed request to //codecombat.com/auth/whoami: ' + e.toString());
                 return $q.reject(api.services.codeCombat.errServerError);
               });
             },
