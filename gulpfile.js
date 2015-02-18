@@ -2,11 +2,14 @@
 
 var addsrc = require('gulp-add-src');
 var concat = require('gulp-concat');
+var debug = require('gulp-debug');
 var del = require('del');
 var gulp = require('gulp');
 var gulpFilter = require('gulp-filter');
 var minifyCSS = require('gulp-minify-css');
+var minimist = require('minimist');
 var ngHtml2Js = require('gulp-ng-html2js');
+var path = require('path');
 var rename = require('gulp-rename');
 var replace = require('gulp-replace');
 var rev = require('gulp-rev');
@@ -15,6 +18,9 @@ var streamqueue = require('streamqueue');
 var targetHTML = require('gulp-targethtml');
 var uglify = require('gulp-uglify');
 var usemin = require('gulp-usemin');
+
+
+var argv = minimist(process.argv);
 
 var apps = [
   'badgetracker',
@@ -69,7 +75,7 @@ function copyBuid(target, dest) {
     .pipe(addsrc([config.vendorFiles, config.assetsFiles, config.sharedFiles].concat(config.appFiles), {
       base: config.src
     }))
-    .pipe(gulp.dest(config.build[dest]));
+    .pipe(gulp.dest(dest));
 }
 
 
@@ -124,8 +130,10 @@ function concatBuild(appName) {
  * Stream shared by the 3 app concat build tasks.
  *
  */
-function buildApp(appName) {
+function buildApp(appName, dest) {
   var scriptsFilterRev = gulpFilter(['*', '!index.html']);
+
+  dest = dest || config.build.concat;
 
   // Append a hash to all assets file
   return concatBuild(appName)
@@ -133,17 +141,19 @@ function buildApp(appName) {
     .pipe(rev())
     .pipe(scriptsFilterRev.restore())
     .pipe(revReplace())
-    .pipe(gulp.dest(config.build.concat + '/' + appName));
+    .pipe(gulp.dest(dest + '/' + appName));
 }
 
 /**
  * Stream shared by the 3 app dist tasks
  *
  */
-function buildAppDist(appName) {
+function buildAppDist(appName, dest) {
   var jsFilter = gulpFilter(['*.js']);
   var cssFilter = gulpFilter(['*.css']);
   var scriptsFilterRev = gulpFilter(['*', '!index.html']);
+
+  dest = dest || config.build.dist;
 
   // Append a hash to all assets file
   return concatBuild(appName)
@@ -160,7 +170,7 @@ function buildAppDist(appName) {
     .pipe(scriptsFilterRev.restore())
     .pipe(revReplace())
 
-  .pipe(gulp.dest(config.build.dist + '/' + appName));
+  .pipe(gulp.dest(dest + '/' + appName));
 }
 
 /**
@@ -168,9 +178,17 @@ function buildAppDist(appName) {
  *
  */
 gulp.task('clean', function(done) {
-  del(Object.keys(config.build).map(function(k) {
+  var folders = Object.keys(config.build).map(function(k) {
     return config.build[k];
-  }), done);
+  });
+
+  if (config.dest) {
+    folders.push(config.dest);
+  }
+
+  del(folders, {
+    force: true
+  }, done);
 
 });
 
@@ -180,7 +198,7 @@ gulp.task('clean', function(done) {
  *
  */
 gulp.task('build:dev', ['clean'], function() {
-  return copyBuid('dev');
+  return copyBuid('dev', config.build.dev);
 });
 
 
@@ -189,7 +207,7 @@ gulp.task('build:dev', ['clean'], function() {
  *
  */
 gulp.task('build:debug', ['clean'], function() {
-  return copyBuid('debug', 'live');
+  return copyBuid('live', config.build.debug);
 });
 
 
@@ -214,7 +232,7 @@ gulp.task('build:e2e', ['clean'], function() {
  */
 config.apps.map(function(appName) {
   gulp.task('build:concat-' + appName, ['clean'], function() {
-    return buildApp(appName);
+    return buildApp(appName, config.dest);
   });
 });
 
@@ -269,7 +287,7 @@ gulp.task('watch:concat', ['build:concat'], function() {
  */
 config.apps.map(function(appName) {
   gulp.task('dist:' + appName, ['clean'], function() {
-    return buildAppDist(appName);
+    return buildAppDist(appName, config.dest);
   });
 });
 
@@ -277,7 +295,7 @@ config.apps.map(function(appName) {
  * Like build but minify css and js files too.
  *
  */
-gulp.task('dist', ['clean'].concat(config.apps.map(function(appName){
+gulp.task('dist', ['clean'].concat(config.apps.map(function(appName) {
   return 'dist:' + appName;
 })));
 
