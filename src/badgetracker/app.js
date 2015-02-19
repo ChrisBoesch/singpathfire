@@ -58,9 +58,9 @@
     'spfFirebaseRef',
     'spfFirebaseSync',
     function oepDataStoreFactory($q, $log, $http, spfFirebaseRef, spfFirebaseSync) {
-      var api;
+      var oepDataStore;
 
-      api = {
+      oepDataStore = {
         profile: function(publicId) {
           return $q.when(publicId).then(function(publicId) {
             return spfFirebaseSync(['badgeTracker/userProfiles', publicId]).$asObject().$loaded();
@@ -78,11 +78,43 @@
             displayName: userSync.displayName,
             gravatar: userSync.gravatar
           }).then(function() {
-            return api.profile(userSync.publicId);
+            return oepDataStore.profile(userSync.publicId);
           });
         },
 
         services: {
+          errNoPublicId: new Error('The user has not set a user public id.'),
+
+          saveDetails: function(serviceId, userSync, details) {
+            if (!userSync || !userSync.publicId) {
+              return $q.reject(oepDataStore.services.errNoPublicId);
+            }
+
+            return spfFirebaseSync(
+              ['badgeTracker/servicesUserIds/' + serviceId]
+            ).$set(details.id, userSync.publicId).then(function() {
+              return spfFirebaseSync(
+                ['badgeTracker/userProfiles', userSync.publicId, 'services/' + serviceId]
+              ).$set('details', {
+                id: details.id,
+                name: details.name,
+                registeredBefore: {
+                  '.sv': 'timestamp'
+                }
+              });
+            }).then(function(profile) {
+              return $http.post('/api/badges/track/' + userSync.publicId + '/' + serviceId.toLowerCase()).then(function() {
+                return profile;
+              });
+            });
+          },
+
+          userIdTaken: function(serviceId, userId) {
+            return spfFirebaseSync(['badgeTracker/servicesUserIds', serviceId, userId]).$asObject().$loaded().then(function(sync){
+              return sync.$value !== null;
+            });
+          },
+
           codeCombat: {
             errServerError: new Error('Failed to get logged in user info from Code Combat.'),
             errLoggedOff: new Error('The user is not logged in to Code Combat.'),
@@ -91,11 +123,11 @@
             currentUser: function() {
               return $http.jsonp('//codecombat.com/auth/whoami?callback=JSON_CALLBACK').then(function(resp) {
                 if (resp.data.anonymous) {
-                  return $q.reject(api.services.codeCombat.errLoggedOff);
+                  return $q.reject(oepDataStore.services.codeCombat.errLoggedOff);
                 }
 
                 if (!resp.data.name) {
-                  return $q.reject(api.services.codeCombat.errNoName);
+                  return $q.reject(oepDataStore.services.codeCombat.errNoName);
                 }
 
                 return {
@@ -106,31 +138,38 @@
                 };
               }, function(e) {
                 $log.error('Failed request to //codecombat.com/auth/whoami: ' + e.toString());
-                return $q.reject(api.services.codeCombat.errServerError);
+                return $q.reject(oepDataStore.services.codeCombat.errServerError);
               });
             },
 
             saveDetails: function(userSync, details) {
-              if (!userSync || !userSync.publicId) {
-                return $q.reject(new Error('The user has not set a user public id.'));
+              return oepDataStore.services.saveDetails('codeCombat', userSync, details);
+            },
+
+            userIdTaken: function(userId) {
+              return oepDataStore.services.userIdTaken('codeCombat', userId);
+            }
+
+          },
+
+          codeSchool: {
+            saveDetails: function(userSync, details) {
+              return oepDataStore.services.saveDetails('codeSchool', userSync, details);
+            },
+
+            userIdTaken: function(userId) {
+              return oepDataStore.services.userIdTaken('codeSchool', userId);
+            },
+
+            userIdExist: function(userId) {
+              if (!userId) {
+                return $q.when(false);
               }
 
-              return spfFirebaseSync(
-                ['badgeTracker/servicesUserIds/codeCombat']
-              ).$set(details.id, userSync.publicId).then(function() {
-                return spfFirebaseSync(
-                  ['badgeTracker/userProfiles', userSync.publicId, 'services/codeCombat']
-                ).$set('details', {
-                  id: details.id,
-                  name: details.name,
-                  registeredBefore: {
-                    '.sv': 'timestamp'
-                  }
-                });
-              }).then(function(profile){
-                return $http.post('/api/badges/track/' + userSync.publicId + '/codecombat').then(function(){
-                  return profile;
-                });
+              return $http.get('/api/services/codeschool/users/' + userId).then(function(){
+                return true;
+              }).catch(function(){
+                return false;
               });
             }
           }
@@ -138,7 +177,7 @@
 
       };
 
-      return api;
+      return oepDataStore;
     }
   ])
 

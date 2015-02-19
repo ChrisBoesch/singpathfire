@@ -163,6 +163,21 @@
       };
 
       this.lookUp = {
+        codeSchool: {
+          id: undefined,
+
+          save: function() {
+            return oepDataStore.services.codeSchool.saveDetails(self.currentUser, {
+              id: self.lookUp.codeSchool.id,
+              name: self.lookUp.codeSchool.id
+            }).then(function() {
+              spfAlert.success('Code School user name saved.');
+            }).catch(function(err) {
+              spfAlert.error(err.toString());
+            });
+          },
+        },
+
         codeCombat: {
           errors: {},
           id: undefined,
@@ -239,6 +254,35 @@
         controllerAs: 'ctrl',
         // arguments: scope, iElement, iAttrs, controller
         link: function oepProfilePostLink() {}
+      };
+    }
+  ]).
+
+  directive('oepServiceUserIdExists', [
+    '$q',
+    'oepDataStore',
+    function oepServiceUserIdExistsFactory($q, oepDataStore) {
+      return {
+        restrict: 'A',
+        scope: false,
+        require: 'ngModel',
+        // arguments: scope, iElement, iAttrs, controller
+        link: function oepServiceUserIdExistsPostLink(s, e, iAttrs, model) {
+          var serviceId = iAttrs.oepServiceUserIdExists;
+
+          if (!serviceId || !oepDataStore.services[serviceId]) {
+            return;
+          }
+
+          model.$asyncValidators.oepServiceUserIdExists = function(modelValue, viewValue) {
+            return oepDataStore.services[serviceId].userIdExist(viewValue).then(function(exists) {
+              if (!exists) {
+                return $q.reject(new Error(viewValue + 'does not exist or is not public'));
+              }
+              return true;
+            });
+          };
+        }
       };
     }
   ])
