@@ -1,3 +1,36 @@
 .profile {
     text-align: center;
 }
+
+.badges img, .courses img {
+    width: 100%;
+    text-align: center;
+    position: relative;
+    -webkit-box-reflect: below 0 -webkit-gradient(linear, left top, left bottom, from(transparent), color-stop(70%, transparent), to(rgba(255,255,255,0.2)));
+    -webkit-transition: top 0.5s ease-out;
+    -moz-transition: top 0.5s ease-out;
+    -o-transition: top 0.5s ease-out;
+}
+
+.courses img {
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
+
+.badges .thumbnail, .courses .thumbnail {
+  background-color: transparent;
+  border: none;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.badges img:hover, .courses img:hover {
+  cursor:pointer;
+  top: -5px;
+  -webkit-box-reflect: below 10px -webkit-gradient(linear, left top, left bottom, from(transparent), color-stop(70%, transparent), to(rgba(255,255,255,0.2)));
+}
+
+.arena {
+  padding-bottom: 10px;
+}
