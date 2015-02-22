@@ -2,29 +2,27 @@
  * Style for index.html
  *
  */
-
-html, body {
-  height: 100%;
+md-toolbar .open-menu, md-toolbar .login-details, md-toolbar .menu-item {
+  margin-right: 10px;
 }
-#wrap {
-  min-height: 100%;
-  height: auto;
-  margin: 0 auto -60px;
-  padding: 80px 20px;
+md-toolbar .login-details {
+  font-size: 66%;
 }
-#wrap > .container-fluid {
-  padding-bottom: 20px;
+md-toolbar .open-menu path, md-toolbar .md-accent path, md-toolbar .md-primary path, md-toolbar .separator path {
+  fill: white;
+  fill: rgba(255, 255, 255, 0.87);
 }
-footer {
-  overflow: hidden;
-  border-top: 1px solid #f4e3db;
-  height: 60px;
-  background-color: #f5f5f5;
+md-list .md-button {
+  color: inherit;
+  font-weight: 500;
+  text-align: left;
+  width: 100%;
+  padding: 16px;
 }
-footer .text-muted {
-  margin: 20px 0;
+.bottom-menu {
+  text-align: center;
 }
-footer > .container-fluid {
-  padding-left: 15px;
-  padding-right: 15px;
+md-toolbar .separator {
+  width: 48px;
+  height: 28px;
 }

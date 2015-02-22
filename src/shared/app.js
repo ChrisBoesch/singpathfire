@@ -5,28 +5,39 @@
 (function() {
   'use strict';
 
-  angular.module('spf.shared', [
+  var coreModule = angular.module('spf.shared.core', [
+    'angular-loading-bar',
+    'firebase'
+  ]);
+
+  var bootstrapModule = angular.module('spf.shared', [
     'angular-loading-bar',
     'firebase',
-    'mgcrea.ngStrap'
-  ]).
+    'mgcrea.ngStrap',
+    'spf.shared.core'
+  ]);
 
-  constant('routes', {
+  var materialModule = angular.module('spf.shared.material', [
+    'ngMaterial',
+    'spf.shared.core'
+  ]);
+
+  coreModule.constant('routes', {
     home: '/'
-  }).
+  });
 
   /**
    * Configure cfpLoadingBar options.
    *
    */
-  config([
+  coreModule.config([
     'cfpLoadingBarProvider',
     function(cfpLoadingBarProvider) {
       cfpLoadingBarProvider.includeSpinner = false;
     }
-  ]).
+  ]);
 
-  config([
+  coreModule.config([
     '$provide',
     function($provide) {
       $provide.decorator('$firebase', [
@@ -107,7 +118,7 @@
         }
       ]);
     }
-  ]).
+  ]);
 
   /**
    * Listen for routing error to alert the user of the error and
@@ -118,13 +129,13 @@
    * to the home route.
    *
    */
-  run([
+  coreModule.run([
     '$rootScope',
     '$location',
     'routes',
     'spfAlert',
     function($rootScope, $location, routes, spfAlert) {
-      $rootScope.$on('$routeChangeError', function(e, failedRoute, currentRoute, err){
+      $rootScope.$on('$routeChangeError', function(e, failedRoute, currentRoute, err) {
         spfAlert.error(err.message || err.toString());
 
         if (currentRoute === undefined) {
@@ -132,7 +143,7 @@
         }
       });
     }
-  ]).
+  ]);
 
   /**
    * spfFirebaseRef return a Firebase reference to singpath database,
@@ -158,7 +169,7 @@
    *    ])
    *
    */
-  provider('spfFirebaseRef', function OepFirebaseProvider() {
+  coreModule.provider('spfFirebaseRef', function OepFirebaseProvider() {
     var baseUrl = 'https://singpath-play.firebaseio.com/';
 
     this.setBaseUrl = function(url) {
@@ -186,13 +197,13 @@
       };
     }];
 
-  }).
+  });
 
   /**
    * Like spfFirebaseRef by return an $firebase object.
    *
    */
-  factory('spfFirebaseSync', [
+  coreModule.factory('spfFirebaseSync', [
     '$firebase',
     'spfFirebaseRef',
     function spfFirebaseSyncFactory($firebase, spfFirebaseRef) {
@@ -200,14 +211,14 @@
         return $firebase(spfFirebaseRef.apply(null, arguments));
       };
     }
-  ]).
+  ]);
 
 
   /**
    * Returns an object with `user` (Firebase auth user data) property,
    * and login/logout methods.
    */
-  factory('spfAuth', [
+  coreModule.factory('spfAuth', [
     '$q',
     '$firebaseAuth',
     'spfFirebaseRef',
@@ -264,13 +275,13 @@
 
       };
     }
-  ]).
+  ]);
 
   /**
    * Service to interact with singpath firebase db
    *
    */
-  factory('spfAuthData', [
+  coreModule.factory('spfAuthData', [
     '$q',
     '$log',
     'spfFirebaseRef',
@@ -280,7 +291,7 @@
     function spfAuthDataFactory($q, $log, spfFirebaseRef, spfFirebaseSync, spfAuth, spfCrypto) {
       var userData, userDataPromise, spfAuthData;
 
-      spfAuth.onAuth(function(auth){
+      spfAuth.onAuth(function(auth) {
         if (!auth) {
           userData = userDataPromise = undefined;
         }
@@ -383,13 +394,10 @@
 
       return spfAuthData;
     }
-  ]).
+  ]);
 
   /**
-   * Service to show notification message in top right corner of
-   * the window.
-   *
-   * Relies on Alert css properties sets in `src/app/app.css`.
+   * Service to show notification m.
    *
    * It takes as arguments the type of notification and the content
    * of the nofication.
@@ -398,33 +406,25 @@
    * the class of the notication block: for type set `info`,
    * the block class will be set `alert` and `alert-info` (always lowercase).
    *
-   * `spfAlert.success`, `spfAlert.info`, `spfAlert.warning`
+   * `spfAlert.success`, `spfAlert.info`, `spfAlert.warning`, `spfAlert.error`
    * and `spfAlert.danger` are shortcut for the spfAlert function.
    *
-   * They take as agurment the notification content and set respectively the
-   * type to "Success", "Info", "Warning" and "Danger".
-   *
    */
-  factory('spfAlert', [
-    '$window',
-    function spfAlertFactory($window) {
-      var ctx = $window.alertify;
-      var spfAlert = function(type, content) {
-        type = type ? type.toLowerCase() : undefined;
-        ctx.log(content, type);
-      };
+  coreModule.factory('spfAlert', [
+    function spfAlertFactory() {
+      var spfAlert = angular.noop;
 
-      spfAlert.success = spfAlert.bind(ctx, 'success');
-      spfAlert.info = spfAlert.bind(ctx, null);
-      spfAlert.warning = spfAlert.bind(ctx, 'error');
-      spfAlert.danger = spfAlert.bind(ctx, 'error');
-      spfAlert.error = spfAlert.bind(ctx, 'error');
+      spfAlert.success = angular.noop;
+      spfAlert.info = angular.noop;
+      spfAlert.warning = angular.noop;
+      spfAlert.danger = angular.noop;
+      spfAlert.error = angular.noop;
 
       return spfAlert;
     }
-  ]).
+  ]);
 
-  provider('spfCrypto', [
+  coreModule.provider('spfCrypto', [
     function cryptoProvider() {
       var saltSize = 128 / 8;
       var hashOpts = {
@@ -509,9 +509,69 @@
         }
       ];
     }
-  ]).
+  ]);
 
-  directive('spfBsValidClass', [
+  coreModule.filter('spfEmpty', [
+    function spfEmptyFactory() {
+      return function spfEmpty(obj) {
+        if (!obj) {
+          return true;
+        }
+
+        if (obj.hasOwnProperty('$value')) {
+          return obj.$value === null;
+        }
+
+        if (obj.length !== undefined) {
+          return obj.length === 0;
+        }
+
+        return Object.keys(obj).length === 0;
+      };
+    }
+  ]);
+
+
+  /**
+   * Service to show notification message in top right corner of
+   * the window.
+   *
+   * Relies on Alert css properties sets in `src/app/app.css`.
+   *
+   * It takes as arguments the type of notification and the content
+   * of the nofication.
+   *
+   * The type is used as title of the notification and is user to set
+   * the class of the notication block: for type set `info`,
+   * the block class will be set `alert` and `alert-info` (always lowercase).
+   *
+   * `spfAlert.success`, `spfAlert.info`, `spfAlert.warning`
+   * and `spfAlert.danger` are shortcut for the spfAlert function.
+   *
+   * They take as agurment the notification content and set respectively the
+   * type to "Success", "Info", "Warning" and "Danger".
+   *
+   */
+  bootstrapModule.factory('spfAlert', [
+    '$window',
+    function spfAlertFactory($window) {
+      var ctx = $window.alertify;
+      var spfAlert = function(type, content) {
+        type = type ? type.toLowerCase() : undefined;
+        ctx.log(content, type);
+      };
+
+      spfAlert.success = spfAlert.bind(ctx, 'success');
+      spfAlert.info = spfAlert.bind(ctx, null);
+      spfAlert.warning = spfAlert.bind(ctx, 'error');
+      spfAlert.danger = spfAlert.bind(ctx, 'error');
+      spfAlert.error = spfAlert.bind(ctx, 'error');
+
+      return spfAlert;
+    }
+  ]);
+
+  bootstrapModule.directive('spfBsValidClass', [
 
     function spfBsValidClassFactory() {
       return {
@@ -566,28 +626,13 @@
         }
       };
     }
-  ]).
+  ]);
 
-  filter('spfEmpty', [
-    function spfEmptyFactory() {
-      return function spfEmpty(obj) {
-        if (!obj) {
-          return true;
-        }
-
-        if (obj.hasOwnProperty('$value')) {
-          return obj.$value === null;
-        }
-
-        if (obj.length !== undefined) {
-          return obj.length === 0;
-        }
-
-        return Object.keys(obj).length === 0;
-      };
-    }
-  ])
-
-  ;
+  materialModule.config(function($mdThemingProvider) {
+    $mdThemingProvider.theme('default')
+      .primaryPalette('brown')
+      .accentPalette('amber')
+      .warnPalette('deep-orange');
+  });
 
 })();

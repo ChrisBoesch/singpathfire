@@ -1,0 +1,24 @@
+md-toast.md-default-theme {
+    max-width: none;
+    margin: 8px;
+    background-color: black;
+    background-color: rgba(121,85,72, 0.95);
+    color: white;
+}
+
+md-toast.info {
+    background-color: #795548;
+    color: white;
+}
+md-toast.success {
+    background-color: #cddc39;
+    color: #3e464c;
+}
+md-toast.warning {
+    background-color: #ffc107;
+    color: #3e464c;
+}
+md-toast.danger, md-toast.error {
+    background-color: #ff5722;
+    color: white;
+}

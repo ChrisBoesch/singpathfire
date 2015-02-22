@@ -48,12 +48,10 @@
    */
   factory('oepEditProfileInitialDataResolver', [
     '$q',
-    '$route',
-    'routes',
     'spfAuth',
     'spfAuthData',
     'oepDataStore',
-    function oepEditProfileInitialDataResolverFactory($q, $route, routes, spfAuth, spfAuthData, oepDataStore) {
+    function oepEditProfileInitialDataResolverFactory($q, spfAuth, spfAuthData, oepDataStore) {
       return function oepEditProfileInitialDataResolver() {
         var userPromise = spfAuthData.user();
         var profilePromise;
@@ -96,11 +94,10 @@
   factory('oepShowProfileInitialDataResolver', [
     '$q',
     '$route',
-    'routes',
     'spfAuth',
     'spfAuthData',
     'oepDataStore',
-    function oepShowProfileInitialDataResolverFactory($q, $route, routes, spfAuth, spfAuthData, oepDataStore) {
+    function oepShowProfileInitialDataResolverFactory($q, $route, spfAuth, spfAuthData, oepDataStore) {
       return function oepShowProfileInitialDataResolver() {
         var publicId = $route.current.params.publicId;
         var userPromise = spfAuthData.user();

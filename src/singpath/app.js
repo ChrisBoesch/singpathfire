@@ -12,11 +12,10 @@
   angular.module('spf', [
     'angular-loading-bar',
     'firebase',
-    'mgcrea.ngStrap',
     'ngAnimate',
     'ngMessages',
     'ngRoute',
-    'spf.shared'
+    'spf.shared.material'
   ]).
 
   /**
@@ -26,7 +25,10 @@
    *
    */
   constant('routes', {
-    home: '/'
+    home: '/problems',
+    profile: '/profile',
+    problems: '/problems',
+    newProblem: '/new-problem'
   }).
 
   /**
@@ -49,10 +51,22 @@
    *
    */
   factory('spfDataStore', [
-    function spfDataStoreFactory() {
+    '$q',
+    'spfAuth',
+    'spfFirebaseSync',
+    function spfDataStoreFactory($q, spfAuth, spfFirebaseSync) {
       var spfDataStore;
 
-      spfDataStore = {};
+      spfDataStore = {
+        problems: {
+          list: function() {
+            return spfFirebaseSync(['singpath/problems'], {
+              orderByChild: 'timestamp',
+              limitToLast: 50
+            }).$asArray();
+          }
+        }
+      };
 
       return spfDataStore;
     }

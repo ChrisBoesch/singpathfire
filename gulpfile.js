@@ -104,7 +104,9 @@ function concatBuild(appName) {
       concatScripts.pipe(appJsFilter),
       gulp.src([
         config.src + '/' + appName + '/**/*.html',
-        config.src + '/shared/**/*.html'
+        config.src + '/shared/**/*.html',
+        config.src + '/' + appName + '/**/*.svg',
+        config.src + '/shared/**/*.svg'
       ], {
         base: config.src
       })
