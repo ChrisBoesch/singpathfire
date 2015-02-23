@@ -43,7 +43,6 @@
       }
 
       var spfAlert = function(nType, message) {
-        console.log(message);
         notifications.splice(0, 0, newNotification(nType, message));
         $mdToast.show(options);
       };
@@ -64,7 +63,7 @@
     'toastOptions',
     function SpfAlertCtrl($mdToast, notifications, toastOptions) {
       var self = this;
-      console.dir($mdToast);
+
       this.notifications = notifications;
 
       this.prev = function() {

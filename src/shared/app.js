@@ -130,16 +130,19 @@
    *
    */
   coreModule.run([
+    '$window',
     '$rootScope',
     '$location',
     'routes',
     'spfAlert',
-    function($rootScope, $location, routes, spfAlert) {
+    function($window, $rootScope, $location, routes, spfAlert) {
       $rootScope.$on('$routeChangeError', function(e, failedRoute, currentRoute, err) {
         spfAlert.error(err.message || err.toString());
 
         if (currentRoute === undefined) {
           $location.path(routes.home);
+        } else if ($window.history && $window.history.back) {
+          $window.history.back();
         }
       });
     }

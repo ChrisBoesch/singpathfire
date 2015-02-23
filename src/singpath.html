@@ -51,7 +51,7 @@
 
     <div layout="column" role="main" flex>
         <md-content>
-            <md-toolbar layout="row" ng-controller="SpfSharedMaterialNavBarCtrl as navBar">
+            <md-toolbar class="md-hue-2" layout="row" ng-controller="SpfSharedMaterialNavBarCtrl as navBar">
                 <div class="md-toolbar-tools">
                     <md-button ng-click="navBar.openSideMenu('left')" hide-gt-md class="open-menu" aria-label="open side menu">
                         <md-icon md-svg-src="shared/components/icons/SVG/reorder.svg" alt="open side menu"></md-icon>
@@ -71,7 +71,7 @@
 
                     <span flex></span>
 
-                    <md-button class="menu-item md-raised md-primary" ng-repeat="btn in navBar.currentPage.menuItems" ng-href="{{btn.url}}">
+                    <md-button class="menu-item md-raised md-primary" ng-repeat="btn in navBar.currentPage.menuItems" ng-href="{{btn.url}}" aria-label="{{btn.title}}">
                         <md-icon md-svg-src="{{btn.iconUrl}}" ng-if="btn.iconUrl"></md-icon>
                         <span ng-bind="btn.title"></span>
                     </md-button>
