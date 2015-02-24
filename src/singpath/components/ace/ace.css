@@ -1,0 +1,37 @@
+spf-editor-container label {
+  color: black;
+  color: rgba(0, 0, 0, 0.258824);
+  cursor: default;
+  display: block;
+  font-family: RobotoDraft, Roboto, 'Helvetica Neue', sans-serif;
+  padding: 20px 0 5px 2px;
+}
+spf-editor-container div[ng-message] {
+  color: black;
+  color: rgba(0, 0, 0, 0.870588);
+  display: block;
+  font-family: RobotoDraft, Roboto, 'Helvetica Neue', sans-serif;
+  font-size: 12px;
+  height: 24px;
+  line-height: 24px;
+}
+spf-editor-container.is-invalid.has-focus label, spf-editor-container.is-invalid.has-focus div[ng-message],
+spf-editor-container.is-invalid.had-focus label, spf-editor-container.is-invalid.had-focus div[ng-message] {
+  color: rgb(255, 87, 34);
+}
+
+spf-editor-container.has-focus label, spf-editor-container:not(.is-empty) label {
+  transition: transform cubic-bezier(0.25, 0.8, 0.25, 1) 0.25s;
+  transform: translate3d(0, 4px, 0) scale(0.75);
+  transform-origin: left bottom;
+}
+
+
+spf-editor-container.is-valid label, spf-editor-container.is-valid div[ng-message] {
+  color: black;
+  color: rgba(0, 0, 0, 0.541176);
+}
+
+.spf-ace-editor {
+  height: 200px;
+}

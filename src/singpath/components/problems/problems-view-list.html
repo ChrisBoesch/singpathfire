@@ -1,0 +1,20 @@
+<md-content flex class="md-padding">
+
+    <p ng-if="ctrl.problems|spfEmpty">No problem found.</p>
+
+    <md-list>
+        <md-item ng-repeat="problem in ctrl.problems">
+            <md-item-content>
+                <div class="md-tile-left language-icon">
+                    <md-icon md-svg-icon="language:{{problem.language}}">
+                </div>
+                <div class="md-tile-content">
+                    <h3>{{problem.title}}</h3>
+                    <h4>by {{problem.owner.displayName}}</h4>
+                    <p>{{problem.description}}</p>
+                </div>
+            </md-item-content>
+        </md-item>
+    </md-list>
+
+</md-content>

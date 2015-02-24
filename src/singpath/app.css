@@ -8,12 +8,11 @@ html, body, md-content.md-default-theme, md-list {
   color: rgba(0, 0, 0, 0.87);
 }
 
-md-toolbar .open-menu, md-toolbar .login-details, md-toolbar .menu-item {
-  margin-right: 10px;
+.md-button {
+  margin: 1em;
+  padding: .5em
 }
-md-toolbar .login-details {
-  font-size: 66%;
-}
+
 md-toolbar .open-menu path, md-toolbar .md-primary path, md-toolbar .separator path {
   fill: white;
   fill: rgba(255, 255, 255, 0.87);
@@ -24,6 +23,7 @@ md-list .md-button {
   text-align: left;
   width: 100%;
   padding: 16px;
+  margin: 0;
 }
 .bottom-menu {
   text-align: center;

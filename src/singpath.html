@@ -14,9 +14,6 @@
         Singpath
     </title>
 
-    <link href='//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700' rel='stylesheet' type='text/css'>
-    <link href='//fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
-
     <!-- build:vendorCss(src) vendor.css -->
     <link rel="stylesheet" href="vendor/angular-loading-bar/build/loading-bar.css">
     <link rel="stylesheet" href="vendor/angular-material/angular-material.css">
@@ -24,8 +21,11 @@
 
     <!-- endbuild -->
     <!-- build:appCss(src) app.css -->
-    <link rel="stylesheet" href="singpath/app.css">
     <link rel="stylesheet" href="shared/components/alert/alert.css">
+    <link rel="stylesheet" href="shared/components/select/select.css">
+    <link rel="stylesheet" href="singpath/app.css">
+    <link rel="stylesheet" href="singpath/components/ace/ace.css">
+    <link rel="stylesheet" href="singpath/components/problems/problems.css">
     <!-- Add Singpath Fire style sheets here.-->
     <!-- endbuild -->
 </head>
@@ -57,12 +57,12 @@
                         <md-icon md-svg-src="shared/components/icons/SVG/reorder.svg" alt="open side menu"></md-icon>
                     </md-button>
 
-                    <h2 ng-if="navBar.currentPage.parent.title">
+                    <h2 ng-if="navBar.currentPage.parent.title" hide-sm>
                         <a ng-href="{{navBar.currentPage.parent.url || ''}}" ng-bind="navBar.currentPage.parent.title">
                         </a>
                     </h2>
 
-                    <md-icon class="separator"
+                    <md-icon class="separator" hide-sm
                         md-svg-src="shared/components/icons/SVG/keyboard-arrow-right.svg"
                         ng-if="navBar.currentPage.parent &amp;&amp; navBar.currentPage.section"
                     ></md-icon>
@@ -79,7 +79,7 @@
                     <span ng-switch="navBar.auth.user.uid">
                         <span ng-switch-when="undefined">
                             <md-button ng-click="navBar.login()" class="md-raised md-accent">
-                                <md-icon md-svg-src="shared/components/icons/SVG/exit-to-app.svg"></md-icon>
+                                <md-icon md-svg-src="shared/components/icons/SVG/launch.svg"></md-icon>
                                 login
                             </md-button>
                         </span>
@@ -109,6 +109,7 @@
     <script src="vendor/crypto-js/src/sha256.js"></script>
     <script src="vendor/firebase/firebase.js"></script>
     <script src="vendor/moment/moment.js"></script>
+    <script src="vendor/ace-builds/src-noconflict/ace.js"></script>
     <script src="vendor/angular/angular.js"></script>
     <script src="vendor/angular-animate/angular-animate.js"></script>
     <script src="vendor/angular-route/angular-route.js"></script>
@@ -129,6 +130,7 @@
     <script src="shared/components/icons/icons.js"></script>
     <script src="shared/components/alert/alert.js"></script>
     <script src="singpath/components/problems/problems.js"></script>
+    <script src="singpath/components/ace/ace.js"></script>
     <!-- Add Singpath Fire scripts above -->
     <!-- endbuild -->
 

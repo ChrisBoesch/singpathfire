@@ -58,12 +58,39 @@
       var spfDataStore;
 
       spfDataStore = {
+        profile: function(publicId) {
+          return $q.when(publicId).then(function(publicId) {
+            return spfFirebaseSync(['singpath/userProfiles', publicId]).$asObject().$loaded();
+          });
+        },
+
+        initProfile: function(userSync) {
+          if (!userSync || !userSync.publicId) {
+            return $q.reject(new Error('The user has not set a user public id.'));
+          }
+
+          return spfFirebaseSync(
+            ['singpath/userProfiles', userSync.publicId, 'user']
+          ).$set({
+            displayName: userSync.displayName,
+            gravatar: userSync.gravatar
+          }).then(function() {
+            return spfDataStore.profile(userSync.publicId);
+          });
+        },
+
         problems: {
           list: function() {
             return spfFirebaseSync(['singpath/problems'], {
               orderByChild: 'timestamp',
               limitToLast: 50
             }).$asArray();
+          },
+
+          create: function(problem) {
+            return spfFirebaseSync(['singpath/problems']).$push(problem).then(function(ref){
+              return ref;
+            });
           }
         }
       };
