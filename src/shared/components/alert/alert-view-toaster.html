@@ -1,5 +1,5 @@
 <!-- ng-class="ctrl.notifications[0].notificationType" -->
-<md-toast class="md-whiteframe-z2 error" layout-padding layout-margin>
+<md-toast class="md-whiteframe-z2" ng-class="ctrl.notifications[0].notificationType" layout-padding layout-margin>
     <span flex>{{ctrl.notifications[0].message}}</span>
     <md-button class="md-raised md-primary" ng-click="ctrl.prev()" ng-disabled="ctrl.notifications.length < 2">
         Prev
