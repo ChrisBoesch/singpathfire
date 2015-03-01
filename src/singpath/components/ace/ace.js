@@ -36,7 +36,6 @@
           session = editor.getSession();
           elm.css('display', 'none');
 
-
           // Link editor and model
           ngModel.$formatters.push(function(value) {
             if (angular.isUndefined(value) || value === null) {
@@ -93,8 +92,14 @@
             session.setMode('ace/mode/' + mode);
           }));
 
+          watchers.push(attrs.$observe('spfReadonly', function(value) {
+            var isReadOnly = scope.$eval(value);
+            editor.setReadOnly(isReadOnly);
+          }));
+
           // Other options
           editor.setTheme('ace/theme/twilight');
+          editor.setFontSize(14);
           editor.renderer.setShowGutter(true);
           editor.renderer.setShowInvisibles(true);
           session.setUseWrapMode(true);

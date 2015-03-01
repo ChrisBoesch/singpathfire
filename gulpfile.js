@@ -52,6 +52,14 @@ var config = {
     ],
     base: 'src/vendor/bootstrap/dist'
   },
+  ace: {
+    assets: [
+      'src/vendor/ace-builds/src-noconflict/mode-javascript.js',
+      'src/vendor/ace-builds/src-noconflict/mode-python.js',
+      'src/vendor/ace-builds/src-noconflict/theme-twilight.js'
+    ],
+    base: 'src/vendor/ace-builds/src-noconflict'
+  },
   // only used for build:concat and dist
   dest: argv.dest ? path.resolve(argv.dest) : null,
   noduleNames: {
@@ -117,14 +125,17 @@ function concatBuild(appName) {
     .pipe(concat('app.js'))
     .pipe(appJsFilter.restore());
 
-  // Get bootstraps' fonts and the their path in the css and js files
+  // Add bootstrap andace editor resources
   return concatScriptsWithTemplate
     .pipe(addsrc(config.bootstrap.assets, {
       base: config.bootstrap.base
     }))
     .pipe(scriptsFilter)
     .pipe(replace(/\.\.\/fonts\//g, './fonts/'))
-    .pipe(scriptsFilter.restore());
+    .pipe(scriptsFilter.restore())
+    .pipe(addsrc(config.ace.assets, {
+      base: config.ace.base
+    }));
 }
 
 
@@ -133,7 +144,7 @@ function concatBuild(appName) {
  *
  */
 function buildApp(appName, dest) {
-  var scriptsFilterRev = gulpFilter(['*', '!index.html']);
+  var scriptsFilterRev = gulpFilter(['*', '!index.html', '!mode-*.js', '!theme-*.js']);
 
   dest = dest || config.build.concat;
 
@@ -250,31 +261,31 @@ gulp.task('build', ['build:dev', 'build:debug', 'build:e2e', 'build:concat']);
 
 gulp.task('watch', ['build:dev', 'build:debug', 'build:e2e', 'build:concat'], function() {
   return gulp.watch(
-    'src/**/*', ['build:dev', 'build:debug', 'build:e2e', 'build:concat']
+    ['src/**/*.html', 'src/**/*.css', 'src/**/*.js'], ['build:dev', 'build:debug', 'build:e2e', 'build:concat']
   );
 });
 
 gulp.task('watch:dev', ['build:dev'], function() {
   return gulp.watch(
-    'src/**/*', ['build:dev']
+    ['src/**/*.html', 'src/**/*.css', 'src/**/*.js'], ['build:dev']
   );
 });
 
 gulp.task('watch:debug', ['build:debug', ], function() {
   return gulp.watch(
-    'src/**/*', ['build:debug', ]
+    ['src/**/*.html', 'src/**/*.css', 'src/**/*.js'], ['build:debug', ]
   );
 });
 
 gulp.task('watch:e2e', ['build:e2e'], function() {
   return gulp.watch(
-    'src/**/*', ['build:e2e']
+    ['src/**/*.html', 'src/**/*.css', 'src/**/*.js'], ['build:e2e']
   );
 });
 
 gulp.task('watch:concat', ['build:concat'], function() {
   return gulp.watch(
-    'src/**/*', ['build:concat']
+    ['src/**/*.html', 'src/**/*.css', 'src/**/*.js'], ['build:concat']
   );
 });
 

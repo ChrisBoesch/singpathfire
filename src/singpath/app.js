@@ -28,7 +28,9 @@
     home: '/problems',
     profile: '/profile',
     problems: '/problems',
-    newProblem: '/new-problem'
+    newProblem: '/new-problem',
+    playProblem: '/problems/:problemId/play',
+    editProblem: '/problems/:problemId/edit'
   }).
 
   /**
@@ -52,9 +54,11 @@
    */
   factory('spfDataStore', [
     '$q',
+    '$http',
+    '$log',
     'spfAuth',
     'spfFirebaseSync',
-    function spfDataStoreFactory($q, spfAuth, spfFirebaseSync) {
+    function spfDataStoreFactory($q, $http, $log, spfAuth, spfFirebaseSync) {
       var spfDataStore;
 
       spfDataStore = {
@@ -88,8 +92,59 @@
           },
 
           create: function(problem) {
-            return spfFirebaseSync(['singpath/problems']).$push(problem).then(function(ref){
+            return spfFirebaseSync(['singpath/problems']).$push(problem).then(function(ref) {
               return ref;
+            });
+          },
+
+          get: function(problemId) {
+            return spfFirebaseSync(['singpath/problems', problemId]).$asObject();
+          }
+        },
+
+        solutions: {
+          errMissingPublicId: new Error('No public id for the solution'),
+          errMissingProblemId: new Error('The problem has no id. Is it saved?'),
+          errStartVerifcation: new Error('Failed to initiate solution verification'),
+          errSaveSolution: new Error('Failed to save solution.'),
+
+          get: function(problemId, publicId) {
+            if (!publicId) {
+              return $q.reject(spfDataStore.solutions.errMissingPublicId);
+            }
+
+            if (!problemId) {
+              return $q.reject(spfDataStore.solutions.errMissingProblemId);
+            }
+
+            return spfFirebaseSync(
+              ['singpath/solutions', problemId, publicId]
+            ).$asObject();
+          },
+
+          create: function(problem, publicId, solution) {
+            if (!publicId) {
+              return $q.reject(spfDataStore.solutions.errMissingPublicId);
+            }
+
+            if (!problem.$id) {
+              return $q.reject(spfDataStore.solutions.errMissingProblemId);
+            }
+
+            return spfFirebaseSync(
+              ['singpath/solutions', problem.$id]
+            ).$set(publicId, {
+              language: problem.language,
+              solution: solution.solution,
+              tests: problem.tests,
+            }).then(function(){
+              return $http.post('/api/solution/' + problem.$id + '/' + publicId).catch(function(err) {
+                $log.error(err);
+                return $q.reject(spfDataStore.solutions.errStartVerifcation);
+              });
+            }, function(err) {
+              $log.error(err);
+              return $q.reject(spfDataStore.solutions.errSaveSolution);
             });
           }
         }

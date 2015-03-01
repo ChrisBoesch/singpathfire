@@ -35,6 +35,20 @@
             }
           ]
         }
+      }).
+
+      when(routes.playProblem, {
+        templateUrl: 'singpath/components/problems/problems-view-play.html',
+        controller: 'PlayProblemCtrl',
+        controllerAs: 'ctrl',
+        resolve: {
+          'initialData': [
+            'playProblemCtrlInitialData',
+            function(playProblemCtrlInitialData) {
+              return playProblemCtrlInitialData();
+            }
+          ]
+        }
       })
 
       ;
@@ -95,6 +109,7 @@
         }]
       );
       this.problems = initialData.problems;
+      console.dir(this);
     }
   ]).
 
@@ -175,6 +190,10 @@
         if (!self.profile) {
           next = spfAuthData.publicId(currentUser).then(function() {
             spfAlert.success('Public id and display name saved');
+            return spfDataStore.initProfile(currentUser);
+          }).then(function(profile) {
+            self.profile = profile;
+            return profile;
           });
         } else {
           next = $q.when();
@@ -199,9 +218,138 @@
         });
       };
     }
+  ]).
+
+
+  /**
+   * Use to resolve `initialData` of `PlayProblemCtrl`.
+   *
+   */
+  factory('playProblemCtrlInitialData', [
+    '$q',
+    '$route',
+    'spfAuth',
+    'spfAuthData',
+    'spfDataStore',
+    function playProblemCtrlInitialDataFactory($q, $route, spfAuth, spfAuthData, spfDataStore) {
+      return function playProblemCtrlInitialData() {
+        var userPromise = spfAuthData.user();
+        var profilePromise;
+        var problemPromise;
+        var errLoggedOff = new Error('The user should be logged in to play.');
+
+        if (!spfAuth.user || !spfAuth.user.uid) {
+          return $q.reject(errLoggedOff);
+        }
+
+        profilePromise = userPromise.then(function(userData) {
+          if (!userData.publicId) {
+            return;
+          }
+
+          return spfDataStore.profile(userData.publicId).then(function(profile) {
+            if (profile && profile.$value === null) {
+              return spfDataStore.initProfile(userData);
+            }
+
+            return profile;
+          });
+        });
+
+        problemPromise = spfDataStore.problems.get($route.current.params.problemId);
+
+        return $q.all({
+          auth: spfAuth,
+          currentUser: userPromise,
+          profile: profilePromise,
+          problem: problemPromise,
+          solution: $q.all({
+            user: userPromise,
+            problem: problemPromise
+          }).then(function(result) {
+            if (!result.user || !result.user.publicId) {
+              return;
+            }
+            return spfDataStore.solutions.get(
+              result.problem.$id, result.user.publicId
+            ).$loaded();
+          })
+        });
+      };
+    }
+  ]).
+
+  /**
+   * PlayProblemCtrl
+   *
+   */
+  controller('PlayProblemCtrl', [
+    '$q',
+    'initialData',
+    'routes',
+    'SpfNavBarService',
+    'spfAlert',
+    'spfAuthData',
+    'spfDataStore',
+    function PlayProblemCtrl($q, initialData, routes, SpfNavBarService, spfAlert, spfAuthData, spfDataStore) {
+      var self = this;
+
+      SpfNavBarService.update(
+        initialData.problem.title, {
+          title: 'Problems',
+          url: '#' + routes.problems
+        }
+      );
+
+      this.auth = initialData.auth;
+      this.currentUser = initialData.currentUser;
+      this.profile = initialData.profile;
+      this.problem = initialData.problem;
+      this.solution = initialData.solution || {};
+
+      this.savingSolution = false;
+      this.solutionSaved = false;
+      this.solve = function(currentUser, problem, solution) {
+        var next;
+
+        self.savingSolution = true;
+
+        if (!self.profile) {
+          next = spfAuthData.publicId(currentUser).then(function() {
+            spfAlert.success('Public id and display name saved');
+            return spfDataStore.initProfile(currentUser);
+          }).then(function(profile) {
+            self.profile = profile;
+            return profile;
+          });
+        } else {
+          next = $q.when();
+        }
+
+        next.then(function() {
+          return spfDataStore.solutions.create(problem, currentUser.publicId, solution);
+        }).then(function() {
+          this.solutionSaved = true;
+          spfAlert.success('Solution saved');
+        }).catch(function(err) {
+          spfAlert.error(err.message || err.toString());
+        }).finally(function(){
+          self.savingSolution = false;
+        });
+      };
+
+      this.reset = function(solution) {
+        self.solutionSaved = false;
+        solution.solution = '';
+        solution.output = undefined;
+      };
+
+      this.resetOutput = function(solution) {
+        self.solutionSaved = false;
+        solution.output = undefined;
+      };
+    }
   ])
-
-
 
   ;
 

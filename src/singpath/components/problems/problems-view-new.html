@@ -57,14 +57,14 @@
             <textarea name="problemTests"
                 ng-model="ctrl.problem.tests"
                 columns="1"
-                ng-required
+                ng-required="true"
                 ng-minlength="3"
                 ng-maxlength="500"
                 spf-editor="{{ctrl.problem.language}}"
             ></textarea>
             <div ng-messages="newProblem.problemTests.$error">
                 <div ng-message="required">This is required.</div>
-                <div ng-message="minlength">The description has to be more than 1 characters long.</div>
+                <div ng-message="minlength">The description has to be more than 3 characters long.</div>
                 <div ng-message="maxlength">The screen name has to be less than 500 characters long.</div>
             </div>
         </spf-editor-container>

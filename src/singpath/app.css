@@ -2,28 +2,29 @@
  * Style for index.html
  *
  */
+
 html, body, md-content.md-default-theme, md-list {
   background-color: #efebe9;
   color: black;
   color: rgba(0, 0, 0, 0.87);
 }
-
 .md-button {
   margin: 1em;
   padding: .5em
 }
-
-md-toolbar .open-menu path, md-toolbar .md-primary path, md-toolbar .separator path {
+.md-primary path, md-toolbar .open-menu path, md-toolbar .separator path {
   fill: white;
   fill: rgba(255, 255, 255, 0.87);
 }
 md-list .md-button {
+  padding: 2px 8px;
+  margin: 0;
+}
+md-sidenav md-list .md-button {
   color: inherit;
   font-weight: 500;
   text-align: left;
   width: 100%;
-  padding: 16px;
-  margin: 0;
 }
 .bottom-menu {
   text-align: center;
@@ -32,7 +33,6 @@ md-toolbar .separator {
   width: 48px;
   height: 28px;
 }
-
 .menu-item.ng-leave {
   display: None;
 }
