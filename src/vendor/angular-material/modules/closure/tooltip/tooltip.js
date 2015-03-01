@@ -2,7 +2,7 @@
  * Angular Material Design
  * https://github.com/angular/material
  * @license MIT
- * v0.8.0-rc1-master-ffbea7d
+ * v0.8.2
  */
 goog.provide('ng.material.components.tooltip');
 goog.require('ng.material.core');
@@ -65,6 +65,7 @@ function MdTooltipDirective($timeout, $window, $$rAF, $document, $mdUtil, $mdThe
     $mdTheming(element);
     var parent = element.parent();
     var background = angular.element(element[0].getElementsByClassName('md-background')[0]);
+    var content = angular.element(element[0].getElementsByClassName('md-content')[0]);
     var direction = attr.mdDirection;
 
     // Keep looking for a higher parent if our current one has no pointer events
@@ -139,11 +140,13 @@ function MdTooltipDirective($timeout, $window, $$rAF, $document, $mdUtil, $mdThe
       positionTooltip();
       $animate.addClass(element, 'md-show');
       $animate.addClass(background, 'md-show');
+      $animate.addClass(content, 'md-show');
     }
 
     function hideTooltip() {
       parent.removeAttr('aria-describedby');
       $q.all([
+        $animate.removeClass(content, 'md-show'),
         $animate.removeClass(background, 'md-show'),
         $animate.removeClass(element, 'md-show')
       ]).then(function () {
@@ -154,25 +157,14 @@ function MdTooltipDirective($timeout, $window, $$rAF, $document, $mdUtil, $mdThe
     function positionTooltip() {
       var tipRect = $mdUtil.offsetRect(element, tooltipParent);
       var parentRect = $mdUtil.offsetRect(parent, tooltipParent);
+      var newPosition = getPosition(direction);
 
-      // Default to bottom position if possible
-      var tipDirection = 'bottom';
-      var newPosition = {
-        left: parentRect.left + parentRect.width / 2 - tipRect.width / 2,
-        top: parentRect.top + parentRect.height
-      };
-
-      // If element bleeds over left/right of the window, place it on the edge of the window.
-      newPosition.left = Math.min(
-        newPosition.left,
-        tooltipParent.prop('scrollWidth') - tipRect.width - TOOLTIP_WINDOW_EDGE_SPACE
-      );
-      newPosition.left = Math.max(newPosition.left, TOOLTIP_WINDOW_EDGE_SPACE);
-
-      // If element bleeds over the bottom of the window, place it above the parent.
-      if (newPosition.top + tipRect.height > tooltipParent.prop('scrollHeight')) {
-        newPosition.top = parentRect.top - tipRect.height;
-        tipDirection = 'top';
+      // If the user provided a direction, just nudge the tooltip onto the screen
+      // Otherwise, recalculate based on 'top' since default is 'bottom'
+      if (direction) {
+        newPosition = fitInParent(newPosition);
+      } else if (newPosition.top > tooltipParent.prop('scrollHeight') - tipRect.height - TOOLTIP_WINDOW_EDGE_SPACE) {
+        newPosition = fitInParent(getPosition('top'));
       }
 
       element.css({top: newPosition.top + 'px', left: newPosition.left + 'px'});
@@ -195,12 +187,12 @@ function MdTooltipDirective($timeout, $window, $$rAF, $document, $mdUtil, $mdThe
         });
       }
 
-      function fitOnScreen (pos) {
-        var newPosition = {};
-        newPosition.left = Math.min( pos.left, tooltipParent.prop('scrollWidth') - tipRect.width - TOOLTIP_WINDOW_EDGE_SPACE );
-        newPosition.left = Math.max( pos.left, TOOLTIP_WINDOW_EDGE_SPACE );
-        newPosition.top  = Math.min( pos.top,  tooltipParent.prop('scrollHeight') - tipRect.height - TOOLTIP_WINDOW_EDGE_SPACE );
-        newPosition.top  = Math.max( pos.top,  TOOLTIP_WINDOW_EDGE_SPACE );
+      function fitInParent (pos) {
+        var newPosition = { left: pos.left, top: pos.top };
+        newPosition.left = Math.min( newPosition.left, tooltipParent.prop('scrollWidth') - tipRect.width - TOOLTIP_WINDOW_EDGE_SPACE );
+        newPosition.left = Math.max( newPosition.left, TOOLTIP_WINDOW_EDGE_SPACE );
+        newPosition.top  = Math.min( newPosition.top,  tooltipParent.prop('scrollHeight') - tipRect.height - TOOLTIP_WINDOW_EDGE_SPACE );
+        newPosition.top  = Math.max( newPosition.top,  TOOLTIP_WINDOW_EDGE_SPACE );
         return newPosition;
       }
 

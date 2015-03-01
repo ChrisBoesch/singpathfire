@@ -1,0 +1,91 @@
+<md-content class="md-padding play-problem">
+    <form name="solutionForm" ng-submit="ctrl.solve(ctrl.currentUser, ctrl.problem, ctrl.solution)">
+
+        <div class="details">
+            <div layout layout-align="center start">
+                <h4 flex="50">Language</h4>
+                <p flex="50">{{ctrl.problem.language}}</p>
+            </div>
+
+            <div layout layout-align="center start">
+                <h4 flex="50">Creator</h4>
+                <p flex="50">{{ctrl.problem.owner.displayName}}</p>
+            </div>
+
+            <div layout layout-align="center start">
+                <h4 flex="50">Goal</h4>
+                <p flex="50">{{ctrl.problem.description}}</p>
+            </div>
+        </div>
+
+        <div layout layout-sm="column" ng-if="!ctrl.profile">
+            <md-input-container flex>
+                <label>Your Public Id</label>
+                <input ng-minlength="3" md-maxlength="30" ng-pattern="/^[-a-z0-9]+$/" required name="userPublicId" ng-model="ctrl.currentUser.publicId">
+                <div ng-messages="solutionForm.userPublicId.$error">
+                    <div ng-message="required">This is required.</div>
+                    <div ng-message="minlength">The public id has to be more than 2 characters long.</div>
+                    <div ng-message="md-maxlength">The public id has to be less than 30 characters long.</div>
+                    <div ng-message="pattern">The public id should include letters, numbers and "-".</div>
+                </div>
+            </md-input-container>
+            <md-input-container flex>
+                <label>Your screen name</label>
+                <input ng-minlength="3" md-maxlength="30" required name="userDisplayName" ng-model="ctrl.currentUser.displayName">
+                <div ng-messages="solutionForm.userDisplayName.$error">
+                    <div ng-message="required">This is required.</div>
+                    <div ng-message="minlength">The screen name has to be more than 2 characters long.</div>
+                    <div ng-message="md-maxlength">The screen name has to be less than 30 characters long.</div>
+                </div>
+            </md-input-container>
+        </div>
+
+        <div layout layout-sm="column" layout-padding>
+            <spf-editor-container flex>
+                <label>Solution</label>
+                <textarea name="problemSolution" ng-model="ctrl.solution.solution" columns="1" required ng-minlength="3" ng-maxlength="500" spf-editor="{{ctrl.problem.language}}" ng-change="ctrl.resetOutput(ctrl.solution)"></textarea>
+                <div ng-messages="solutionForm.problemSolution.$error">
+                    <div ng-message="required">This is required.</div>
+                    <div ng-message="minlength">The description has to be more than 1 characters long.</div>
+                    <div ng-message="maxlength">The screen name has to be less than 500 characters long.</div>
+                </div>
+            </spf-editor-container>
+
+            <spf-editor-container flex>
+                <label>Tests</label>
+                <textarea name="problemTests" ng-model="ctrl.problem.tests" columns="1" spf-editor="{{ctrl.problem.language}}" spf-readonly="true"></textarea>
+            </spf-editor-container>
+        </div>
+
+        <div layout="column" layout-align="center center" ng-if="ctrl.solutionSaved &amp;&amp; !ctrl.solution.output">
+            <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+            <p>Waiting for result...</p>
+        </div>
+
+        <div ng-if="ctrl.solution.output" ng-switch on="ctrl.solution.language">
+            <div ng-switch-when="python" layout layout-align="center center" class="solution-result python-result">
+                <table class="md-whiteframe-z1" ng-class="{'solved': ctrl.solution.solved}">
+                    <thead>
+                        <th>Call</th>
+                        <th>Expected</th>
+                        <th>Received</th>
+                        <th>Correct</th>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="test in ctrl.solution.output.results" ng-class="{'failed': !test.correct}">
+                            <td>{{test.call}}</td>
+                            <td>{{test.expected}}</td>
+                            <td>{{test.received}}</td>
+                            <td>{{test.correct}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div layout="row" layout-align="center center" layout-padding>
+            <md-button flex="25" flex-sm="50" type="submit" class="md-raised md-primary" ng-disabled="!solutionForm.$valid || ctrl.savingSolution || ctrl.solutionSaved">Run Solution</md-button>
+            <md-button flex="25" flex-sm="50" type="reset" class="md-raised" ng-click="ctrl.reset(ctrl.solution)">Reset</md-button>
+        </div>
+    </form>
+</md-content>

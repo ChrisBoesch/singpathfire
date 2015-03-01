@@ -2,10 +2,9 @@
  * Angular Material Design
  * https://github.com/angular/material
  * @license MIT
- * v0.8.0-rc1-master-ffbea7d
+ * v0.8.2
  */
 goog.provide('ng.material.core');
-goog.require('ng.material.components.icon');
 
 (function() {
 'use strict';
@@ -14,52 +13,13 @@ goog.require('ng.material.components.icon');
  * Initialization function that validates environment
  * requirements.
  */
-var iconProvider;
-
 angular
-  .module('material.core', [ 'material.core.theming', 'material.components.icon' ])
-  .config( MdCoreConfigure )
-  .run( ["$templateCache", function( $templateCache ){
-
-    // These process is needed to pre-configure icons used internally
-    // with specific components. Note: these are SVGs and not font-icons.
-    //
-    // NOTE: any SVGs used below that are **also** available in `material-fonts` should
-    // be removed from this startup process.
+  .module('material.core', [ 'material.core.theming' ])
+  .config( MdCoreConfigure );
 
 
-    var svgRegistry = [
-      {
-        id : 'tabs-arrow',
-        url: 'tabs-arrow.svg',
-        svg: '<svg version="1.1" x="0px" y="0px" viewBox="0 0 24 24"><g id="tabs-arrow"><polygon points="15.4,7.4 14,6 8,12 14,18 15.4,16.6 10.8,12 "/></g></svg>'
-      },
-      {
-        id : 'close',
-        url: 'close.svg',
-        svg: '<svg version="1.1" x="0px" y="0px" viewBox="0 0 24 24"><g id="close"><path d="M19 6.41l-1.41-1.41-5.59 5.59-5.59-5.59-1.41 1.41 5.59 5.59-5.59 5.59 1.41 1.41 5.59-5.59 5.59 5.59 1.41-1.41-5.59-5.59z"/></g></svg>'
-      },
-      {
-        id:  'cancel',
-        url: 'cancel.svg',
-        svg: '<svg version="1.1" x="0px" y="0px" viewBox="0 0 24 24"><g id="cancel"><path d="M12 2c-5.53 0-10 4.47-10 10s4.47 10 10 10 10-4.47 10-10-4.47-10-10-10zm5 13.59l-1.41 1.41-3.59-3.59-3.59 3.59-1.41-1.41 3.59-3.59-3.59-3.59 1.41-1.41 3.59 3.59 3.59-3.59 1.41 1.41-3.59 3.59 3.59 3.59z"/></g></svg>'
-      }
-    ];
+function MdCoreConfigure($provide, $mdThemingProvider) {
 
-    svgRegistry.forEach(function(asset){
-      iconProvider.icon(asset.id,  asset.url);
-      $templateCache.put(asset.url, asset.svg);
-    });
-
-    // Remove reference
-    iconProvider = null;
-
-  }]);
-
-
-function MdCoreConfigure($provide, $mdThemingProvider, $mdIconProvider ) {
-
-  iconProvider =  $mdIconProvider;
   $provide.decorator('$$rAF', ["$delegate", rAFDecorator]);
 
   $mdThemingProvider.theme('default')
@@ -68,7 +28,7 @@ function MdCoreConfigure($provide, $mdThemingProvider, $mdIconProvider ) {
     .warnPalette('red')
     .backgroundPalette('grey');
 }
-MdCoreConfigure.$inject = ["$provide", "$mdThemingProvider", "$mdIconProvider"];
+MdCoreConfigure.$inject = ["$provide", "$mdThemingProvider"];
 
 function rAFDecorator( $delegate ) {
   /**
@@ -481,7 +441,7 @@ function mdMediaFactory($mdConstant, $rootScope, $window) {
       }
 
       for (var mediaName in $mdConstant.MEDIA) {
-        var normalizedName = getNormalizedName(attrs, attrName + '-' + mediaName);
+        normalizedName = getNormalizedName(attrs, attrName + '-' + mediaName);
         if (!attrs[normalizedName]) {
           return;
         }
@@ -515,7 +475,7 @@ mdMediaFactory.$inject = ["$mdConstant", "$rootScope", "$window"];
 var nextUniqueId = ['0','0','0'];
 
 angular.module('material.core')
-.factory('$mdUtil', ["$cacheFactory", "$document", "$timeout", "$q", "$mdConstant", function($cacheFactory, $document, $timeout, $q, $mdConstant) {
+.factory('$mdUtil', ["$cacheFactory", "$document", "$timeout", "$q", "$window", "$mdConstant", function($cacheFactory, $document, $timeout, $q, $window, $mdConstant) {
   var Util;
 
   function getNode(el) {
@@ -547,7 +507,17 @@ angular.module('material.core')
     offsetRect: function(element, offsetParent) {
       return Util.clientRect(element, offsetParent, true);
     },
-    
+
+    floatingScrollbars: function() {
+      if (this.floatingScrollbars.cached === undefined) {
+        var tempNode = angular.element('<div style="z-index: -1; position: absolute; height: 1px; overflow-y: scroll"><div style="height: 2px;"></div></div>');
+        $document[0].body.appendChild(tempNode[0]);
+        this.floatingScrollbars.cached = (tempNode[0].offsetWidth == tempNode[0].childNodes[0].offsetWidth);
+        tempNode.remove();
+      }
+      return this.floatingScrollbars.cached;
+    },
+
     // Mobile safari only allows you to set focus in click event listeners...
     forceFocus: function(element) {
       var node = element[0] || element;
@@ -951,7 +921,7 @@ function mdCompilerService($q, $http, $injector, $compile, $controller, $templat
     return $q.all(resolve).then(function(locals) {
 
       var template = transformTemplate(locals.$template);
-      var element = angular.element('<div>').html(template.trim()).contents();
+      var element = options.element || angular.element('<div>').html(template.trim()).contents();
       var linkFn = $compile(element);
 
       //Return a linking function that can be used later when the element is ready
@@ -1744,7 +1714,19 @@ function InterimElementProvider() {
           options: options,
           deferred: $q.defer(),
           show: function() {
-            return showDone = $mdCompiler.compile(options).then(function(compileData) {
+            var compilePromise;
+            if (options.skipCompile) {
+              compilePromise = $q(function(resolve) { 
+                resolve({
+                  locals: {},
+                  link: function() { return options.element; }
+                });
+              });
+            } else {
+              compilePromise = $mdCompiler.compile(options);
+            }
+
+            return showDone = compilePromise.then(function(compileData) {
               angular.extend(compileData.locals, self.options);
 
               element = compileData.link(options.scope);
