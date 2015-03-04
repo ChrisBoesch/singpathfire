@@ -25,6 +25,7 @@ md-sidenav md-list .md-button {
   font-weight: 500;
   text-align: left;
   width: 100%;
+  padding: 16px;
 }
 .bottom-menu {
   text-align: center;

@@ -109,7 +109,6 @@
         }]
       );
       this.problems = initialData.problems;
-      console.dir(this);
     }
   ]).
 
@@ -285,14 +284,16 @@
    */
   controller('PlayProblemCtrl', [
     '$q',
+    '$interval',
     'initialData',
     'routes',
     'SpfNavBarService',
     'spfAlert',
     'spfAuthData',
     'spfDataStore',
-    function PlayProblemCtrl($q, initialData, routes, SpfNavBarService, spfAlert, spfAuthData, spfDataStore) {
+    function PlayProblemCtrl($q, $interval, initialData, routes, SpfNavBarService, spfAlert, spfAuthData, spfDataStore) {
       var self = this;
+      var original = {};
 
       SpfNavBarService.update(
         initialData.problem.title, {
@@ -308,7 +309,33 @@
       this.solution = initialData.solution || {};
 
       this.savingSolution = false;
-      this.solutionSaved = false;
+      this.solutionSaved = !!this.solution.output;
+      this.verificationStart = undefined;
+      this.verificationCompleted = 0;
+
+      function handleEta(eta) {
+        var delay, interval;
+
+        self.verificationStart = Date.now();
+        delay = eta - self.verificationStart;
+        interval = $interval(function(){
+          if (!self || ! self.solution || self.solution.output) {
+            self.verificationCompleted = 100;
+            $interval.cancel(interval);
+            return;
+          }
+
+          var done = Date.now() - self.verificationStart;
+
+          self.verificationCompleted = Math.round(done * 100 / delay);
+          if (self.verificationCompleted < 20) {
+            self.verificationCompleted = 20;
+          } else if (self.verificationCompleted > 99) {
+            self.verificationCompleted = 99;
+          }
+        }, 100, 1000, true);
+      }
+
       this.solve = function(currentUser, problem, solution) {
         var next;
 
@@ -328,8 +355,9 @@
 
         next.then(function() {
           return spfDataStore.solutions.create(problem, currentUser.publicId, solution);
-        }).then(function() {
-          this.solutionSaved = true;
+        }).then(function(resp) {
+          handleEta(resp.data.eta);
+          self.solutionSaved = true;
           spfAlert.success('Solution saved');
         }).catch(function(err) {
           spfAlert.error(err.message || err.toString());
@@ -342,11 +370,19 @@
         self.solutionSaved = false;
         solution.solution = '';
         solution.output = undefined;
+        original = {};
       };
 
+      original = Object.assign({}, this.solution);
+      original.solutionSaved = this.solutionSaved;
       this.resetOutput = function(solution) {
-        self.solutionSaved = false;
-        solution.output = undefined;
+        if (solution.solution === original.solution) {
+          self.solutionSaved = original.solutionSaved;
+          solution.output = original.output;
+        } else {
+          self.solutionSaved = undefined;
+          solution.output = false;
+        }
       };
     }
   ])

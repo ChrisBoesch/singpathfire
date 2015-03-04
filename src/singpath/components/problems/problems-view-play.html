@@ -3,18 +3,18 @@
 
         <div class="details">
             <div layout layout-align="center start">
-                <h4 flex="50">Language</h4>
-                <p flex="50">{{ctrl.problem.language}}</p>
+                <h4>Language</h4>
+                <p flex>{{ctrl.problem.language}}</p>
             </div>
 
             <div layout layout-align="center start">
-                <h4 flex="50">Creator</h4>
-                <p flex="50">{{ctrl.problem.owner.displayName}}</p>
+                <h4>Creator</h4>
+                <p flex>{{ctrl.problem.owner.displayName}}</p>
             </div>
 
             <div layout layout-align="center start">
-                <h4 flex="50">Goal</h4>
-                <p flex="50">{{ctrl.problem.description}}</p>
+                <h4>Goal</h4>
+                <p flex>{{ctrl.problem.description}}</p>
             </div>
         </div>
 
@@ -58,13 +58,19 @@
         </div>
 
         <div layout="column" layout-align="center center" ng-if="ctrl.solutionSaved &amp;&amp; !ctrl.solution.output">
-            <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+            <md-progress-circular md-mode="determinate" value="{{ctrl.verificationCompleted}}"></md-progress-circular>
             <p>Waiting for result...</p>
         </div>
 
+
         <div ng-if="ctrl.solution.output" ng-switch on="ctrl.solution.language">
             <div ng-switch-when="python" layout layout-align="center center" class="solution-result python-result">
-                <table class="md-whiteframe-z1" ng-class="{'solved': ctrl.solution.solved}">
+
+                <div ng-if="ctrl.solution.output.errors" class="md-whiteframe-z1 solution-errors">
+                    {{ctrl.solution.output.errors}}
+                </div>
+
+                <table class="md-whiteframe-z1" ng-class="{'solved': ctrl.solution.solved}" ng-if="!(ctrl.solution.output.results|spfEmpty)">
                     <thead>
                         <th>Call</th>
                         <th>Expected</th>

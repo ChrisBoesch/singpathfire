@@ -8,6 +8,9 @@
 .problem-list .md-title-right .md-button {
   width: 6em;
 }
+.play-problem .details h4 {
+  min-width: 6em;
+}
 .play-problem .details h4, .play-problem .details p {
   padding: 0;
   margin: 0 10px;
@@ -17,11 +20,15 @@
 .play-problem .details h4 {
   text-align: right;
 }
-.solution-result table {
+.solution-result table, .solution-errors {
   background-color: #795548;
   color: white;
 }
-.solution-result table {
+.solution-result tr.failed, .solution-errors {
+  background-color: #ff5722;
+  color: white;
+}
+.solution-result table, .solution-errors {
   padding: 16px;
   text-align: center;
 }
@@ -30,10 +37,6 @@
   font-size: 14px;
 }
 .solution-result th, .solution-result td {
-    padding: 4px 8px;
-    min-width: 5em;
-}
-.solution-result tr.failed {
-    background-color: #ff5722;
-    color: white;
+  padding: 4px 8px;
+  min-width: 5em;
 }
