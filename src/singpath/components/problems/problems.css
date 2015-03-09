@@ -20,11 +20,21 @@
 .play-problem .details h4 {
   text-align: right;
 }
+.solution-solved {
+  background-color: #cddc39;
+  color: #3e464c;
+  padding: 16px;
+}
+.solution-failed {
+  background-color: #ff5722;
+  color: white;
+  padding: 16px;
+}
 .solution-result table, .solution-errors {
   background-color: #795548;
   color: white;
 }
-.solution-result tr.failed, .solution-errors {
+.solution-result tr.failed, .solution-errors, .assertion-results tr.failed {
   background-color: #ff5722;
   color: white;
 }

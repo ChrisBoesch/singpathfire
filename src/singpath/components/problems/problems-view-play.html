@@ -62,6 +62,13 @@
             <p>Waiting for result...</p>
         </div>
 
+        <div layout layout-align="center center" layout-align="center center" ng-if="ctrl.solution.output.solved">
+            <p class="solution-solved">Solved!</p>
+        </div>
+
+        <div layout layout-align="center center" layout-align="center center" ng-if="ctrl.solution.output &amp;&amp; !ctrl.solution.output.solved">
+            <p class="solution-failed">It didn't work... Try again.</p>
+        </div>
 
         <div ng-if="ctrl.solution.output" ng-switch on="ctrl.solution.language">
             <div ng-switch-when="python" layout layout-align="center center" class="solution-result python-result">
@@ -83,6 +90,30 @@
                             <td>{{test.expected}}</td>
                             <td>{{test.received}}</td>
                             <td>{{test.correct}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div ng-switch-when="angularjs" layout layout-align="center center" class="solution-result angularjs-result">
+
+                <div ng-if="ctrl.solution.output.errors" class="md-whiteframe-z1 solution-errors">
+                    {{ctrl.solution.output.errors}}
+                </div>
+
+                <table class="md-whiteframe-z1" ng-class="{'solved': ctrl.solution.solved}" ng-repeat="result in ctrl.solution.output.results">
+                    <thead>
+                        <tr>
+                            <th colspan="2">{{result.description}}</th>
+                        </tr>
+                        <tr>
+                            <th>Assertion Passed</th>
+                            <th>Error Message</th>
+                        </tr>
+                    </thead>
+                    <tbody  class="assertion-results">
+                        <tr ng-repeat="assertion in result.assertions" ng-class="{'failed': !assertion.passed}">
+                            <td>{{assertion.passed}}</td>
+                            <td>{{assertion.errorMsg}}</td>
                         </tr>
                     </tbody>
                 </table>
