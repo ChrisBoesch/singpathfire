@@ -57,14 +57,14 @@
     '$http',
     '$log',
     'spfAuth',
-    'spfFirebaseSync',
-    function spfDataStoreFactory($q, $http, $log, spfAuth, spfFirebaseSync) {
+    'spfFirebase',
+    function spfDataStoreFactory($q, $http, $log, spfAuth, spfFirebase) {
       var spfDataStore;
 
       spfDataStore = {
         profile: function(publicId) {
           return $q.when(publicId).then(function(publicId) {
-            return spfFirebaseSync(['singpath/userProfiles', publicId]).$asObject().$loaded();
+            return spfFirebase.obj(['singpath/userProfiles', publicId]).$loaded();
           });
         },
 
@@ -73,32 +73,32 @@
             return $q.reject(new Error('The user has not set a user public id.'));
           }
 
-          return spfFirebaseSync(
-            ['singpath/userProfiles', userSync.publicId, 'user']
-          ).$set({
-            displayName: userSync.displayName,
-            gravatar: userSync.gravatar
-          }).then(function() {
+          return spfFirebase.set(
+            ['singpath/userProfiles', userSync.publicId, 'user'], {
+              displayName: userSync.displayName,
+              gravatar: userSync.gravatar
+            }
+          ).then(function() {
             return spfDataStore.profile(userSync.publicId);
           });
         },
 
         problems: {
           list: function() {
-            return spfFirebaseSync(['singpath/problems'], {
+            return spfFirebase.array(['singpath/problems'], {
               orderByChild: 'timestamp',
               limitToLast: 50
-            }).$asArray();
+            });
           },
 
           create: function(problem) {
-            return spfFirebaseSync(['singpath/problems']).$push(problem).then(function(ref) {
-              return ref;
+            return spfFirebase.push(['singpath/problems'], problem).then(function(resp) {
+              return resp.ref;
             });
           },
 
           get: function(problemId) {
-            return spfFirebaseSync(['singpath/problems', problemId]).$asObject();
+            return spfFirebase.obj(['singpath/problems', problemId]);
           }
         },
 
@@ -117,9 +117,9 @@
               return $q.reject(spfDataStore.solutions.errMissingProblemId);
             }
 
-            return spfFirebaseSync(
+            return spfFirebase.obj(
               ['singpath/solutions', problemId, publicId]
-            ).$asObject();
+            );
           },
 
           create: function(problem, publicId, solution) {
@@ -131,13 +131,13 @@
               return $q.reject(spfDataStore.solutions.errMissingProblemId);
             }
 
-            return spfFirebaseSync(
-              ['singpath/solutions', problem.$id]
-            ).$set(publicId, {
-              language: problem.language,
-              solution: solution.solution,
-              tests: problem.tests,
-            }).then(function(){
+            return spfFirebase.set(
+              ['singpath/solutions', problem.$id, publicId], {
+                language: problem.language,
+                solution: solution.solution,
+                tests: problem.tests,
+              }
+            ).then(function() {
               return $http.post('/api/solution/' + problem.$id + '/' + publicId).catch(function(err) {
                 $log.error(err);
                 return $q.reject(spfDataStore.solutions.errStartVerifcation);

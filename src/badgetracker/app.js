@@ -55,15 +55,14 @@
     '$q',
     '$log',
     '$http',
-    'spfFirebaseRef',
-    'spfFirebaseSync',
-    function oepDataStoreFactory($q, $log, $http, spfFirebaseRef, spfFirebaseSync) {
+    'spfFirebase',
+    function oepDataStoreFactory($q, $log, $http, spfFirebase) {
       var oepDataStore;
 
       oepDataStore = {
         profile: function(publicId) {
           return $q.when(publicId).then(function(publicId) {
-            return spfFirebaseSync(['badgeTracker/userProfiles', publicId]).$asObject().$loaded();
+            return spfFirebase.obj(['badgeTracker/userProfiles', publicId]).$loaded();
           });
         },
 
@@ -72,14 +71,18 @@
             return $q.reject(new Error('The user has not set a user public id.'));
           }
 
-          return spfFirebaseSync(
-            ['badgeTracker/userProfiles', userSync.publicId, 'user']
-          ).$set({
+          return spfFirebase.set(['badgeTracker/userProfiles', userSync.publicId, 'user'], {
             displayName: userSync.displayName,
             gravatar: userSync.gravatar
-          }).then(function() {
-            return oepDataStore.profile(userSync.publicId);
-          });
+          }).then(
+            function() {
+              return oepDataStore.profile(userSync.publicId);
+            },
+            function(err) {
+              $log.error(err);
+              return $q.reject(new Error('Failed to set badge tracker profile'));
+            }
+          );
         },
 
         services: {
@@ -90,27 +93,39 @@
               return $q.reject(oepDataStore.services.errNoPublicId);
             }
 
-            return spfFirebaseSync(
-              ['badgeTracker/servicesUserIds/' + serviceId]
-            ).$set(details.id, userSync.publicId).then(function() {
-              return spfFirebaseSync(
-                ['badgeTracker/userProfiles', userSync.publicId, 'services/' + serviceId]
-              ).$set('details', {
-                id: details.id,
-                name: details.name,
-                registeredBefore: {
-                  '.sv': 'timestamp'
+            return spfFirebase.set(
+              ['badgeTracker/servicesUserIds/' + serviceId + '/' + details.id],
+              userSync.publicId
+            ).then(function() {
+              return spfFirebase.set(
+                ['badgeTracker/userProfiles', userSync.publicId, 'services/' + serviceId], {
+                  id: details.id,
+                  name: details.name,
+                  registeredBefore: {
+                    '.sv': 'timestamp'
+                  }
                 }
+              );
+            }, function(err) {
+              $log.error(err);
+              return $q.reject(new Error('Failed to claim ' + details.id + ' as your ' + serviceId + ' user name.')).catch(function(err) {
+                $log.error(err);
+                return $q.reject(new Error('Failed to save details for your ' + serviceId + ' account.'));
               });
             }).then(function(profile) {
-              return $http.post('/api/badges/track/' + userSync.publicId + '/' + serviceId.toLowerCase()).then(function() {
-                return profile;
-              });
+              return $http.post('/api/badges/track/' + userSync.publicId + '/' + serviceId.toLowerCase()).then(
+                function() {
+                  return profile;
+                },
+                function(err) {
+                  $log.error(err);
+                  return $q.reject(new Error('Failed to track badge on your ' + serviceId + ' account.'));
+                });
             });
           },
 
           userIdTaken: function(serviceId, userId) {
-            return spfFirebaseSync(['badgeTracker/servicesUserIds', serviceId, userId]).$asObject().$loaded().then(function(sync){
+            return spfFirebase.obj(['badgeTracker/servicesUserIds', serviceId, userId]).$loaded().then(function(sync) {
               return sync.$value !== null;
             });
           },
@@ -166,9 +181,9 @@
                 return $q.when(false);
               }
 
-              return $http.get('/api/services/codeschool/users/' + userId).then(function(){
+              return $http.get('/api/services/codeschool/users/' + userId).then(function() {
                 return true;
-              }).catch(function(){
+              }).catch(function() {
                 return false;
               });
             }

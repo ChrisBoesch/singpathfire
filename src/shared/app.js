@@ -37,89 +37,6 @@
     }
   ]);
 
-  coreModule.config([
-    '$provide',
-    function($provide) {
-      $provide.decorator('$firebase', [
-        '$delegate',
-        '$timeout',
-        'cfpLoadingBar',
-        function($delegate, $timeout, cfpLoadingBar) {
-          var latencyThreshold = 100;
-          var requests = 0;
-          var completedRequest = 0;
-          var timeout = null;
-          var started = false;
-
-          function start() {
-            if (started) {
-              cfpLoadingBar.start();
-              return;
-            }
-
-            if (timeout) {
-              return;
-            }
-
-            timeout = setTimeout(function() {
-              if (requests) {
-                cfpLoadingBar.start();
-                started = true;
-                timeout = null;
-              }
-            }, latencyThreshold);
-          }
-
-          function incr() {
-            requests += 1;
-            start();
-          }
-
-          function complete() {
-            completedRequest += 1;
-            if (requests === completedRequest) {
-              cfpLoadingBar.complete();
-              requests = completedRequest = 0;
-              started = false;
-              if (timeout) {
-                $timeout.cancel(timeout);
-                timeout = null;
-              }
-            }
-          }
-
-
-          ['$asArray', '$asObject'].map(function(k) {
-            var _super = $delegate.prototype[k];
-            $delegate.prototype[k] = function() {
-              var result = _super.apply(this, arguments);
-
-              incr();
-              result.$loaded().finally(complete);
-
-              return result;
-            };
-          });
-
-          ['$push', '$remove', '$set', '$update'].map(function(k) {
-            var _super = $delegate.prototype[k];
-            $delegate.prototype[k] = function() {
-              var result = _super.apply(this, arguments);
-
-              incr();
-              result.finally(complete);
-
-              return result;
-            };
-          });
-
-
-          return $delegate;
-        }
-      ]);
-    }
-  ]);
-
   /**
    * Listen for routing error to alert the user of the error and
    * redirect to the default route if not is selected.
@@ -202,20 +119,59 @@
 
   });
 
-  /**
-   * Like spfFirebaseRef by return an $firebase object.
-   *
-   */
-  coreModule.factory('spfFirebaseSync', [
-    '$firebase',
+  coreModule.factory('spfFirebase', [
+    '$q',
+    '$firebaseObject',
+    '$firebaseArray',
     'spfFirebaseRef',
-    function spfFirebaseSyncFactory($firebase, spfFirebaseRef) {
-      return function spfFirebaseSync() {
-        return $firebase(spfFirebaseRef.apply(null, arguments));
+    function spfFirebaseFactory($q, $firebaseObject, $firebaseArray, spfFirebaseRef) {
+      return {
+        ref: function() {
+          return spfFirebaseRef.apply(this, arguments);
+        },
+
+        obj: function() {
+          return $firebaseObject(spfFirebaseRef.apply(this, arguments));
+        },
+
+        array: function() {
+          return $firebaseArray(spfFirebaseRef.apply(this, arguments));
+        },
+
+        push: function(root, value) {
+          return $q(function(resolve, reject) {
+            var ref = spfFirebaseRef(root).push(value, function(err) {
+              if (err) {
+                reject(err);
+              } else {
+                resolve({
+                  ref: ref,
+                  value: value
+                });
+              }
+            });
+          });
+        },
+
+        set: function(path, value) {
+          return $q(function(resolve, reject) {
+            var ref = spfFirebaseRef(path);
+
+            ref.set(value, function(err) {
+              if (err) {
+                reject(err);
+              } else {
+                resolve({
+                  ref: ref,
+                  value: value
+                });
+              }
+            });
+          });
+        }
       };
     }
   ]);
-
 
   /**
    * Returns an object with `user` (Firebase auth user data) property,
@@ -287,11 +243,10 @@
   coreModule.factory('spfAuthData', [
     '$q',
     '$log',
-    'spfFirebaseRef',
-    'spfFirebaseSync',
+    'spfFirebase',
     'spfAuth',
     'spfCrypto',
-    function spfAuthDataFactory($q, $log, spfFirebaseRef, spfFirebaseSync, spfAuth, spfCrypto) {
+    function spfAuthDataFactory($q, $log, spfFirebase, spfAuth, spfCrypto) {
       var userData, userDataPromise, spfAuthData;
 
       spfAuth.onAuth(function(auth) {
@@ -303,7 +258,7 @@
       spfAuthData = {
 
         _user: function() {
-          return spfFirebaseSync(['auth/users', spfAuth.user.uid]).$asObject();
+          return spfFirebase.obj(['auth/users', spfAuth.user.uid]);
         },
 
         /**
@@ -378,8 +333,8 @@
             return $q.reject(new Error('The user has not set a user public id.'));
           }
 
-          return spfFirebaseSync(['auth/publicIds']).$set(userSync.publicId, userSync.$id).then(function() {
-            return spfFirebaseSync(['auth/usedPublicIds']).$set(userSync.publicId, true);
+          return spfFirebase.set(['auth/publicIds', userSync.publicId], userSync.$id).then(function() {
+            return spfFirebase.set(['auth/usedPublicIds', userSync.publicId], true);
           }, function(err) {
             $log.info(err);
             return $q(new Error('Failed to save public id. It might have already being used by an other user.'));
@@ -389,7 +344,7 @@
         },
 
         isPublicIdAvailable: function(publicId) {
-          return spfFirebaseSync(['auth/usedPublicIds', publicId]).$asObject().$loaded().then(function(publicIdSync) {
+          return spfFirebase.obj(['auth/usedPublicIds', publicId]).$loaded().then(function(publicIdSync) {
             return !publicIdSync.$value;
           });
         }

@@ -51,19 +51,19 @@
   factory('clmDataStore', [
     '$q',
     '$log',
-    'spfFirebaseSync',
+    'spfFirebase',
     'spfAuth',
     'spfCrypto',
-    function clmDataStoreFactory($q, $log, spfFirebaseSync, spfAuth, spfCrypto) {
+    function clmDataStoreFactory($q, $log, spfFirebase, spfAuth, spfCrypto) {
       var api;
 
       api = {
         events: {
           list: function() {
-            return spfFirebaseSync(['classMentors/events'], {
+            return spfFirebase.array(['classMentors/events'], {
               orderByChild: 'timestamp',
               limitToLast: 50
-            }).$asArray();
+            });
           },
 
           create: function(collection, data, password) {
@@ -84,7 +84,7 @@
                 hash: hash.value,
                 options: hash.options
               };
-              return spfFirebaseSync(['classMentors/eventPasswords']).$set(eventId, opts);
+              return spfFirebase.set(['classMentors/eventPasswords/' + eventId], opts);
             }).then(function() {
               return eventId;
             });
@@ -103,14 +103,14 @@
 
             // The owner can join without password.
             if (pw === null) {
-              return spfFirebaseSync(paths.participation).$set(true);
+              return spfFirebase.set(paths.participation, true);
             }
 
-            return spfFirebaseSync(paths.hashOptions).$asObject().$loaded().then(function(options) {
+            return spfFirebase.obj(paths.hashOptions).$loaded().then(function(options) {
               var hash = spfCrypto.password.fromSalt(pw, options.$value.salt, options.$value);
-              return spfFirebaseSync(paths.application).$set(hash.value);
+              return spfFirebase.set(paths.application, hash.value);
             }).then(function() {
-              return spfFirebaseSync(paths.participation).$set(true);
+              return spfFirebase.set(paths.participation, true);
             });
           }
         },
@@ -120,11 +120,11 @@
             return $q.reject(new Error('A user should be logged in to create an event.'));
           }
 
-          return spfFirebaseSync([
+          return spfFirebase.set([
             'classMentors/eventParticipants',
             eventId,
             spfAuth.user.uid
-          ]).$set(false);
+          ], false);
         }
       };
 
