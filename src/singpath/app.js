@@ -53,12 +53,15 @@
    *
    */
   factory('spfDataStore', [
+    '$window',
     '$q',
     '$http',
     '$log',
+    '$firebaseUtils',
+    '$firebaseObject',
     'spfAuth',
     'spfFirebase',
-    function spfDataStoreFactory($q, $http, $log, spfAuth, spfFirebase) {
+    function spfDataStoreFactory($window, $q, $http, $log, $firebaseUtils, $firebaseObject, spfAuth, spfFirebase) {
       var spfDataStore;
 
       spfDataStore = {
@@ -88,7 +91,7 @@
             return spfFirebase.array(['singpath/problems'], {
               orderByChild: 'timestamp',
               limitToLast: 50
-            });
+            }).$loaded();
           },
 
           create: function(problem) {
@@ -98,16 +101,27 @@
           },
 
           get: function(problemId) {
-            return spfFirebase.obj(['singpath/problems', problemId]);
+            return spfFirebase.obj(['singpath/problems', problemId]).$loaded();
           }
         },
 
+        /**
+         * Api to create and get a solution to a problem.
+         *
+         * Note that solution are on accesible while working on it. Once, a
+         * solution is resolved, it won't be readable.
+         *
+         */
         solutions: {
           errMissingPublicId: new Error('No public id for the solution'),
           errMissingProblemId: new Error('The problem has no id. Is it saved?'),
           errStartVerifcation: new Error('Failed to initiate solution verification'),
           errSaveSolution: new Error('Failed to save solution.'),
 
+          /**
+           * Return an unsolved solution; a solution that has failed
+           * verification.
+           */
           get: function(problemId, publicId) {
             if (!publicId) {
               return $q.reject(spfDataStore.solutions.errMissingPublicId);
@@ -119,7 +133,7 @@
 
             return spfFirebase.obj(
               ['singpath/solutions', problemId, publicId]
-            );
+            ).$loaded();
           },
 
           create: function(problem, publicId, solution) {
@@ -147,6 +161,60 @@
               return $q.reject(spfDataStore.solutions.errSaveSolution);
             });
           }
+        },
+
+        resolution: {
+          errCannotStart: new Error(
+            'The resolution is already started. ' +
+            'You can restart a solution once you solved it.'
+          ),
+          errCannotReset: new Error(
+            'The solution needs to be solved to be reset.'
+          ),
+          errNotResolved: new Error('The solution is not resolved yet.'),
+
+          _Factory: $firebaseObject.$extend({
+            init: function() {
+              if (this.$value !== null) {
+                return $q.reject(spfDataStore.resolution.errCannotStart);
+              }
+              this.start = {
+                '.sv': 'timestamp'
+              };
+              return this.$save();
+            },
+
+            reset: function() {
+              if (!this.output && !this.output.solved) {
+                return $q.reject(spfDataStore.resolution.errCannotReset);
+              }
+
+              $firebaseUtils.updateRec(this, {
+                start: {
+                  '.sv': 'timestamp'
+                }
+              });
+              return this.$save();
+            },
+
+            solved: function() {
+              return this.output && this.output.solved;
+            },
+
+            duration: function() {
+              if (!this.solved) {
+                throw spfDataStore.resolution.errNotResolved;
+              }
+              return $window.moment.duration(this.end - this.start).humanize();
+            }
+          }),
+
+          get: function(problemId, publicId) {
+            return new spfDataStore.resolution._Factory(spfFirebase.ref(
+              ['singpath/solutionResolution', problemId, publicId]
+            )).$loaded();
+          }
+
         }
       };
 

@@ -187,7 +187,7 @@
         scope: 'email'
       };
 
-      return {
+      var spfAuth = {
         // The current user auth data (null is not authenticated).
         user: auth.$getAuth(),
 
@@ -222,7 +222,6 @@
          */
         logout: function() {
           auth.$unauth();
-          this.user = undefined;
         },
 
         /**
@@ -231,8 +230,15 @@
         onAuth: function(fn, ctx) {
           return auth.$onAuth(fn, ctx);
         }
-
       };
+
+      spfAuth.onAuth(function(auth) {
+        if (!auth) {
+          spfAuth.user = undefined;
+        }
+      });
+
+      return spfAuth;
     }
   ]);
 

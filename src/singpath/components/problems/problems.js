@@ -85,7 +85,7 @@
     function problemListCtrlInitialDataFactory($q, spfDataStore) {
       return function problemListCtrlInitialData() {
         return $q.all({
-          problems: spfDataStore.problems.list().$loaded()
+          problems: spfDataStore.problems.list()
         });
       };
     }
@@ -235,6 +235,7 @@
         var userPromise = spfAuthData.user();
         var profilePromise;
         var problemPromise;
+        var resolutionPromise;
         var errLoggedOff = new Error('The user should be logged in to play.');
 
         if (!spfAuth.user || !spfAuth.user.uid) {
@@ -257,21 +258,45 @@
 
         problemPromise = spfDataStore.problems.get($route.current.params.problemId);
 
+        resolutionPromise = $q.all({
+          user: userPromise,
+          problem: problemPromise
+        }).then(function(result) {
+          if (!result.user || !result.user.publicId) {
+            return;
+          }
+
+          return spfDataStore.resolution.get(
+            result.problem.$id, result.user.publicId
+          );
+        });
+
         return $q.all({
           auth: spfAuth,
           currentUser: userPromise,
           profile: profilePromise,
           problem: problemPromise,
+          resolution: resolutionPromise,
           solution: $q.all({
             user: userPromise,
-            problem: problemPromise
+            problem: problemPromise,
+            resolution: resolutionPromise
           }).then(function(result) {
             if (!result.user || !result.user.publicId) {
               return;
             }
+
+            if (!result.resolution.start) {
+              return result.resolution.init().then(angular.noop);
+            }
+
+            if (result.resolution.solved()) {
+              return;
+            }
+
             return spfDataStore.solutions.get(
               result.problem.$id, result.user.publicId
-            ).$loaded();
+            );
           })
         });
       };
@@ -307,34 +332,11 @@
       this.profile = initialData.profile;
       this.problem = initialData.problem;
       this.solution = initialData.solution || {};
+      this.resolution = initialData.resolution;
 
       this.savingSolution = false;
-      this.solutionSaved = !!this.solution.output;
-      this.verificationStart = undefined;
-      this.verificationCompleted = 0;
-
-      function handleEta(eta) {
-        var delay, interval;
-
-        self.verificationStart = Date.now();
-        delay = eta - self.verificationStart;
-        interval = $interval(function(){
-          if (!self || ! self.solution || self.solution.output) {
-            self.verificationCompleted = 100;
-            $interval.cancel(interval);
-            return;
-          }
-
-          var done = Date.now() - self.verificationStart;
-
-          self.verificationCompleted = Math.round(done * 100 / delay);
-          if (self.verificationCompleted < 20) {
-            self.verificationCompleted = 20;
-          } else if (self.verificationCompleted > 99) {
-            self.verificationCompleted = 99;
-          }
-        }, 100, 1000, true);
-      }
+      this.solutionSaved = false;
+      original.solution = this.solution.solution;
 
       this.solve = function(currentUser, problem, solution) {
         var next;
@@ -355,34 +357,23 @@
 
         next.then(function() {
           return spfDataStore.solutions.create(problem, currentUser.publicId, solution);
-        }).then(function(resp) {
-          handleEta(resp.data.eta);
-          self.solutionSaved = true;
+        }).then(function() {
           spfAlert.success('Solution saved');
         }).catch(function(err) {
           spfAlert.error(err.message || err.toString());
-        }).finally(function(){
+        }).finally(function() {
           self.savingSolution = false;
+          self.solutionSaved = true;
+          original.solution = solution.solution;
         });
       };
 
       this.reset = function(solution) {
-        self.solutionSaved = false;
         solution.solution = '';
-        solution.output = undefined;
-        original = {};
       };
 
-      original = Object.assign({}, this.solution);
-      original.solutionSaved = this.solutionSaved;
-      this.resetOutput = function(solution) {
-        if (solution.solution === original.solution) {
-          self.solutionSaved = original.solutionSaved;
-          solution.output = original.output;
-        } else {
-          self.solutionSaved = undefined;
-          solution.output = false;
-        }
+      this.solutionChanged = function(solution) {
+        this.solutionSaved = this.solutionSaved && original.solution === solution.solution;
       };
     }
   ])
