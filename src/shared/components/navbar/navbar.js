@@ -64,13 +64,20 @@ angular.module('spf.shared.material').
       return {
         title: 'Singpath',
         section: undefined,
-        parent: undefined,
+        parent: [],
         menuItems: [],
 
-        update: function(section, parent, menuItems) {
+        update: function(section, parents, menuItems) {
           this.section = section;
-          this.parent = parent;
-          this.menuItems = menuItems || [];
+          if (parents) {
+            this.parents = Array.isArray(parents) ? parents : [parents];
+          } else {
+            this.parents = [];
+          }
+          this.menuItems = (menuItems || []).map(function(item) {
+            item.onClick = item.onClick || angular.noop;
+            return item;
+          });
         }
       };
     }

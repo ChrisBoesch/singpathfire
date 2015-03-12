@@ -28,3 +28,6 @@
 .nav-login {
     color: #a94442
 }
+.nav-parent > * {
+  font-size: inherit;;
+}

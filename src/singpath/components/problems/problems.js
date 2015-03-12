@@ -105,7 +105,7 @@
         undefined, [{
           title: 'New problem',
           url: '#' + routes.newProblem,
-          iconUrl: 'shared/components/icons/SVG/add-circle-outline.svg'
+          icon: 'add-circle-outline'
         }]
       );
       this.problems = initialData.problems;
