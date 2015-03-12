@@ -1,13 +1,16 @@
+/* Problem list */
 .language-icon md-icon {
   height: 60px;
   width: 100px;
 }
-.problem-list .md-title-right {
-  width: 8em
-}
 .problem-list .md-title-right .md-button {
-  width: 6em;
+  padding: 8px 16px 8px 8px;
 }
+
+.problem-list .md-title-right .md-button md-icon {
+  margin-right: 8px
+}
+
 .play-problem .details h4 {
   min-width: 6em;
 }
@@ -17,6 +20,8 @@
   height: 28px;
   line-height: 28px;
 }
+
+/* Play problem */
 .play-problem .details h4 {
   text-align: right;
 }

@@ -168,7 +168,23 @@
               }
             });
           });
+        },
+
+        remove: function(path) {
+          return $q(function(resolve, reject) {
+            var ref = spfFirebaseRef(path);
+
+            ref.remove(function(err) {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(ref);
+              }
+            });
+          });
         }
+
+
       };
     }
   ]);

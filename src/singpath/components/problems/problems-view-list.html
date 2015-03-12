@@ -18,16 +18,8 @@
                 </div>
                 <div class="md-title-right" layout="column" layout-align="top center">
                     <md-button ng-href="#/problems/{{problem.$id}}/play" layout layout-align="center center" class="md-raised md-primary" aria-label="Run">
-                        <md-icon md-svg-src="shared/components/icons/SVG/launch.svg"></md-icon>
+                        <md-icon md-svg-icon="play-arrow"></md-icon>
                         <span flex>Solve</span>
-                    </md-button>
-                    <md-button ng-href="#/problems/{{problem.$id}}/edit" layout layout-align="center center" class="md-raised" ng-disabled="true" aria-label="Edit">
-                        <md-icon md-svg-src="shared/components/icons/SVG/create.svg"></md-icon>
-                        <span flex>Edit</span>
-                    </md-button>
-                    <md-button ng-click="ctrl.delete(problem)" layout layout-align="center center" class="md-raised md-warn" ng-disabled="true" aria-label="Profile">
-                        <md-icon md-svg-src="shared/components/icons/SVG/delete.svg"></md-icon>
-                        <span flex>Delete</span>
                     </md-button>
                 </div>
             </md-item-content>

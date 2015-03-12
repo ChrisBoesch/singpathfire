@@ -41,7 +41,7 @@
         </div>
 
         <div layout layout-sm="column" layout-padding>
-            <spf-editor-container flex ng-if="!ctrl.resolution.solved()">
+            <spf-editor-container flex ng-if="!ctrl.resolution.$solved()">
                 <label>Solution</label>
                 <textarea name="problemSolution" ng-model="ctrl.solution.solution" columns="1" required ng-minlength="3" ng-maxlength="500" spf-editor="{{ctrl.problem.language}}" ng-change="ctrl.solutionChanged(ctrl.solution)"></textarea>
                 <div ng-messages="solutionForm.problemSolution.$error">
@@ -62,7 +62,7 @@
             <p>Waiting for result...</p>
         </div>
 
-        <div layout layout-align="center center" layout-align="center center" ng-if="ctrl.resolution.solved()">
+        <div layout layout-align="center center" layout-align="center center" ng-if="ctrl.resolution.$solved()">
             <p class="solution-solved">Solved!</p>
         </div>
 
@@ -77,7 +77,7 @@
                     {{ctrl.resolution.output.errors}}
                 </div>
 
-                <table class="md-whiteframe-z1" ng-class="{'solved': ctrl.resolution.solved()}" ng-if="!(ctrl.resolution.output.results|spfEmpty)">
+                <table class="md-whiteframe-z1" ng-class="{'solved': ctrl.resolution.$solved()}" ng-if="!(ctrl.resolution.output.results|spfEmpty)">
                     <thead>
                         <th>Call</th>
                         <th>Expected</th>
@@ -100,7 +100,7 @@
                     {{ctrl.resolution.output.errors}}
                 </div>
 
-                <table class="md-whiteframe-z1" ng-class="{'solved': ctrl.resolution.solved()}" ng-repeat="result in ctrl.resolution.output.results">
+                <table class="md-whiteframe-z1" ng-class="{'solved': ctrl.resolution.$solved()}" ng-repeat="result in ctrl.resolution.output.results">
                     <thead>
                         <tr>
                             <th colspan="2">{{result.description}}</th>
@@ -121,8 +121,8 @@
         </div>
 
         <div layout="row" layout-align="center center" layout-padding>
-            <md-button flex="25" flex-sm="50" type="submit" class="md-raised md-primary" ng-disabled="!solutionForm.$valid || ctrl.savingSolution || ctrl.solutionSaved || ctrl.resolution.solved()">Run Solution</md-button>
-            <md-button flex="25" flex-sm="50" type="reset" class="md-raised" ng-click="ctrl.reset(ctrl.solution)" ng-disabled="ctrl.resolution.solved()">Reset</md-button>
+            <md-button flex="25" flex-sm="50" type="submit" class="md-raised md-primary" ng-disabled="!solutionForm.$valid || ctrl.savingSolution || ctrl.solutionSaved || ctrl.resolution.$solved()">Run Solution</md-button>
+            <md-button flex="25" flex-sm="50" type="reset" class="md-raised" ng-click="ctrl.reset(ctrl.solution)" ng-disabled="ctrl.resolution.$solved()">Reset</md-button>
         </div>
     </form>
 </md-content>

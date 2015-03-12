@@ -87,6 +87,28 @@
         },
 
         problems: {
+          errDeleteFailed: new Error('Failed to delete the problem and its solutions'),
+
+          _Factory: $firebaseObject.$extend({
+            $canBeEditedBy: function(user) {
+              return this.owner.publicId === user.publicId;
+            },
+
+            $remove: function() {
+              var self = this;
+
+              return $q.all([
+                spfFirebase.remove(['singpath/solutions', this.$id]),
+                spfFirebase.remove(['singpath/solutionResolution', this.$id])
+              ]).then(function() {
+                return $firebaseObject.prototype.$remove.apply(self);
+              }).catch(function(err) {
+                $log.error(err);
+                return $q.reject();
+              });
+            }
+          }),
+
           list: function() {
             return spfFirebase.array(['singpath/problems'], {
               orderByChild: 'timestamp',
@@ -101,7 +123,9 @@
           },
 
           get: function(problemId) {
-            return spfFirebase.obj(['singpath/problems', problemId]).$loaded();
+            return new spfDataStore.problems._Factory(
+              spfFirebase.ref(['singpath/problems', problemId])
+            ).$loaded();
           }
         },
 
@@ -174,7 +198,7 @@
           errNotResolved: new Error('The solution is not resolved yet.'),
 
           _Factory: $firebaseObject.$extend({
-            init: function() {
+            $init: function() {
               if (this.$value !== null) {
                 return $q.reject(spfDataStore.resolution.errCannotStart);
               }
@@ -184,7 +208,7 @@
               return this.$save();
             },
 
-            reset: function() {
+            $reset: function() {
               if (!this.output && !this.output.solved) {
                 return $q.reject(spfDataStore.resolution.errCannotReset);
               }
@@ -197,11 +221,11 @@
               return this.$save();
             },
 
-            solved: function() {
+            $solved: function() {
               return this.output && this.output.solved;
             },
 
-            duration: function() {
+            $duration: function() {
               if (!this.solved) {
                 throw spfDataStore.resolution.errNotResolved;
               }
