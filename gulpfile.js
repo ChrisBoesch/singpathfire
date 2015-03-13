@@ -16,7 +16,7 @@ var revReplace = require('gulp-rev-replace');
 var targetHTML = require('gulp-targethtml');
 var templateCache = require('gulp-angular-templatecache');
 var uglify = require('gulp-uglify');
-var usemin = require('gulp-usemin');
+var useref = require('gulp-useref');
 
 
 var argv = minimist(process.argv);
@@ -117,13 +117,18 @@ var compilers = config.apps.reduce(function(compilers, appName) {
  *
  */
 function concatBuild(appName) {
+  var assets = useref.assets({searchPath: config.src});
+
   return gulp.src([config.src + appName + '.html'], {
       base: config.src
     })
-    // Concat scrips (css and js).
     .pipe(rename('index.html'))
+    // remove some of the html block
     .pipe(targetHTML('live'))
-    .pipe(usemin())
+    // Concat scrips (css and js).
+    .pipe(assets)
+    .pipe(assets.restore())
+    .pipe(useref())
     // Add compiled html templates and svg icons into app.js
     .pipe(gulpIf(/app\.js/, compilers[appName]()))
     // Add boostrap assets
