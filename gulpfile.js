@@ -190,11 +190,12 @@ function buildAppDist(appName, dest) {
   .pipe(gulp.dest(dest + '/' + appName));
 }
 
+
 /**
  * Delete all build reportories (build/, dist/, debug/ and e2e/)
  *
  */
-gulp.task('clean', function(done) {
+function clean(done) {
   var folders = Object.keys(config.build).map(function(k) {
     return config.build[k];
   });
@@ -207,25 +208,28 @@ gulp.task('clean', function(done) {
     force: true
   }, done);
 
-});
+}
+gulp.task('clean', clean);
 
 
 /**
  * Copy src/ to build-dev/ and tweak mocking.
  *
  */
-gulp.task('build:dev', ['clean'], function() {
+function buildDev() {
   return copyBuid('dev', config.build.dev);
-});
+}
+gulp.task('build:dev', gulp.series(clean, buildDev));
 
 
 /**
  * Copy src/ to debug/ and remove any mocking.
  *
  */
-gulp.task('build:debug', ['clean'], function() {
+function buildDebug() {
   return copyBuid('live', config.build.debug);
-});
+}
+gulp.task('build:debug', gulp.series(clean, buildDebug));
 
 
 /**
@@ -234,86 +238,72 @@ gulp.task('build:debug', ['clean'], function() {
  * to each e2e scenario to mock th http response.
  *
  */
-gulp.task('build:e2e', ['clean'], function() {
+function buildE2E() {
   return copyBuid('e2e');
-});
+}
+gulp.task('build:e2e', gulp.series(clean, buildE2E));
 
-
-/**
- * For each app, add a build:concat-<app name> task:
- *
- * - build:concat-badgetracker
- * - build:concat-classmentors
- * - build:concat-singpath
- *
- */
-config.apps.map(function(appName) {
-  gulp.task('build:concat-' + appName, ['clean'], function() {
-    return buildApp(appName, config.dest);
-  });
-});
 
 /**
  * Build the apps into build/<app name> by removing any mocking and by concataning
  * assets for each app.
  */
-gulp.task('build:concat', ['clean'].concat(config.apps.map(function(appName) {
-  return 'build:concat-' + appName;
-})));
+var buildConcat = gulp.parallel(config.apps.map(function(appName) {
+  var taskName = 'build/concat: ' + appName;
 
-gulp.task('build', ['build:dev', 'build:debug', 'build:e2e', 'build:concat']);
+  gulp.task(taskName, function() {
+    return buildApp(appName, config.dest);
+  });
 
-gulp.task('watch', ['build:dev', 'build:debug', 'build:e2e', 'build:concat'], function() {
-  return gulp.watch(
-    ['src/**/*.html', 'src/**/*.css', 'src/**/*.js'], ['build:dev', 'build:debug', 'build:e2e', 'build:concat']
-  );
-});
-
-gulp.task('watch:dev', ['build:dev'], function() {
-  return gulp.watch(
-    ['src/**/*.html', 'src/**/*.css', 'src/**/*.js'], ['build:dev']
-  );
-});
-
-gulp.task('watch:debug', ['build:debug', ], function() {
-  return gulp.watch(
-    ['src/**/*.html', 'src/**/*.css', 'src/**/*.js'], ['build:debug', ]
-  );
-});
-
-gulp.task('watch:e2e', ['build:e2e'], function() {
-  return gulp.watch(
-    ['src/**/*.html', 'src/**/*.css', 'src/**/*.js'], ['build:e2e']
-  );
-});
-
-gulp.task('watch:concat', ['build:concat'], function() {
-  return gulp.watch(
-    ['src/**/*.html', 'src/**/*.css', 'src/**/*.js'], ['build:concat']
-  );
-});
+  return taskName;
+}));
+gulp.task('build:concat', gulp.series(clean, buildConcat));
 
 
 /**
- * For each app, add a dist:<app name> task:
- *
- * - dist:badgetracker
- * - dist:classmentors
- * - dist:singpath
- *
+ * Build all app type.
  */
-config.apps.map(function(appName) {
-  gulp.task('dist:' + appName, ['clean'], function() {
-    return buildAppDist(appName, config.dest);
-  });
+gulp.task(
+  'build',
+  gulp.series(
+    clean,
+    gulp.parallel(buildDev, buildDebug, buildE2E, buildConcat)
+  )
+);
+
+/**
+ * Watch tasks
+ */
+gulp.task('watch', gulp.parallel('build', function() {
+  gulp.watch(['src/**/*.html', 'src/**/*.css', 'src/**/*.js'], 'build');
+}));
+
+['dev', 'debug', 'e2e', 'concat'].forEach(function(buildType) {
+  var taskName = 'watch:' + buildType;
+  var buildTaskName = 'build:' + buildType;
+
+  gulp.task(taskName, gulp.parallel(buildTaskName, function() {
+    gulp.watch(['src/**/*.html', 'src/**/*.css', 'src/**/*.js'], buildTaskName);
+  }));
 });
+
 
 /**
  * Like build but minify css and js files too.
  *
  */
-gulp.task('dist', ['clean'].concat(config.apps.map(function(appName) {
-  return 'dist:' + appName;
-})));
+var dist = gulp.parallel(config.apps.map(function(appName) {
+  var taskName = 'build/concat: ' + appName;
 
-gulp.task('default', ['build:concat']);
+  gulp.task(taskName, function() {
+    return buildAppDist(appName, config.dest);
+  });
+
+  return taskName;
+}));
+gulp.task('dist', gulp.series(clean, dist));
+
+/**
+ * Default task
+ */
+gulp.task('default', gulp.parallel('build:concat'));
