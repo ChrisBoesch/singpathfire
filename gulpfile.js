@@ -256,7 +256,7 @@ gulp.task(
  * Watch tasks
  */
 gulp.task('watch', gulp.parallel('build', function() {
-  gulp.watch(['src/**/*.html', 'src/**/*.css', 'src/**/*.js'], 'build');
+  gulp.watch(['src/**/*.html', 'src/**/*.css', 'src/**/*.js', '!src/vendor/**/*'], 'build');
 }));
 
 ['dev', 'debug', 'e2e', 'concat'].forEach(function(buildType) {
@@ -264,7 +264,7 @@ gulp.task('watch', gulp.parallel('build', function() {
   var buildTaskName = 'build:' + buildType;
 
   gulp.task(taskName, gulp.parallel(buildTaskName, function() {
-    gulp.watch(['src/**/*.html', 'src/**/*.css', 'src/**/*.js'], buildTaskName);
+    gulp.watch(['src/**/*.html', 'src/**/*.css', 'src/**/*.js', '!src/vendor/**/*'], buildTaskName);
   }));
 });
 
