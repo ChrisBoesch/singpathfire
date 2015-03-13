@@ -260,7 +260,7 @@ gulp.task(
 /**
  * Watch tasks
  */
-gulp.task('watch', gulp.parallel('build', function() {
+gulp.task('watch', gulp.parallel('build', function buildWather() {
   gulp.watch(['src/**/*.html', 'src/**/*.css', 'src/**/*.js', '!src/vendor/**/*'], 'build');
 }));
 
@@ -268,7 +268,7 @@ gulp.task('watch', gulp.parallel('build', function() {
   var taskName = 'watch:' + buildType;
   var buildTaskName = 'build:' + buildType;
 
-  gulp.task(taskName, gulp.parallel(buildTaskName, function() {
+  gulp.task(taskName, gulp.parallel(buildTaskName, function SomeBuildWatcher() {
     gulp.watch(['src/**/*.html', 'src/**/*.css', 'src/**/*.js', '!src/vendor/**/*'], buildTaskName);
   }));
 });
