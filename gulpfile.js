@@ -8,16 +8,15 @@ var gulpIf = require('gulp-if');
 var lazypipe = require('lazypipe');
 var minifyCSS = require('gulp-minify-css');
 var minimist = require('minimist');
-var ngHtml2Js = require('gulp-ng-html2js');
 var path = require('path');
 var rename = require('gulp-rename');
 var replace = require('gulp-replace');
 var rev = require('gulp-rev');
 var revReplace = require('gulp-rev-replace');
 var targetHTML = require('gulp-targethtml');
+var templateCache = require('gulp-angular-templatecache');
 var uglify = require('gulp-uglify');
 var usemin = require('gulp-usemin');
-var gulpFilter = require('gulp-filter');
 
 
 var argv = minimist(process.argv);
@@ -29,16 +28,16 @@ var apps = [
 ];
 
 var config = {
-  src: './src',
-  watch: './src/**/*',
+  src: 'src/',
+  watch: 'src/**/*',
   apps: apps,
-  pages: './src/*.html',
+  pages: 'src/*.html',
   appFiles: apps.map(function(app) {
-    return './src/' + app + '/**/*';
+    return 'src/' + app + '/**/*';
   }),
-  vendorFiles: './src/vendor/**/*',
-  assetsFiles: './src/assets/**/*',
-  sharedFiles: './src/shared/**/*',
+  vendorFiles: 'src/vendor/**/*',
+  assetsFiles: 'src/assets/**/*',
+  sharedFiles: 'src/shared/**/*',
   build: {
     concat: './build',
     debug: './build-debug',
@@ -95,17 +94,18 @@ function copyBuid(target, dest) {
 var compilers = config.apps.reduce(function(compilers, appName) {
   compilers[appName] = lazypipe()
     .pipe(gulp.src, [
-      config.src + '/' + appName + '/**/*.html',
-      config.src + '/shared/**/*.html',
-      config.src + '/' + appName + '/**/*.svg',
-      config.src + '/shared/**/*.svg'
+      config.src + appName + '/**/*.html',
+      config.src + 'shared/**/*.html',
+      config.src + appName + '/**/*.svg',
+      config.src + 'shared/**/*.svg'
     ], {
       base: config.src,
       passthrough: true
     })
     .pipe(function() {
-      return gulpIf(/.+\.(html|svg)/, ngHtml2Js({
-        moduleName: config.noduleNames[appName]
+      return gulpIf(/.+\.(html|svg)/, templateCache({
+        module: config.noduleNames[appName],
+        base: path.resolve(config.src)
       }));
     })
     .pipe(concat, 'app.js');
@@ -117,7 +117,7 @@ var compilers = config.apps.reduce(function(compilers, appName) {
  *
  */
 function concatBuild(appName) {
-  return gulp.src([config.src + '/' + appName + '.html'], {
+  return gulp.src([config.src + appName + '.html'], {
       base: config.src
     })
     // Concat scrips (css and js).
