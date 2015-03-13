@@ -1,11 +1,11 @@
 'use strict';
 
-var addsrc = require('gulp-add-src');
 var concat = require('gulp-concat');
 var debug = require('gulp-debug');
 var del = require('del');
 var gulp = require('gulp');
-var gulpFilter = require('gulp-filter');
+var gulpIf = require('gulp-if');
+var lazypipe = require('lazypipe');
 var minifyCSS = require('gulp-minify-css');
 var minimist = require('minimist');
 var ngHtml2Js = require('gulp-ng-html2js');
@@ -14,10 +14,10 @@ var rename = require('gulp-rename');
 var replace = require('gulp-replace');
 var rev = require('gulp-rev');
 var revReplace = require('gulp-rev-replace');
-var streamqueue = require('streamqueue');
 var targetHTML = require('gulp-targethtml');
 var uglify = require('gulp-uglify');
 var usemin = require('gulp-usemin');
+var gulpFilter = require('gulp-filter');
 
 
 var argv = minimist(process.argv);
@@ -84,61 +84,59 @@ function copyBuid(target, dest) {
       base: config.src
     })
     .pipe(targetHTML(target))
-    .pipe(addsrc([config.vendorFiles, config.assetsFiles, config.sharedFiles].concat(config.appFiles), {
-      base: config.src
+    .pipe(gulp.src([config.vendorFiles, config.assetsFiles, config.sharedFiles].concat(config.appFiles), {
+      base: config.src,
+      passthrough: true
     }))
     .pipe(gulp.dest(dest));
 }
 
 
+var compilers = config.apps.reduce(function(compilers, appName) {
+  compilers[appName] = lazypipe()
+    .pipe(gulp.src, [
+      config.src + '/' + appName + '/**/*.html',
+      config.src + '/shared/**/*.html',
+      config.src + '/' + appName + '/**/*.svg',
+      config.src + '/shared/**/*.svg'
+    ], {
+      base: config.src,
+      passthrough: true
+    })
+    .pipe(function() {
+      return gulpIf(/.+\.(html|svg)/, ngHtml2Js({
+        moduleName: config.noduleNames[appName]
+      }));
+    })
+    .pipe(concat, 'app.js');
+  return compilers;
+}, {});
 
 /**
  * Stream that build and dist tasks will share
  *
  */
 function concatBuild(appName) {
-  var appJsFilter = gulpFilter(['app.js']);
-  var scriptsFilter = gulpFilter(['*.js', '*.css']);
-
-  // Concat scrips (css and js).
-  var concatScripts = gulp.src([config.src + '/' + appName + '.html'], {
+  return gulp.src([config.src + '/' + appName + '.html'], {
       base: config.src
     })
+    // Concat scrips (css and js).
     .pipe(rename('index.html'))
     .pipe(targetHTML('live'))
-    .pipe(usemin());
-
-  // Compile partials html templates to js
-  // and add it to app.js
-  var concatScriptsWithTemplate = streamqueue({
-        objectMode: true
-      },
-      concatScripts.pipe(appJsFilter),
-      gulp.src([
-        config.src + '/' + appName + '/**/*.html',
-        config.src + '/shared/**/*.html',
-        config.src + '/' + appName + '/**/*.svg',
-        config.src + '/shared/**/*.svg'
-      ], {
-        base: config.src
-      })
-      .pipe(ngHtml2Js({
-        moduleName: config.noduleNames[appName]
-      }))
-    )
-    .pipe(concat('app.js'))
-    .pipe(appJsFilter.restore());
-
-  // Add bootstrap andace editor resources
-  return concatScriptsWithTemplate
-    .pipe(addsrc(config.bootstrap.assets, {
-      base: config.bootstrap.base
+    .pipe(usemin())
+    // Add compiled html templates and svg icons into app.js
+    .pipe(gulpIf(/app\.js/, compilers[appName]()))
+    // Add boostrap assets
+    .pipe(gulp.src(config.bootstrap.assets, {
+      base: config.bootstrap.base,
+      passthrough: true
     }))
-    .pipe(scriptsFilter)
-    .pipe(replace(/\.\.\/fonts\//g, './fonts/'))
-    .pipe(scriptsFilter.restore())
-    .pipe(addsrc(config.ace.assets, {
-      base: config.ace.base
+    // Bootstrap relative path to font changes form "../fonts" to "./fonts"
+    .pipe(gulpIf(/.+\.(js|css)$/, replace(/\.\.\/fonts\//g, './fonts/')))
+    // Add ace assets
+    .pipe(gulp.src(config.ace.assets, {
+      base: config.ace.base,
+      passthrough: true
     }));
 }
 
@@ -148,15 +146,11 @@ function concatBuild(appName) {
  *
  */
 function buildApp(appName, dest) {
-  var scriptsFilterRev = gulpFilter(['*', '!index.html', '!mode-*.js', '!theme-*.js', '!worker-*.js']);
-
   dest = dest || config.build.concat;
 
-  // Append a hash to all assets file
+  // Append a hash to most assets file
   return concatBuild(appName)
-    .pipe(scriptsFilterRev)
-    .pipe(rev())
-    .pipe(scriptsFilterRev.restore())
+    .pipe(gulpIf(/(app|vendor)\.(js|css)/, rev()))
     .pipe(revReplace())
     .pipe(gulp.dest(dest + '/' + appName));
 }
@@ -166,28 +160,15 @@ function buildApp(appName, dest) {
  *
  */
 function buildAppDist(appName, dest) {
-  var jsFilter = gulpFilter(['*.js']);
-  var cssFilter = gulpFilter(['*.css']);
-  var scriptsFilterRev = gulpFilter(['*', '!index.html']);
-
   dest = dest || config.build.dist;
 
   // Append a hash to all assets file
   return concatBuild(appName)
-    .pipe(jsFilter)
-    .pipe(uglify())
-    .pipe(jsFilter.restore())
-
-  .pipe(cssFilter)
-    .pipe(minifyCSS())
-    .pipe(cssFilter.restore())
-
-  .pipe(scriptsFilterRev)
-    .pipe(rev())
-    .pipe(scriptsFilterRev.restore())
+    .pipe(gulpIf('*.js', uglify()))
+    .pipe(gulpIf('*.css', minifyCSS()))
+    .pipe(gulpIf(/(app|vendor)\.(js|css)/, rev()))
     .pipe(revReplace())
-
-  .pipe(gulp.dest(dest + '/' + appName));
+    .pipe(gulp.dest(dest + '/' + appName));
 }
 
 
