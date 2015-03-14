@@ -99,7 +99,7 @@
 
               return $q.all([
                 spfFirebase.remove(['singpath/solutions', this.$id]),
-                spfFirebase.remove(['singpath/solutionResolution', this.$id])
+                spfFirebase.remove(['singpath/resolutions', this.$id])
               ]).then(function() {
                 return $firebaseObject.prototype.$remove.apply(self);
               }).catch(function(err) {
@@ -187,7 +187,7 @@
           }
         },
 
-        resolution: {
+        resolutions: {
           errCannotStart: new Error(
             'The resolution is already started. ' +
             'You can restart a solution once you solved it.'
@@ -200,9 +200,9 @@
           _Factory: $firebaseObject.$extend({
             $init: function() {
               if (this.$value !== null) {
-                return $q.reject(spfDataStore.resolution.errCannotStart);
+                return $q.reject(spfDataStore.resolutions.errCannotStart);
               }
-              this.start = {
+              this.startedAt = {
                 '.sv': 'timestamp'
               };
               return this.$save();
@@ -210,11 +210,11 @@
 
             $reset: function() {
               if (!this.output && !this.output.solved) {
-                return $q.reject(spfDataStore.resolution.errCannotReset);
+                return $q.reject(spfDataStore.resolutions.errCannotReset);
               }
 
               $firebaseUtils.updateRec(this, {
-                start: {
+                startedAt: {
                   '.sv': 'timestamp'
                 }
               });
@@ -227,15 +227,15 @@
 
             $duration: function() {
               if (!this.solved) {
-                throw spfDataStore.resolution.errNotResolved;
+                throw spfDataStore.resolutions.errNotResolved;
               }
-              return $window.moment.duration(this.end - this.start).humanize();
+              return $window.moment.duration(this.endedAt - this.startedAt).humanize();
             }
           }),
 
           get: function(problemId, publicId) {
-            return new spfDataStore.resolution._Factory(spfFirebase.ref(
-              ['singpath/solutionResolution', problemId, publicId]
+            return new spfDataStore.resolutions._Factory(spfFirebase.ref(
+              ['singpath/resolutions', problemId, publicId]
             )).$loaded();
           }
 

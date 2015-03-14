@@ -282,7 +282,7 @@
             return;
           }
 
-          return spfDataStore.resolution.get(
+          return spfDataStore.resolutions.get(
             result.problem.$id, result.user.publicId
           );
         });
@@ -302,7 +302,7 @@
               return;
             }
 
-            if (!result.resolution.start) {
+            if (!result.resolution.startedAt) {
               return result.resolution.$init().then(angular.noop);
             }
 
