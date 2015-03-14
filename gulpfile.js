@@ -29,7 +29,7 @@ var apps = [
 
 var config = {
   src: 'src/',
-  watch: 'src/**/*',
+  watch: ['src/**/*.html', 'src/**/*.css', 'src/**/*.js', '!src/vendor/**/*'],
   apps: apps,
   pages: 'src/*.html',
   appFiles: apps.map(function(app) {
@@ -261,7 +261,7 @@ gulp.task(
  * Watch tasks
  */
 gulp.task('watch', gulp.parallel('build', function buildWather() {
-  gulp.watch(['src/**/*.html', 'src/**/*.css', 'src/**/*.js', '!src/vendor/**/*'], 'build');
+  gulp.watch(config.watch, 'build');
 }));
 
 ['dev', 'debug', 'e2e', 'concat'].forEach(function(buildType) {
@@ -269,7 +269,7 @@ gulp.task('watch', gulp.parallel('build', function buildWather() {
   var buildTaskName = 'build:' + buildType;
 
   gulp.task(taskName, gulp.parallel(buildTaskName, function SomeBuildWatcher() {
-    gulp.watch(['src/**/*.html', 'src/**/*.css', 'src/**/*.js', '!src/vendor/**/*'], buildTaskName);
+    gulp.watch(config.watch, buildTaskName);
   }));
 });
 
