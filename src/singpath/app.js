@@ -65,9 +65,39 @@
       var spfDataStore;
 
       spfDataStore = {
+        _profileFactory: $firebaseObject.$extend({
+          hasSolved: function(problem) {
+            return (
+              this.solutions &&
+              this.solutions[problem.$id] &&
+              this.solutions[problem.$id].solved
+            );
+          },
+
+          hasStarted: function(problem) {
+            return (
+              this.solutions &&
+              this.solutions[problem.$id] &&
+              this.solutions[problem.$id].startedAt
+            );
+          },
+
+          workingOn: function(problem) {
+            return (
+              this.solutions &&
+              this.solutions[problem.$id] &&
+              this.solutions[problem.$id].startedAt &&
+              !this.solutions[problem.$id].solved
+            );
+          }
+
+        }),
+
         profile: function(publicId) {
-          return $q.when(publicId).then(function(publicId) {
-            return spfFirebase.obj(['singpath/userProfiles', publicId]).$loaded();
+          return $q.when(publicId).then(function(id) {
+            return new spfDataStore._profileFactory(
+              spfFirebase.ref(['singpath/userProfiles', id])
+            ).$loaded();
           });
         },
 
@@ -95,16 +125,13 @@
             },
 
             $remove: function() {
-              var self = this;
+              var problemId = this.$id;
 
-              return $q.all([
-                spfFirebase.remove(['singpath/solutions', this.$id]),
-                spfFirebase.remove(['singpath/resolutions', this.$id])
-              ]).then(function() {
-                return $firebaseObject.prototype.$remove.apply(self);
+              return $firebaseObject.prototype.$remove.apply(this).then(function(){
+                return $http.delete('/api/problems/' + problemId);
               }).catch(function(err) {
                 $log.error(err);
-                return $q.reject();
+                return $q.reject('Failed to delete this problem.');
               });
             }
           }),
@@ -199,13 +226,30 @@
 
           _Factory: $firebaseObject.$extend({
             $init: function() {
+              var self = this;
+
               if (this.$value !== null) {
                 return $q.reject(spfDataStore.resolutions.errCannotStart);
               }
+
               this.startedAt = {
                 '.sv': 'timestamp'
               };
-              return this.$save();
+
+              return this.$save().then(function(ref) {
+                return $q(function(resolve, reject) {
+                  ref.once('value', resolve, reject);
+                });
+              }).then(function(snapshot) {
+                return spfFirebase.set([
+                  'singpath/userProfiles',
+                  self.$id,
+                  'solutions',
+                  self.$ref().parent().key()
+                ], {
+                  startedAt: snapshot.val().startedAt
+                });
+              });
             },
 
             $reset: function() {

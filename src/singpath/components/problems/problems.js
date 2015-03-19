@@ -95,11 +95,33 @@
    */
   factory('problemListCtrlInitialData', [
     '$q',
+    'spfAuth',
+    'spfAuthData',
     'spfDataStore',
-    function problemListCtrlInitialDataFactory($q, spfDataStore) {
+    function problemListCtrlInitialDataFactory($q, spfAuth, spfAuthData, spfDataStore) {
       return function problemListCtrlInitialData() {
+        if (!spfAuth.user || !spfAuth.user.uid) {
+          return $q.all({
+            problems: spfDataStore.problems.list(),
+            profile: undefined
+          });
+        }
+
         return $q.all({
-          problems: spfDataStore.problems.list()
+          problems: spfDataStore.problems.list(),
+          profile: spfAuthData.user().then(function(userData) {
+            if (!userData.publicId) {
+              return;
+            }
+
+            return spfDataStore.profile(userData.publicId).then(function(profile) {
+              if (profile && profile.$value === null) {
+                return spfDataStore.initProfile(userData);
+              }
+
+              return profile;
+            });
+          })
         });
       };
     }
@@ -122,7 +144,9 @@
           icon: 'add-circle-outline'
         }]
       );
+
       this.problems = initialData.problems;
+      this.profile = initialData.profile;
     }
   ]).
 
@@ -221,10 +245,10 @@
           };
 
           return spfDataStore.problems.create(problem);
-        }).then(function(problem) {
+        }).then(function(updatedProblem) {
           spfAlert.success('Problem created.');
           $location.path(routes.problems);
-          return problem;
+          return updatedProblem;
         }, function(err) {
           spfAlert.error(err.message || err.toString());
           return err;
@@ -464,8 +488,8 @@
       this.problem = initialData.problem;
 
       this.saveProblem = function(problem) {
-        return problem.$save().then(function(problem) {
-          originalProblem = Object.assign({}, problem);
+        return problem.$save().then(function(updatedProblem) {
+          originalProblem = Object.assign({}, updatedProblem);
           spfAlert.success('Problem saved');
         }).catch(function(err) {
           $log.error(err);
