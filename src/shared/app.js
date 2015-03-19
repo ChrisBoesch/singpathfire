@@ -103,13 +103,13 @@
         $log.debug('singpath base URL: "' + baseUrl + '".');
 
         paths = paths || [];
-        ref = paths.reduce(function(ref, p) {
-          return ref.child(p);
+        ref = paths.reduce(function(prevRef, p) {
+          return prevRef.child(p);
         }, ref);
 
         queryOptions = queryOptions || {};
-        Object.keys(queryOptions).reduce(function(ref, k) {
-          return ref[k](queryOptions[k]);
+        Object.keys(queryOptions).reduce(function(prevRef, k) {
+          return prevRef[k](queryOptions[k]);
         }, ref);
 
         $log.debug('singpath ref path: "' + ref.path.toString() + '".');
@@ -125,7 +125,7 @@
     '$firebaseArray',
     'spfFirebaseRef',
     function spfFirebaseFactory($q, $firebaseObject, $firebaseArray, spfFirebaseRef) {
-      return {
+      var spfFirebase = {
         ref: function() {
           return spfFirebaseRef.apply(this, arguments);
         },
@@ -183,9 +183,9 @@
             });
           });
         }
-
-
       };
+
+      return spfFirebase;
     }
   ]);
 
@@ -248,8 +248,8 @@
         }
       };
 
-      spfAuth.onAuth(function(auth) {
-        if (!auth) {
+      spfAuth.onAuth(function(currentAuth) {
+        if (!currentAuth) {
           spfAuth.user = undefined;
         }
       });
@@ -321,20 +321,20 @@
          * they become available.
          *
          */
-        register: function(userData) {
+        register: function(userDataObj) {
           var gravatarBaseUrl = '//www.gravatar.com/avatar/';
 
-          if (angular.isUndefined(userData)) {
+          if (angular.isUndefined(userDataObj)) {
             return $q.reject(new Error('A user should be logged in to register'));
           }
 
-          // $value will be undefined and not null when the userData object
+          // $value will be undefined and not null when the userDataObj object
           // is set.
-          if (userData.$value !== null) {
-            return $q.when(userData);
+          if (userDataObj.$value !== null) {
+            return $q.when(userDataObj);
           }
 
-          userData.$value = {
+          userDataObj.$value = {
             id: spfAuth.user.uid,
             fullName: spfAuth.user.google.displayName,
             displayName: spfAuth.user.google.displayName,
@@ -345,8 +345,8 @@
             }
           };
 
-          return userData.$save().then(function() {
-            return userData;
+          return userDataObj.$save().then(function() {
+            return userDataObj;
           });
         },
 
@@ -435,7 +435,7 @@
 
           return {
             md5: function(message) {
-              return CryptoJS.MD5(message);
+              return new CryptoJS.MD5(message);
             },
 
             password: {
@@ -563,11 +563,11 @@
           var formControl, setPristine = model.$setPristine;
 
           function findFormController(input, className) {
-            var formControl = input;
-            while (formControl.length > 0) {
-              formControl = formControl.parent();
-              if (formControl.hasClass(className)) {
-                return formControl;
+            var formCtrl = input;
+            while (formCtrl.length > 0) {
+              formCtrl = formCtrl.parent();
+              if (formCtrl.hasClass(className)) {
+                return formCtrl;
               }
             }
           }

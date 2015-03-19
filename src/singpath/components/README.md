@@ -136,7 +136,7 @@ A view going with the controller above:
 
 Tests the controller and its resolver.
 ```js
-/* jshint camelcase: false*/
+/* eslint camelcase: false*/
 /* global describe, beforeEach, module, it, inject, expect, jasmine */
 
 (function() {

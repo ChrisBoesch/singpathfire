@@ -10,7 +10,7 @@
     configurable: true,
     writable: true,
     value: function(target, firstSource) {
-      // jshint unused:vars
+      /* eslint no-unused-vars: 0 */
       if (target === undefined || target === null) {
         throw new TypeError('Cannot convert first argument to object');
       }

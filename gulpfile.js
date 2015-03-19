@@ -1,3 +1,5 @@
+/* eslint-env node */
+/* eslint strict: [2, "global"] */
 'use strict';
 
 var concat = require('gulp-concat');
@@ -43,11 +45,11 @@ var config = {
     debug: './build-debug',
     dev: './build-dev',
     dist: './dist',
-    e2e: './build-e2e',
+    e2e: './build-e2e'
   },
   bootstrap: {
     assets: [
-      'src/vendor/bootstrap/dist/fonts/*',
+      'src/vendor/bootstrap/dist/fonts/*'
     ],
     base: 'src/vendor/bootstrap/dist'
   },
@@ -91,8 +93,8 @@ function copyBuid(target, dest) {
 }
 
 
-var compilers = config.apps.reduce(function(compilers, appName) {
-  compilers[appName] = lazypipe()
+var compilers = config.apps.reduce(function(prev, appName) {
+  prev[appName] = lazypipe()
     .pipe(gulp.src, [
       config.src + appName + '/**/*.html',
       config.src + 'shared/**/*.html',
@@ -109,7 +111,7 @@ var compilers = config.apps.reduce(function(compilers, appName) {
       }));
     })
     .pipe(concat, 'app.js');
-  return compilers;
+  return prev;
 }, {});
 
 /**

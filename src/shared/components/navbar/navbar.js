@@ -1,4 +1,4 @@
- (function() {
+(function() {
   'use strict';
 
   angular.module('spf.shared').
@@ -52,7 +52,7 @@
   ;
 
 
-angular.module('spf.shared.material').
+  angular.module('spf.shared.material').
 
   /**
    * NavBarService

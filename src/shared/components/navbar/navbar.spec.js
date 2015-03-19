@@ -1,4 +1,4 @@
-/* jshint camelcase: false*/
+/* eslint camelcase: false*/
 /* global describe, beforeEach, module, it, inject, expect, jasmine */
 
 (function() {
@@ -52,8 +52,8 @@
 
           auth.login.and.returnValue($q.when(resp));
 
-          ctrl.login().then(function(resp) {
-            result = resp;
+          ctrl.login().then(function(_resp) {
+            result = _resp;
           });
           $rootScope.$apply();
 
@@ -72,17 +72,17 @@
         });
 
         it('should reject login promise on error', function() {
-          var e = new Error('I want it to fail');
+          var err = new Error('I want it to fail');
           var result;
 
-          auth.login.and.returnValue($q.reject(e));
+          auth.login.and.returnValue($q.reject(err));
 
           ctrl.login().catch(function(e) {
             result = e;
           });
           $rootScope.$apply();
 
-          expect(result).toBe(e);
+          expect(result).toBe(err);
         });
 
       });

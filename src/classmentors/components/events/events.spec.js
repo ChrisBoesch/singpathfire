@@ -1,4 +1,4 @@
-// /* jshint camelcase: false*/
+// /* eslint camelcase: false*/
 // /* global describe, beforeEach, module, inject,  jasmine */
 
 // (function() {

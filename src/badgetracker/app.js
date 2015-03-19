@@ -61,8 +61,8 @@
 
       oepDataStore = {
         profile: function(publicId) {
-          return $q.when(publicId).then(function(publicId) {
-            return spfFirebase.obj(['badgeTracker/userProfiles', publicId]).$loaded();
+          return $q.when(publicId).then(function(id) {
+            return spfFirebase.obj(['badgeTracker/userProfiles', id]).$loaded();
           });
         },
 
@@ -106,21 +106,14 @@
                   }
                 }
               );
-            }, function(err) {
-              $log.error(err);
-              return $q.reject(new Error('Failed to claim ' + details.id + ' as your ' + serviceId + ' user name.')).catch(function(err) {
-                $log.error(err);
-                return $q.reject(new Error('Failed to save details for your ' + serviceId + ' account.'));
-              });
             }).then(function(profile) {
               return $http.post('/api/badges/track/' + userSync.publicId + '/' + serviceId.toLowerCase()).then(
                 function() {
                   return profile;
-                },
-                function(err) {
-                  $log.error(err);
-                  return $q.reject(new Error('Failed to track badge on your ' + serviceId + ' account.'));
                 });
+            }).catch(function(err){
+              $log.error(err);
+              return $q.reject(new Error('Failed to user details for ' + serviceId));
             });
           },
 

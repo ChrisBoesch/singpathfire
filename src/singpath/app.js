@@ -173,7 +173,7 @@
               ['singpath/solutions', problem.$id, publicId], {
                 language: problem.language,
                 solution: solution.solution,
-                tests: problem.tests,
+                tests: problem.tests
               }
             ).then(function() {
               return $http.post('/api/solution/' + problem.$id + '/' + publicId).catch(function(err) {

@@ -172,7 +172,7 @@
             }).catch(function(err) {
               spfAlert.error(err.toString());
             });
-          },
+          }
         },
 
         codeCombat: {
