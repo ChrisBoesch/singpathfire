@@ -1,0 +1,42 @@
+<div class="row">
+    <div class="col-sm-4 profile">
+        <img ng-src="{{ctrl.profile.user.gravatar}}?s=200&amp;r=g&amp;d=mm" alt="user avatar" class="img-thumbnail">
+        <h2>
+            {{ctrl.profile.user.displayName}}
+        </h2>
+    </div>
+
+    <div class="col-sm-8">
+
+        <div oep-profile="ctrl.profile"  oep-service-id="codeCombat"></div>
+        <div oep-profile="ctrl.profile"  oep-service-id="codeSchool"></div>
+        <div oep-profile="ctrl.profile"  oep-service-id="treeHouse"></div>
+
+        <div id="register-codecombat" class="well clearfix" ng-if="!ctrl.profile.services.codeCombat.details.id">
+            <h2>Code Combat</h2>
+
+            <p>
+                <a href="http://codecombat.com/" target="_blank">Code Combat</a>, learn to Code JavaScript by Playing a Game.
+            </p>
+
+        </div>
+
+        <div id="register-codeschool" class="well clearfix">
+            <h2>Code School</h2>
+
+            <p>
+                <a href="https://www.codeschool.com/" target="_blank">Code School</a> teaches web technologies in the comfort of your browser with video lessons, coding challenges, and screencasts. Registering is free, and the provides free content to try out.
+            </p>
+        </div>
+
+        <div id="register-codeschool" class="well clearfix">
+            <h2>Treehouse</h2>
+
+            <p>
+                Learn HTML, CSS, iPhone apps &amp; more at <a href="http://www.teamtreehouse.com/signup_code/singapore" target="_blank">Treehouse</a>. Treehouse offers a 14 days free trial.
+            </p>
+
+        </div>
+
+    </div>
+</div>

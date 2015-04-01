@@ -1,6 +1,6 @@
 /**
  * angular-strap
- * @version v2.1.6 - 2015-01-11
+ * @version v2.1.6 - 2015-02-03
  * @link http://mgcrea.github.io/angular-strap
  * @author Olivier Louvignes (olivier@mg-crea.com)
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -483,9 +483,19 @@ angular.module('mgcrea.ngStrap.tooltip', ['mgcrea.ngStrap.helpers.dimensions'])
           var el = $element[0];
 
           var elRect = el.getBoundingClientRect();
+          var rect = {};
+
+          // IE8 has issues with angular.extend and using elRect directly.
+          // By coping the values of elRect into a new object, we can continue to use extend
+          for (var p in elRect) {
+            if (elRect.hasOwnProperty(p)) {
+              rect[p] = elRect[p];
+            }
+          }
+
           if (elRect.width === null) {
             // width and height are missing in IE8, so compute them manually; see https://github.com/twbs/bootstrap/issues/14093
-            elRect = angular.extend({}, elRect, { width: elRect.right - elRect.left, height: elRect.bottom - elRect.top });
+            rect = angular.extend({}, rect, { width: elRect.right - elRect.left, height: elRect.bottom - elRect.top });
           }
 
           var elPos;
@@ -495,7 +505,7 @@ angular.module('mgcrea.ngStrap.tooltip', ['mgcrea.ngStrap.helpers.dimensions'])
             elPos = dimensions.position(el);
           }
 
-          return angular.extend({}, elRect, elPos);
+          return angular.extend({}, rect, elPos);
         }
 
         function getCalculatedOffset(placement, position, actualWidth, actualHeight) {
@@ -598,17 +608,10 @@ angular.module('mgcrea.ngStrap.tooltip', ['mgcrea.ngStrap.helpers.dimensions'])
         return angular.element((element || document).querySelectorAll(query));
       }
 
-      var fetchPromises = {};
       function fetchTemplate(template) {
-        if(fetchPromises[template]) return fetchPromises[template];
-        return (fetchPromises[template] = $q.when($templateCache.get(template) || $http.get(template))
-        .then(function(res) {
-          if(angular.isObject(res)) {
-            $templateCache.put(template, res.data);
-            return res.data;
-          }
-          return res;
-        }));
+        return $http.get(template, {cache: $templateCache}).then(function(res) {
+          return res.data;
+        });
       }
 
       return TooltipFactory;
@@ -626,9 +629,14 @@ angular.module('mgcrea.ngStrap.tooltip', ['mgcrea.ngStrap.helpers.dimensions'])
 
         // Directive options
         var options = {scope: scope};
-        angular.forEach(['template', 'contentTemplate', 'placement', 'container', 'target', 'delay', 'trigger', 'keyboard', 'html', 'animation', 'backdropAnimation', 'type', 'customClass', 'id'], function(key) {
+        angular.forEach(['template', 'contentTemplate', 'placement', 'container', 'delay', 'trigger', 'keyboard', 'html', 'animation', 'backdropAnimation', 'type', 'customClass', 'id'], function(key) {
           if(angular.isDefined(attr[key])) options[key] = attr[key];
         });
+
+        // should not parse target attribute, only data-target
+        if(element.attr('data-target')) {
+          options.target = element.attr('data-target');
+        }
 
         // overwrite inherited title value when no value specified
         // fix for angular 1.3.1 531a8de72c439d8ddd064874bf364c00cedabb11

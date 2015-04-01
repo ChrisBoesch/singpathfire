@@ -1,0 +1,27 @@
+<div class="well clearfix" ng-if="profile.services[serviceId].details.id &amp;&amp; ctrl.services[serviceId]">
+    <h2>
+        {{ctrl.services[serviceId].name}}
+        <small>- registered as <em>{{profile.services[serviceId].details.name}}</em></small>
+    </h2>
+
+    <p ng-if="!profile.services[serviceId].lastUpdate">
+        We haven't look up your profile at {{ctrl.services[serviceId].name}} yet.
+    </p>
+
+    <p ng-if="profile.services[serviceId].lastUpdate &amp;&amp; (profile.services[serviceId].badges|spfEmpty)">
+        No level completed yet.
+    </p>
+
+    <div ng-if="!(profile.services[serviceId].badges|spfEmpty)" class="badges">
+        <h2>Levels completed:</h2>
+        <div class="row">
+            <div ng-repeat="badge in profile.services[serviceId].badges" class="col-xs-4 col-md-2">
+                <a ng-href="{{badge.url || ctrl.services[serviceId].url}}" class="thumbnail" title="earned the {{badge.name}} badge." target="_blank">
+                    <img ng-class="serviceId" ng-src="{{badge.iconUrl}}" alt="{{badge.name}}" title="earned the {{badge.name}} badge." />
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <p class="last-update" ng-if="profile.services[serviceId].lastUpdate"><small>last update from {{profile.services[serviceId].lastUpdate|date:'medium'}}</small></p>
+</div>

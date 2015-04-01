@@ -1,0 +1,32 @@
+<md-content flex class="md-padding">
+
+    <p ng-if="ctrl.problems|spfEmpty">No problem found.</p>
+
+    <md-list class="problem-list">
+        <md-item ng-repeat="problem in ctrl.problems">
+            <md-item-content>
+                <div class="md-tile-left language-icon" hide-sm>
+                    <md-icon md-svg-icon="language:{{problem.language}}" alt="{{problem.language}}">
+                </div>
+                <div class="md-tile-content">
+                    <h3 layout>
+                        <span flex>{{problem.title}}</span>
+                        <span hide-gt-sm>[{{problem.language}}]</span>
+                    </h3>
+                    <h4>by {{problem.owner.displayName}}</h4>
+                    <p>{{problem.description}}</p>
+                </div>
+                <div class="md-title-right" layout="column" layout-align="top center">
+                    <md-button ng-href="#/problems/{{problem.$id}}/play" layout layout-align="center center" class="md-raised md-primary" aria-label="Run">
+                        <md-icon md-svg-icon="play-arrow"></md-icon>
+                        <span ng-if="!ctrl.profile.hasStarted(problem)" flex>Solve</span>
+                        <span ng-if="ctrl.profile.workingOn(problem)" flex>Continue</span>
+                        <span ng-if="ctrl.profile.hasSolved(problem)" flex>Results</span>
+                    </md-button>
+                </div>
+            </md-item-content>
+            <md-divider ng-if="!$last"></md-divider>
+        </md-item>
+    </md-list>
+
+</md-content>

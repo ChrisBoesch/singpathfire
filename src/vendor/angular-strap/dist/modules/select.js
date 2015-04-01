@@ -1,6 +1,6 @@
 /**
  * angular-strap
- * @version v2.1.6 - 2015-01-11
+ * @version v2.1.6 - 2015-02-03
  * @link http://mgcrea.github.io/angular-strap
  * @author Olivier Louvignes (olivier@mg-crea.com)
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -46,6 +46,10 @@ angular.module('mgcrea.ngStrap.select', ['mgcrea.ngStrap.tooltip', 'mgcrea.ngStr
 
         // Common vars
         var options = angular.extend({}, defaults, config);
+
+        // parse sort option value to support attribute as string
+        // when binded to interpolated value
+        options.sort = options.sort.toString().match(/true|1/i);
 
         $select = $tooltip(element, options);
         var scope = $select.$scope;
@@ -103,7 +107,6 @@ angular.module('mgcrea.ngStrap.select', ['mgcrea.ngStrap.tooltip', 'mgcrea.ngStr
 
         $select.activate = function(index) {
           if(options.multiple) {
-            scope.$activeIndex.sort();
             $select.$isActive(index) ? scope.$activeIndex.splice(scope.$activeIndex.indexOf(index), 1) : scope.$activeIndex.push(index);
             if(options.sort) scope.$activeIndex.sort();
           } else {
@@ -249,7 +252,7 @@ angular.module('mgcrea.ngStrap.select', ['mgcrea.ngStrap.tooltip', 'mgcrea.ngStr
 
         // Directive options
         var options = {scope: scope, placeholder: defaults.placeholder};
-        angular.forEach(['placement', 'container', 'delay', 'trigger', 'keyboard', 'html', 'animation', 'template', 'placeholder', 'multiple', 'allNoneButtons', 'maxLength', 'maxLengthHtml', 'allText', 'noneText', 'iconCheckmark', 'autoClose', 'id'], function(key) {
+        angular.forEach(['placement', 'container', 'delay', 'trigger', 'keyboard', 'html', 'animation', 'template', 'placeholder', 'multiple', 'allNoneButtons', 'maxLength', 'maxLengthHtml', 'allText', 'noneText', 'iconCheckmark', 'autoClose', 'id', 'sort'], function(key) {
           if(angular.isDefined(attr[key])) options[key] = attr[key];
         });
 

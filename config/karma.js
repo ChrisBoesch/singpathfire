@@ -17,26 +17,45 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'src/vendor/es5-shim/es5-shim.js',
+      'src/vendor/alertifyjs/src/js/alertify.js',
+      'src/vendor/crypto-js/src/core.js',
+      'src/vendor/crypto-js/src/md5.js',
+      'src/vendor/crypto-js/src/hmac.js',
+      'src/vendor/crypto-js/src/pbkdf2.js',
+      'src/vendor/crypto-js/src/sha1.js',
+      'src/vendor/crypto-js/src/sha256.js',
       'src/vendor/firebase/firebase.js',
       'src/vendor/moment/moment.js',
       'src/vendor/angular/angular.js',
       'src/vendor/angular-animate/angular-animate.js',
       'src/vendor/angular-route/angular-route.js',
+      'src/vendor/angular-messages/angular-messages.js',
       'src/vendor/angular-loading-bar/build/loading-bar.js',
       'src/vendor/angular-strap/dist/angular-strap.js',
       'src/vendor/angular-strap/dist/angular-strap.tpl.js',
       'src/vendor/angularfire/dist/angularfire.js',
-      'src/app/app.js',
-      'src/app/app-fixtures.js',
-      'src/app/components/**/*.js',
-      'src/app/**/*.spec.js'
+      'src/vendor/angular-mocks/angular-mocks.js',
+      'src/badgetracker/app.js',
+      'src/classmentors/app.js',
+      'src/shared/app.js',
+      'src/singpath/app.js',
+      'src/badgetracker/**/*.js',
+      'src/classmentors/**/*.js',
+      'src/shared/**/*.js',
+      'src/singpath/**/*.js'
     ],
 
 
     // list of files to exclude
     exclude: [
-      'src/app/**/*.e2e.js'
+      'src/badgetracker/**/*.e2e.js',
+      'src/classmentors/**/*.e2e.js',
+      'src/shared/**/*.e2e.js',
+      'src/singpath/**/*.e2e.js',
+      'src/badgetracker/*.-mock.js',
+      'src/classmentors/*.-mock.js',
+      'src/shared/*.-mock.js',
+      'src/singpath/*.-mock.js'
     ],
 
 
