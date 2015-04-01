@@ -259,7 +259,6 @@
     }
   ]).
 
-
   /**
    * Use to resolve `initialData` of `PlayProblemCtrl`.
    *

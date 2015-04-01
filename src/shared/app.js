@@ -511,7 +511,6 @@
     }
   ]);
 
-
   /**
    * Service to show notification message in top right corner of
    * the window.
@@ -560,7 +559,8 @@
         require: 'ngModel',
         // arguments: scope, iElement, iAttrs, controller
         link: function spfBsValidClassPostLink(s, iElement, a, model) {
-          var formControl, setPristine = model.$setPristine;
+          var formControl;
+          var setPristine = model.$setPristine;
 
           function findFormController(input, className) {
             var formCtrl = input;

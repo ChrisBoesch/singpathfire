@@ -47,7 +47,6 @@
     }
   ]).
 
-
   /**
    * Service to interact with singpath firebase db
    *

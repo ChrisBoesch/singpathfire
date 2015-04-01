@@ -15,7 +15,6 @@
 //       $q = _$q_;
 //     }));
 
-
 //     describe('ClassMentorsEventList', function() {
 //       var auth, ctrl;
 

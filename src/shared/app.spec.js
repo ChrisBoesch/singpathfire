@@ -21,15 +21,12 @@
     //     $q = _$q_;
     //   }));
 
-
     // });
-
 
     /**
      * Test core singpath fire services
      */
     describe('services', function() {
-
 
       describe('spfCrypto', function() {
 
@@ -81,7 +78,6 @@
         });
 
       });
-
 
       describe('spfAuthData', function() {
         var spfFirebaseSync, spfAuth, sync, userObj;
@@ -172,7 +168,6 @@
 
       });
 
-
       describe('spfFirebaseSync', function() {
         var $firebase, spfFirebaseRef, ref, sync;
 
@@ -206,7 +201,6 @@
         }));
 
       });
-
 
       describe('spfFirebaseRef', function() {
         var provider, factory, Firebase, firebaseSpy, spfFirebaseRef, ref;
@@ -275,7 +269,6 @@
 
       });
 
-
       describe('spfAuth', function() {
         var auth, spfFirebaseRef;
 
@@ -314,7 +307,6 @@
             expect(spfAuth.user).toBeNull();
           });
         });
-
 
         describe('login', function() {
           var user;
@@ -450,7 +442,6 @@
 
         });
 
-
         describe('logout', function() {
 
           it('should unauthenticates current user', function() {
@@ -482,7 +473,6 @@
         });
 
       });
-
 
       describe('spfAlert', function() {
         var log, spfAlert;
@@ -537,7 +527,6 @@
 
         });
 
-
         describe('spfAlert.danger', function() {
 
           it('should send a notification of type "danger"', function() {
@@ -559,7 +548,6 @@
       });
 
     });
-
 
   });
 

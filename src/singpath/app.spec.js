@@ -21,15 +21,12 @@
 //         $q = _$q_;
 //       }));
 
-
 //     });
-
 
 //     /**
 //      * Test core singpath fire services
 //      */
 //     describe('services', function() {
-
 
 //       describe('spfDataStore', function() {
 
@@ -38,7 +35,6 @@
 //       });
 
 //     });
-
 
 //   });
 
