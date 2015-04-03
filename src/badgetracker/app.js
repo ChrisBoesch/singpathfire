@@ -46,7 +46,6 @@
     }
   ]).
 
-
   /**
    * Service to interact with singpath firebase db
    *
@@ -111,7 +110,7 @@
                 function() {
                   return profile;
                 });
-            }).catch(function(err){
+            }).catch(function(err) {
               $log.error(err);
               return $q.reject(new Error('Failed to user details for ' + serviceId));
             });

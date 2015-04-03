@@ -1,0 +1,32 @@
+<md-content flex class="md-padding">
+
+    <p ng-if="ctrl.paths|spfEmpty">No path found.</p>
+
+    <md-list class="path-list">
+        <md-item ng-repeat="path in ctrl.paths">
+            <md-item-content>
+                <div class="md-tile-left language-icon" hide-sm>
+                    <md-icon md-svg-icon="language:{{path.language}}" alt="{{path.language}}">
+                </div>
+                <div class="md-tile-content">
+                    <h3 layout>
+                        <span flex>{{path.title}}</span>
+                        <span hide-gt-sm>[{{path.language}}]</span>
+                    </h3>
+                    <h4>by {{path.owner.displayName}}</h4>
+                    <p>{{path.description}}</p>
+                </div>
+                <div class="md-title-right" layout="column" layout-align="top center">
+                    <md-button ng-href="#{{ 'levels'|urlFor: {pathId: path.$id} }}" layout layout-align="center center" class="md-raised md-primary" aria-label="Run">
+                        <md-icon md-svg-icon="play-arrow"></md-icon>
+                        <span ng-if="!ctrl.profile.hasStartedPath(path)" flex>Start</span>
+                        <span ng-if="ctrl.profile.workingOnPath(path)" flex>Continue</span>
+                        <span ng-if="ctrl.profile.hasSolvedPath(path)" flex>Results</span>
+                    </md-button>
+                </div>
+            </md-item-content>
+            <md-divider ng-if="!$last"></md-divider>
+        </md-item>
+    </md-list>
+
+</md-content>

@@ -51,7 +51,6 @@
 
   ;
 
-
   angular.module('spf.shared.material').
 
   /**
@@ -59,8 +58,8 @@
    *
    * Registery to set section name and menu items
    */
-  factory('SpfNavBarService', [
-    function SpfNavBarServiceFactory() {
+  factory('spfNavBarService', [
+    function spfNavBarServiceFactory() {
       return {
         title: 'Singpath',
         section: undefined,
@@ -99,10 +98,10 @@
     '$mdSidenav',
     'spfAlert',
     'spfAuth',
-    'SpfNavBarService',
-    function SpfSharedMaterialNavBarCtrl($q, $mdSidenav, spfAlert, spfAuth, SpfNavBarService) {
+    'spfNavBarService',
+    function SpfSharedMaterialNavBarCtrl($q, $mdSidenav, spfAlert, spfAuth, spfNavBarService) {
       this.auth = spfAuth;
-      this.currentPage = SpfNavBarService;
+      this.currentPage = spfNavBarService;
 
       this.login = function() {
         return spfAuth.login().catch(function(e) {

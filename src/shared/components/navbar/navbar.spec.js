@@ -21,7 +21,6 @@
         $q = _$q_;
       }));
 
-
       /**
        * Test SpfSharedNavBarCtrl.
        */
@@ -87,9 +86,7 @@
 
       });
 
-
     });
-
 
   });
 

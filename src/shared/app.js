@@ -65,6 +65,39 @@
     }
   ]);
 
+  coreModule.factory('urlFor', [
+    'routes',
+    function urlForFactory(routes) {
+      var routeFns = Object.keys(routes).reduce(function(fns, name) {
+        var parts = routes[name].split('/');
+
+        fns[name] = function(keys) {
+          keys = keys || {};
+          return parts.map(function(part) {
+            return part[0] === ':' ? keys[part.slice(1)] : part;
+          }).join('/');
+        };
+
+        return fns;
+      }, {});
+
+      return function(name, params) {
+        var fn = routeFns[name] || routeFns.home;
+        return fn(params);
+      };
+    }
+  ]);
+
+  coreModule.filter('urlFor', [
+    'urlFor',
+    function urlForFilterFactory(urlFor) {
+      return function urlForFilter(name, params) {
+        var url = urlFor(name, params);
+        return url;
+      };
+    }
+  ]);
+
   /**
    * spfFirebaseRef return a Firebase reference to singpath database,
    * at a specific path, with a specific query; e.g:
@@ -103,13 +136,18 @@
         $log.debug('singpath base URL: "' + baseUrl + '".');
 
         paths = paths || [];
+        paths = angular.isArray(paths) ? paths : [paths];
         ref = paths.reduce(function(prevRef, p) {
           return prevRef.child(p);
         }, ref);
 
         queryOptions = queryOptions || {};
         Object.keys(queryOptions).reduce(function(prevRef, k) {
-          return prevRef[k](queryOptions[k]);
+          if (queryOptions[k] == null) {
+            return prevRef[k]();
+          } else {
+            return prevRef[k](queryOptions[k]);
+          }
         }, ref);
 
         $log.debug('singpath ref path: "' + ref.path.toString() + '".');
@@ -511,7 +549,6 @@
     }
   ]);
 
-
   /**
    * Service to show notification message in top right corner of
    * the window.
@@ -560,7 +597,8 @@
         require: 'ngModel',
         // arguments: scope, iElement, iAttrs, controller
         link: function spfBsValidClassPostLink(s, iElement, a, model) {
-          var formControl, setPristine = model.$setPristine;
+          var formControl;
+          var setPristine = model.$setPristine;
 
           function findFormController(input, className) {
             var formCtrl = input;

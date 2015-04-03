@@ -263,7 +263,7 @@ gulp.task(
  * Watch tasks
  */
 gulp.task('watch', gulp.parallel('build', function buildWather() {
-  gulp.watch(config.watch, 'build');
+  gulp.watch(config.watch, gulp.task('build'));
 }));
 
 ['dev', 'debug', 'e2e', 'concat'].forEach(function(buildType) {
@@ -271,7 +271,7 @@ gulp.task('watch', gulp.parallel('build', function buildWather() {
   var buildTaskName = 'build:' + buildType;
 
   gulp.task(taskName, gulp.parallel(buildTaskName, function SomeBuildWatcher() {
-    gulp.watch(config.watch, buildTaskName);
+    gulp.watch(config.watch, gulp.task(buildTaskName));
   }));
 });
 

@@ -17,11 +17,11 @@
                     <p>{{problem.description}}</p>
                 </div>
                 <div class="md-title-right" layout="column" layout-align="top center">
-                    <md-button ng-href="#/problems/{{problem.$id}}/play" layout layout-align="center center" class="md-raised md-primary" aria-label="Run">
+                    <md-button ng-href="#{{ 'playProblem'|urlFor: {pathId: ctrl.path.$id, levelId: ctrl.level.$id, problemId: problem.$id} }}" layout layout-align="center center" class="md-raised md-primary" aria-label="Run">
                         <md-icon md-svg-icon="play-arrow"></md-icon>
-                        <span ng-if="!ctrl.profile.hasStarted(problem)" flex>Solve</span>
-                        <span ng-if="ctrl.profile.workingOn(problem)" flex>Continue</span>
-                        <span ng-if="ctrl.profile.hasSolved(problem)" flex>Results</span>
+                        <span ng-if="!ctrl.profile.$hasStarted(problem)" flex>Solve</span>
+                        <span ng-if="ctrl.profile.$workingOn(problem)" flex>Continue</span>
+                        <span ng-if="ctrl.profile.$hasSolved(problem)" flex>Results</span>
                     </md-button>
                 </div>
             </md-item-content>

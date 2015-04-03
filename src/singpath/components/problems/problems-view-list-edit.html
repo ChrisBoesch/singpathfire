@@ -1,0 +1,120 @@
+<md-content class="md-padding">
+    <md-tabs>
+        <md-tab ng-repeat="problem in ctrl.problems" label="{{problem.title}}">
+            <form name="editProblem" ng-submit="ctrl.saveProblem(ctrl.problems, $index)">
+                <md-input-container flex>
+                    <label>Problem Title</label>
+                    <input ng-minlength="3" md-maxlength="30" required name="problemTitle" ng-model="problem.title">
+                    <div ng-messages="editProblem.problemTitle.$error">
+                        <div ng-message="required">This is required.</div>
+                        <div ng-message="minlength">The title has to be more than 2 characters long.</div>
+                        <div ng-message="md-maxlength">The title has to be less than 30 characters long.</div>
+                    </div>
+                </md-input-container>
+
+                <md-input-container flex>
+                    <label>Description</label>
+                    <textarea name="problemDescription" ng-model="problem.description" columns="1" required ng-minlength="1" md-maxlength="200"></textarea>
+                    <div ng-messages="editProblem.problemDescription.$error">
+                        <div ng-message="required">This is required.</div>
+                        <div ng-message="minlength">The description has to be more than 1 characters long.</div>
+                        <div ng-message="md-maxlength">The description has to be less than 200 characters long.</div>
+                    </div>
+                </md-input-container>
+
+                <spf-editor-container flex>
+                    <label>Tests</label>
+                    <textarea name="problemTests"
+                        ng-model="problem.tests"
+                        columns="1"
+                        ng-required="true"
+                        ng-minlength="3"
+                        ng-maxlength="500"
+                        spf-editor="{{ctrl.level.language}}"
+                    ></textarea>
+                    <div ng-messages="editProblem.problemTests.$error">
+                        <div ng-message="required">A test is required.</div>
+                        <div ng-message="minlength">The test has to be more than 3 characters long.</div>
+                        <div ng-message="maxlength">The test has to be less than 500 characters long.</div>
+                    </div>
+                </spf-editor-container>
+
+                <div layout="row" layout-align="center center">
+                    <md-button flex="25" flex-sm="50" type="submit" class="md-raised md-primary">Save Problem</md-button>
+                </div>
+            </form>
+        </md-tab>
+    </md-tabs>
+
+
+    <hr/>
+
+    <h2>New Problem</h2>
+
+    <form name="newProblem" ng-submit="ctrl.createProblem(ctrl.currentUser, ctrl.problems, ctrl.newProblem)">
+        <div layout layout-sm="column" ng-if="!ctrl.profile">
+            <md-input-container flex>
+                <label>Your Public Id</label>
+                <input ng-minlength="3" md-maxlength="30" ng-pattern="/^[-a-z0-9]+$/" required name="userPublicId" ng-model="ctrl.currentUser.publicId">
+                <div ng-messages="newProblem.userPublicId.$error">
+                    <div ng-message="required">This is required.</div>
+                    <div ng-message="minlength">The public id has to be more than 2 characters long.</div>
+                    <div ng-message="md-maxlength">The public id has to be less than 30 characters long.</div>
+                    <div ng-message="pattern">The public id should include letters, numbers and "-".</div>
+                </div>
+            </md-input-container>
+            <md-input-container flex>
+                <label>Your screen name</label>
+                <input ng-minlength="3" md-maxlength="30" required name="userDisplayName" ng-model="ctrl.currentUser.displayName">
+                <div ng-messages="newProblem.userDisplayName.$error">
+                    <div ng-message="required">This is required.</div>
+                    <div ng-message="minlength">The screen name has to be more than 2 characters long.</div>
+                    <div ng-message="md-maxlength">The screen name has to be less than 30 characters long.</div>
+                </div>
+            </md-input-container>
+        </div>
+
+        <md-input-container flex>
+            <label>Problem Title</label>
+            <input ng-minlength="3" md-maxlength="30" required name="problemTitle" ng-model="ctrl.newProblem.title">
+            <div ng-messages="newProblem.problemTitle.$error">
+                <div ng-message="required">This is required.</div>
+                <div ng-message="minlength">The title has to be more than 2 characters long.</div>
+                <div ng-message="md-maxlength">The title has to be less than 30 characters long.</div>
+            </div>
+        </md-input-container>
+
+        <md-input-container flex>
+            <label>Description</label>
+            <textarea name="problemDescription" ng-model="ctrl.newProblem.description" columns="1" required ng-minlength="1" md-maxlength="200"></textarea>
+            <div ng-messages="newProblem.problemDescription.$error">
+                <div ng-message="required">This is required.</div>
+                <div ng-message="minlength">The description has to be more than 1 characters long.</div>
+                <div ng-message="md-maxlength">The screen name has to be less than 200 characters long.</div>
+            </div>
+        </md-input-container>
+
+        <spf-editor-container flex>
+            <label>Tests</label>
+            <textarea name="problemTests"
+                ng-model="ctrl.newProblem.tests"
+                columns="1"
+                ng-required="true"
+                ng-minlength="3"
+                ng-maxlength="500"
+                spf-editor="{{ctrl.level.language}}"
+            ></textarea>
+            <div ng-messages="newProblem.problemTests.$error">
+                <div ng-message="required">This is required.</div>
+                <div ng-message="minlength">The description has to be more than 3 characters long.</div>
+                <div ng-message="maxlength">The screen name has to be less than 500 characters long.</div>
+            </div>
+        </spf-editor-container>
+
+        <div layout="row" layout-align="center center">
+            <md-button flex="25" flex-sm="50" type="submit" class="md-raised md-primary">Create Problem</md-button>
+            <md-button flex="25" flex-sm="50" type="reset" class="md-raised">Reset</md-button>
+        </div>
+    </form>
+
+</md-content>

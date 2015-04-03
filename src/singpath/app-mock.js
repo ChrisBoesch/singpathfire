@@ -7,7 +7,7 @@
 
   angular.module('spfMocked', ['spf', 'ngMockE2E', 'spf.shared.material']).config([
     'spfFirebaseRefProvider',
-    function(spfFirebaseRefProvider){
+    function(spfFirebaseRefProvider) {
       spfFirebaseRefProvider.setBaseUrl('https://singpath-play.firebaseIO.com');
     }
   ]).run([

@@ -74,7 +74,6 @@
             editor.focus();
           }
 
-
           // Observed attributes
           watchers.push(attrs.$observe('spfEditor', function(value) {
             var mode;

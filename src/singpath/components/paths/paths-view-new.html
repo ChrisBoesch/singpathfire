@@ -1,0 +1,60 @@
+<md-content class="md-padding">
+    <form name="newPath" ng-submit="ctrl.createPath(ctrl.currentUser, ctrl.path)">
+        <div layout layout-sm="column" ng-if="!ctrl.profile">
+            <md-input-container flex>
+                <label>Your Public Id</label>
+                <input ng-minlength="3" md-maxlength="30" ng-pattern="/^[-a-z0-9]+$/" required name="userPublicId" ng-model="ctrl.currentUser.publicId">
+                <div ng-messages="newPath.userPublicId.$error">
+                    <div ng-message="required">This is required.</div>
+                    <div ng-message="minlength">The public id has to be more than 2 characters long.</div>
+                    <div ng-message="md-maxlength">The public id has to be less than 30 characters long.</div>
+                    <div ng-message="pattern">The public id should include letters, numbers and "-".</div>
+                </div>
+            </md-input-container>
+            <md-input-container flex>
+                <label>Your screen name</label>
+                <input ng-minlength="3" md-maxlength="30" required name="userDisplayName" ng-model="ctrl.currentUser.displayName">
+                <div ng-messages="newPath.userDisplayName.$error">
+                    <div ng-message="required">This is required.</div>
+                    <div ng-message="minlength">The screen name has to be more than 2 characters long.</div>
+                    <div ng-message="md-maxlength">The screen name has to be less than 30 characters long.</div>
+                </div>
+            </md-input-container>
+        </div>
+
+        <div layout layout-sm="column">
+            <md-input-container flex>
+                <label>Path Title</label>
+                <input ng-minlength="3" md-maxlength="30" required name="pathTitle" ng-model="ctrl.path.title">
+                <div ng-messages="newPath.pathTitle.$error">
+                    <div ng-message="required">This is required.</div>
+                    <div ng-message="minlength">The title has to be more than 2 characters long.</div>
+                    <div ng-message="md-maxlength">The title has to be less than 30 characters long.</div>
+                </div>
+            </md-input-container>
+            <spf-select-container flex layout="column">
+                <md-select flex name="pathLanguage" ng-model="ctrl.path.language" spf-required placeholder="Select a Language">
+                    <md-option ng-value="opt" ng-repeat="opt in ['angularjs', 'python']">{{opt}}</md-option>
+                </md-select>
+                <div ng-messages="newPath.pathLanguage.$error">
+                    <div ng-message="required">This is required.</div>
+                </div>
+            </spf-select-container></div>
+        </div>
+
+        <md-input-container flex>
+            <label>Description</label>
+            <textarea name="pathDescription" ng-model="ctrl.path.description" columns="1" required ng-minlength="1" md-maxlength="200"></textarea>
+            <div ng-messages="newPath.pathDescription.$error">
+                <div ng-message="required">This is required.</div>
+                <div ng-message="minlength">The description has to be more than 1 characters long.</div>
+                <div ng-message="md-maxlength">The screen name has to be less than 200 characters long.</div>
+            </div>
+        </md-input-container>
+
+        <div layout="row" layout-align="center center">
+            <md-button flex="25" flex-sm="50" type="submit" class="md-raised md-primary">Create Path</md-button>
+            <md-button flex="25" flex-sm="50" type="reset" class="md-raised">Reset</md-button>
+        </div>
+    </form>
+</md-content>
