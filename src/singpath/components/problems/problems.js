@@ -23,15 +23,15 @@
         }
       }).
 
-      when(routes.newProblem, {
-        templateUrl: 'singpath/components/problems/problems-view-new.html',
-        controller: 'NewProblemCtrl',
+      when(routes.editProblems, {
+        templateUrl: 'singpath/components/problems/problems-view-list-edit.html',
+        controller: 'EditProblemsCtrl',
         controllerAs: 'ctrl',
         resolve: {
           'initialData': [
-            'newProblemCtrlInitialData',
-            function(newProblemCtrlInitialData) {
-              return newProblemCtrlInitialData();
+            'editProblemsCtrlInitialData',
+            function(editProblemsCtrlInitialData) {
+              return editProblemsCtrlInitialData();
             }
           ]
         }
@@ -49,20 +49,6 @@
             }
           ]
         }
-      }).
-
-      when(routes.editProblem, {
-        templateUrl: 'singpath/components/problems/problems-view-edit.html',
-        controller: 'EditProbemCtrl',
-        controllerAs: 'ctrl',
-        resolve: {
-          'initialData': [
-            'editProbemCtrlInitialData',
-            function(editProbemCtrlInitialData) {
-              return editProbemCtrlInitialData();
-            }
-          ]
-        }
       })
 
       ;
@@ -70,105 +56,34 @@
     }
   ]).
 
-  config([
-    '$mdIconProvider',
-    function($mdIconProvider) {
-      // Configure URLs for icons specified by [set:]id.
-      $mdIconProvider
-        .icon(
-          'language:python',
-          'singpath/components/problems/problems-icons-python.svg',
-          120
-        )
-        .icon(
-          'language:angularjs',
-          'singpath/components/problems/problems-icons-angularjs.svg',
-          120
-        );
-    }
-  ]).
-
-
   /**
-   * Use to resolve `initialData` of `ProblemListCtrl`.
+   * Used to initiate problem list and new problem view.
    *
    */
-  factory('problemListCtrlInitialData', [
-    '$q',
+  factory('baseProblemListResolver', [
+    '$route',
     'spfAuth',
     'spfAuthData',
     'spfDataStore',
-    function problemListCtrlInitialDataFactory($q, spfAuth, spfAuthData, spfDataStore) {
-      return function problemListCtrlInitialData() {
-        if (!spfAuth.user || !spfAuth.user.uid) {
-          return $q.all({
-            problems: spfDataStore.problems.list(),
-            profile: undefined
-          });
-        }
-
-        return $q.all({
-          problems: spfDataStore.problems.list(),
-          profile: spfAuthData.user().then(function(userData) {
-            if (!userData.publicId) {
-              return;
-            }
-
-            return spfDataStore.profile(userData.publicId).then(function(profile) {
-              if (profile && profile.$value === null) {
-                return spfDataStore.initProfile(userData);
-              }
-
-              return profile;
-            });
-          })
-        });
-      };
-    }
-  ]).
-
-  /**
-   * ProblemListCtrl
-   *
-   */
-  controller('ProblemListCtrl', [
-    'initialData',
-    'routes',
-    'SpfNavBarService',
-    function ProblemListCtrl(initialData, routes, SpfNavBarService) {
-      SpfNavBarService.update(
-        'Problems',
-        undefined, [{
-          title: 'New problem',
-          url: '#' + routes.newProblem,
-          icon: 'add-circle-outline'
-        }]
-      );
-
-      this.problems = initialData.problems;
-      this.profile = initialData.profile;
-    }
-  ]).
-
-  /**
-   * Get user profile for ProblemCreat
-   */
-  factory('newProblemCtrlInitialData', [
-    '$q',
-    'spfAuth',
-    'spfAuthData',
-    'spfDataStore',
-    function newProblemCtrlInitialDataFactory($q, spfAuth, spfAuthData, spfDataStore) {
-      return function newProblemCtrlInitialData() {
+    function baseProblemListResolverFactory($route, spfAuth, spfAuthData, spfDataStore) {
+      return function baseProblemListResolver() {
+        var pathId = $route.current.params.pathId;
+        var levelId = $route.current.params.levelId;
         var userPromise = spfAuthData.user();
-        var profilePromise;
-        var errLoggedOff = new Error('The user should be logged in to create a problem.');
+        var data = {
+          auth: spfAuth,
+          currentUser: userPromise,
+          profile: undefined,
+          path: spfDataStore.paths.get(pathId),
+          level: spfDataStore.levels.get(pathId, levelId),
+          problems: spfDataStore.problems.list(pathId, levelId)
+        };
 
         if (!spfAuth.user || !spfAuth.user.uid) {
-          return $q.reject(errLoggedOff);
+          return data;
         }
 
-        profilePromise = userPromise.then(function(userData) {
+        data.profile = userPromise.then(function(userData) {
           if (!userData.publicId) {
             return;
           }
@@ -182,11 +97,21 @@
           });
         });
 
-        return $q.all({
-          auth: spfAuth,
-          currentUser: userPromise,
-          profile: profilePromise
-        });
+        return data;
+      };
+    }
+  ]).
+
+  /**
+   * Use to resolve `initialData` of `ProblemListCtrl`.
+   *
+   */
+  factory('problemListCtrlInitialData', [
+    '$q',
+    'baseProblemListResolver',
+    function problemListCtrlInitialDataFactory($q, baseProblemListResolver) {
+      return function problemListCtrlInitialData() {
+        return $q.all(baseProblemListResolver());
       };
     }
   ]).
@@ -195,65 +120,130 @@
    * ProblemListCtrl
    *
    */
-  controller('NewProblemCtrl', [
-    '$q',
-    '$location',
+  controller('ProblemListCtrl', [
     'initialData',
-    'routes',
-    'SpfNavBarService',
-    'spfAuthData',
-    'spfAlert',
-    'spfDataStore',
-    function NewProblemCtrl($q, $location, initialData, routes, SpfNavBarService, spfAuthData, spfAlert, spfDataStore) {
-      var self = this;
-
-      SpfNavBarService.update(
-        'New problem', {
-          title: 'Problems',
-          url: '#' + routes.problems
-        }
-      );
+    'urlFor',
+    'spfNavBarService',
+    function ProblemListCtrl(initialData, urlFor, spfNavBarService) {
+      var pathId = initialData.path.$id;
+      var levelId = initialData.level.$id;
+      var navBarOptions = [];
 
       this.auth = initialData.auth;
       this.currentUser = initialData.currentUser;
       this.profile = initialData.profile;
-      this.problem = {};
-      this.savingProblem = false;
+      this.path = initialData.path;
+      this.level = initialData.level;
+      this.problems = initialData.problems;
 
-      this.createProblem = function(currentUser, problem) {
-        var next;
+      if (this.level.$canBeEditedBy(this.currentUser)) {
+        navBarOptions.push({
+          title: 'Edit',
+          url: '#' + urlFor('editProblems', {pathId: pathId, levelId: levelId}),
+          icon: 'create'
+        });
+      }
 
-        self.savingProblem = true;
+      spfNavBarService.update(
+        this.level.title,
+        [{
+          title: 'Paths',
+          url: '#' + urlFor('paths')
+        }, {
+          title: this.path.title,
+          url: '#' + urlFor('levels', {pathId: this.path.$id})
+        }], navBarOptions
+      );
+    }
+  ]).
 
-        if (!self.profile) {
-          next = spfAuthData.publicId(currentUser).then(function() {
-            spfAlert.success('Public id and display name saved');
-            return spfDataStore.initProfile(currentUser);
-          }).then(function(profile) {
-            self.profile = profile;
-            return profile;
-          });
-        } else {
-          next = $q.when();
-        }
+  /**
+   * Use to resolve `initialData` of `ProblemListCtrl`.
+   *
+   */
+  factory('editProblemsCtrlInitialData', [
+    '$q',
+    'baseProblemListResolver',
+    function editProblemsCtrlInitialDataFactory($q, baseProblemListResolver) {
+      return function editProblemsCtrlInitialData() {
+        var errCannotEdit = new Error('You cannot edit this level');
+        var data = baseProblemListResolver();
 
-        return next.then(function() {
-          problem.owner = {
-            publicId: currentUser.publicId,
-            displayName: currentUser.displayName,
-            gravatar: currentUser.gravatar
-          };
+        return $q.all({
+          level: data.level,
+          user: data.currentUser
+        }).then(function(results) {
+          if (
+            !results.level ||
+            !results.level.$canBeEditedBy ||
+            !results.level.$canBeEditedBy(results.user)
+          ) {
+            return $q.reject(errCannotEdit);
+          }
 
-          return spfDataStore.problems.create(problem);
-        }).then(function(updatedProblem) {
-          spfAlert.success('Problem created.');
-          $location.path(routes.problems);
-          return updatedProblem;
-        }, function(err) {
-          spfAlert.error(err.message || err.toString());
-          return err;
-        }).finally(function() {
-          this.savingProblem = false;
+          return $q.all(data);
+        });
+      };
+    }
+  ]).
+
+  /**
+   * EditProblemsCtrl
+   *
+   */
+  controller('EditProblemsCtrl', [
+    '$log',
+    'initialData',
+    'urlFor',
+    'spfAlert',
+    'spfNavBarService',
+    function EditProblemsCtrl($log, initialData, urlFor, spfAlert, spfNavBarService) {
+      var self = this;
+      var pathId = initialData.path.$id;
+      var levelId = initialData.level.$id;
+
+      this.auth = initialData.auth;
+      this.currentUser = initialData.currentUser;
+      this.profile = initialData.profile;
+      this.path = initialData.path;
+      this.level = initialData.level;
+      this.problems = initialData.problems;
+      this.newProblem = {};
+
+      spfNavBarService.update(
+        'Edit',
+        [{
+          title: 'Paths',
+          url: '#' + urlFor('paths')
+        }, {
+          title: this.path.title,
+          url: '#' + urlFor('levels', {pathId: pathId})
+        }, {
+          title: this.level.title,
+          url: '#' + urlFor('problems', {pathId: pathId, levelId: levelId})
+        }], []
+      );
+
+      this.saveProblem = function(problems, index) {
+        return problems.$save(index).then(function(data) {
+          spfAlert.success('Problem saved');
+          return data;
+        }).catch(function(err) {
+          $log.error(err);
+          spfAlert.success('Failed to save problem changes');
+        });
+      };
+
+      this.createProblem = function(currentUser, problems, newProblem) {
+        newProblem.language = self.level.language;
+        newProblem.owner = self.level.owner;
+        problems.$add(newProblem).then(function(ref) {
+          spfAlert.success('Problem created');
+          self.newProblem = {};
+          return ref;
+        }).catch(function(err) {
+          $log.error(err);
+          spfAlert.error('Failed to create the problem');
         });
       };
     }
@@ -271,32 +261,18 @@
     'spfDataStore',
     function playProblemCtrlInitialDataFactory($q, $route, spfAuth, spfAuthData, spfDataStore) {
       return function playProblemCtrlInitialData() {
-        var userPromise = spfAuthData.user();
-        var profilePromise;
-        var problemPromise;
-        var resolutionPromise;
+        var userPromise, problemPromise, resolutionPromise;
+        var pathId = $route.current.params.pathId;
+        var levelId = $route.current.params.levelId;
+        var problemId = $route.current.params.problemId;
         var errLoggedOff = new Error('The user should be logged in to play.');
 
         if (!spfAuth.user || !spfAuth.user.uid) {
           return $q.reject(errLoggedOff);
         }
 
-        profilePromise = userPromise.then(function(userData) {
-          if (!userData.publicId) {
-            return;
-          }
-
-          return spfDataStore.profile(userData.publicId).then(function(profile) {
-            if (profile && profile.$value === null) {
-              return spfDataStore.initProfile(userData);
-            }
-
-            return profile;
-          });
-        });
-
-        problemPromise = spfDataStore.problems.get($route.current.params.problemId);
-
+        userPromise = spfAuthData.user();
+        problemPromise = spfDataStore.problems.get(pathId, levelId, problemId);
         resolutionPromise = $q.all({
           user: userPromise,
           problem: problemPromise
@@ -306,16 +282,30 @@
           }
 
           return spfDataStore.resolutions.get(
-            result.problem.$id, result.user.publicId
+            pathId, levelId, problemId, result.user.publicId
           );
         });
 
         return $q.all({
           auth: spfAuth,
           currentUser: userPromise,
-          profile: profilePromise,
+          path: spfDataStore.paths.get(pathId),
+          level: spfDataStore.levels.get(pathId, levelId),
           problem: problemPromise,
           resolution: resolutionPromise,
+          profile: userPromise.then(function(userData) {
+            if (!userData.publicId) {
+              return;
+            }
+
+            return spfDataStore.profile(userData.publicId).then(function(profile) {
+              if (profile && profile.$value === null) {
+                return spfDataStore.initProfile(userData);
+              }
+
+              return profile;
+            });
+          }),
           solution: $q.all({
             user: userPromise,
             problem: problemPromise,
@@ -334,7 +324,7 @@
             }
 
             return spfDataStore.solutions.get(
-              result.problem.$id, result.user.publicId
+              pathId, levelId, problemId, result.user.publicId
             );
           })
         });
@@ -350,19 +340,22 @@
     '$q',
     '$location',
     'initialData',
-    'routes',
-    'SpfNavBarService',
+    'urlFor',
+    'spfNavBarService',
     'spfAlert',
     'spfAuthData',
     'spfDataStore',
-    function PlayProblemCtrl($q, $location, initialData, routes, SpfNavBarService, spfAlert, spfAuthData, spfDataStore) {
+    function PlayProblemCtrl(
+      $q, $location, initialData, urlFor, spfNavBarService, spfAlert, spfAuthData, spfDataStore
+    ) {
       var self = this;
       var original = {};
-      var menuItems = [];
 
       this.auth = initialData.auth;
       this.currentUser = initialData.currentUser;
       this.profile = initialData.profile;
+      this.path = initialData.path;
+      this.level = initialData.level;
       this.problem = initialData.problem;
       this.solution = initialData.solution || {};
       this.resolution = initialData.resolution;
@@ -371,19 +364,18 @@
       this.solutionSaved = false;
       original.solution = this.solution.solution;
 
-      if (this.problem.$canBeEditedBy(this.currentUser)) {
-        menuItems = [{
-          title: 'Edit',
-          url: '#' + routes.problems + '/' + this.problem.$id + '/edit',
-          icon: 'add-circle-outline'
-        }];
-      }
-
-      SpfNavBarService.update(
-        initialData.problem.title, {
-          title: 'Problems',
-          url: '#' + routes.problems
-        }, menuItems
+      spfNavBarService.update(
+        this.problem.title,
+        [{
+          title: 'Paths',
+          url: '#' + urlFor('paths')
+        }, {
+          title: this.path.title,
+          url: '#' + urlFor('levels', {pathId: this.path.$id})
+        }, {
+          title: this.level.title,
+          url: '#' + urlFor('problems', {pathId: this.path.$id, levelId: this.level.$id})
+        }], []
       );
 
       this.solve = function(currentUser, problem, solution) {
@@ -422,82 +414,6 @@
 
       this.solutionChanged = function(solution) {
         this.solutionSaved = this.solutionSaved && original.solution === solution.solution;
-      };
-    }
-  ]).
-
-  /**
-   * Use to resolve `initialData` of `EditProbemCtrl`.
-   *
-   */
-  factory('editProbemCtrlInitialData', [
-    '$q',
-    '$route',
-    'spfAuth',
-    'spfDataStore',
-    function editProbemCtrlInitialDataFactory($q, $route, spfAuth, spfDataStore) {
-      return function editProbemCtrlInitialData() {
-        var errLoggedOff = new Error('You should be logged in to edit a problem.');
-
-        if (!spfAuth.user || !spfAuth.user.uid) {
-          return $q.reject(errLoggedOff);
-        }
-
-        return $q.all({
-          auth: spfAuth,
-          problem: spfDataStore.problems.get($route.current.params.problemId)
-        });
-      };
-    }
-  ]).
-
-  /**
-   * EditProbemCtrl
-   *
-   */
-  controller('EditProbemCtrl', [
-    '$log',
-    '$location',
-    'initialData',
-    'spfAlert',
-    'SpfNavBarService',
-    'routes',
-    function EditProbemCtrl($log, $location, initialData, spfAlert, SpfNavBarService, routes) {
-      var self = this;
-      var originalProblem = Object.assign({}, this.problem);
-
-      SpfNavBarService.update(
-        'Edit', [{
-          title: 'Problems',
-          url: '#' + routes.problems
-        }, {
-          title: initialData.problem.title,
-          url: '#' + routes.problems + '/' + initialData.problem.$id + '/play'
-        }], [{
-          title: 'Delete',
-          onClick: function() {
-            self.problem.$remove().then(function() {
-              return $location.path(routes.problems);
-            });
-          },
-          icon: 'add-circle-outline'
-        }]
-      );
-
-      this.problem = initialData.problem;
-
-      this.saveProblem = function(problem) {
-        return problem.$save().then(function(updatedProblem) {
-          originalProblem = Object.assign({}, updatedProblem);
-          spfAlert.success('Problem saved');
-        }).catch(function(err) {
-          $log.error(err);
-          spfAlert.success('Failed to save problem changes');
-        });
-      };
-
-      this.reset = function(problem) {
-        Object.assign(problem, originalProblem);
       };
     }
   ])

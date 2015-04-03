@@ -25,12 +25,15 @@
    *
    */
   constant('routes', {
-    home: '/problems',
+    home: '/paths',
     profile: '/profile',
-    problems: '/problems',
-    newProblem: '/new-problem',
-    playProblem: '/problems/:problemId/play',
-    editProblem: '/problems/:problemId/edit'
+    paths: '/paths',
+    newPath: '/paths/new-path',
+    levels: '/paths/:pathId/levels',
+    newLevel: '/paths/:pathId/levels/new-level',
+    problems: '/paths/:pathId/levels/:levelId/problems',
+    editProblems: '/paths/:pathId/levels/:levelId/edit',
+    playProblem: '/paths/:pathId/levels/:levelId/problems/:problemId/play'
   }).
 
   /**
@@ -58,35 +61,38 @@
     '$log',
     '$firebaseUtils',
     '$firebaseObject',
+    '$firebaseArray',
     'spfAuth',
     'spfFirebase',
-    function spfDataStoreFactory($window, $q, $http, $log, $firebaseUtils, $firebaseObject, spfAuth, spfFirebase) {
+    function spfDataStoreFactory(
+      $window, $q, $http, $log, $firebaseUtils, $firebaseObject, $firebaseArray, spfAuth, spfFirebase
+    ) {
       var spfDataStore;
 
       spfDataStore = {
         _profileFactory: $firebaseObject.$extend({
-          hasSolved: function(problem) {
-            return (
-              this.solutions &&
-              this.solutions[problem.$id] &&
-              this.solutions[problem.$id].solved
-            );
+          $hasSolved: function(problem) {
+            var solution = this.$solution(problem);
+            return solution && solution.solved;
           },
 
-          hasStarted: function(problem) {
-            return (
-              this.solutions &&
-              this.solutions[problem.$id] &&
-              this.solutions[problem.$id].startedAt
-            );
+          $hasStarted: function(problem) {
+            var solution = this.$solution(problem);
+            return solution && solution.startedAt;
           },
 
-          workingOn: function(problem) {
+          $workingOn: function(problem) {
+            var solution = this.$solution(problem);
+            return solution && solution.startedAt && !solution.solved;
+          },
+
+          $solution: function(problem) {
             return (
+              problem &&
               this.solutions &&
-              this.solutions[problem.$id] &&
-              this.solutions[problem.$id].startedAt &&
-              !this.solutions[problem.$id].solved
+              this.solutions[problem.$pathId] &&
+              this.solutions[problem.$pathId][problem.$levelId] &&
+              this.solutions[problem.$pathId][problem.$levelId][problem.$id]
             );
           }
 
@@ -115,6 +121,64 @@
           });
         },
 
+        paths: {
+          _Factory: $firebaseObject.$extend({
+            $canBeEditedBy: function(user) {
+              return user && this.owner.publicId === user.publicId;
+            }
+          }),
+
+          list: function() {
+            return spfFirebase.array('singpath/paths', {
+              orderByKey: undefined,
+              limitToLast: 50
+            }).$loaded();
+          },
+
+          create: function(path) {
+            return spfFirebase.push(['singpath/paths'], path).then(function(resp) {
+              return resp.ref;
+            });
+          },
+
+          get: function(pathId) {
+            return new spfDataStore.paths._Factory(
+              spfFirebase.ref(['singpath/paths', pathId])
+            ).$loaded();
+          }
+        },
+
+        levels: {
+          _Factory: $firebaseObject.$extend({
+            $canBeEditedBy: function(user) {
+              return user && this.owner.publicId === user.publicId;
+            },
+
+            pathId: function() {
+              return this.$ref().parent().key();
+            }
+          }),
+
+          list: function(pathId) {
+            return spfFirebase.array(['singpath/levels', pathId], {
+              orderByKey: undefined,
+              limitToLast: 50
+            }).$loaded();
+          },
+
+          get: function(pathId, levelId) {
+            return new spfDataStore.levels._Factory(
+              spfFirebase.ref(['singpath/levels', pathId, levelId])
+            ).$loaded();
+          },
+
+          create: function(pathId, level) {
+            return spfFirebase.push(['singpath/levels', pathId], level).then(function(resp) {
+              return resp.ref;
+            });
+          }
+        },
+
         problems: {
           errDeleteFailed: new Error('Failed to delete the problem and its solutions'),
 
@@ -124,10 +188,18 @@
             },
 
             $remove: function() {
+              var level = this.$ref().parent();
+              var path = level.parent().key();
               var problemId = this.$id;
 
-              return $firebaseObject.prototype.$remove.apply(this).then(function(){
-                return $http.delete('/api/problems/' + problemId);
+              return $firebaseObject.prototype.$remove.apply(this).then(function() {
+                return $http.delete(
+                  '/'.join([
+                    '/api/paths', path.key(),
+                    'levels', level.key(),
+                    'problems', problemId
+                  ])
+                );
               }).catch(function(err) {
                 $log.error(err);
                 return $q.reject('Failed to delete this problem.');
@@ -135,23 +207,35 @@
             }
           }),
 
-          list: function() {
-            return spfFirebase.array(['singpath/problems'], {
-              orderByChild: 'timestamp',
-              limitToLast: 50
-            }).$loaded();
+          _itemFactory: $firebaseArray.$extend({
+            $$added: function(snap) {
+              var problem = $firebaseArray.prototype.$$added.apply(this, arguments);
+              problem.$levelId = snap.ref().parent().key();
+              problem.$pathId = snap.ref().parent().parent().key();
+              return problem;
+            }
+          }),
+
+          list: function(pathId, levelId) {
+            return new spfDataStore.problems._itemFactory(
+              spfFirebase.ref(['singpath/problems', pathId, levelId]
+            )).$loaded();
           },
 
-          create: function(problem) {
-            return spfFirebase.push(['singpath/problems'], problem).then(function(resp) {
+          create: function(pathId, levelId, problem) {
+            return spfFirebase.push(['singpath/problems', pathId, levelId], problem).then(function(resp) {
               return resp.ref;
             });
           },
 
-          get: function(problemId) {
+          get: function(pathId, levelId, problemId) {
             return new spfDataStore.problems._Factory(
-              spfFirebase.ref(['singpath/problems', problemId])
-            ).$loaded();
+              spfFirebase.ref(['singpath/problems', pathId, levelId, problemId])
+            ).$loaded(function(problem) {
+              problem.$levelId = problem.$ref().parent().key();
+              problem.$pathId = problem.$ref().parent().parent().key();
+              return problem;
+            });
           }
         },
 
@@ -172,7 +256,7 @@
            * Return an unsolved solution; a solution that has failed
            * verification.
            */
-          get: function(problemId, publicId) {
+          get: function(pathId, levelId, problemId, publicId) {
             if (!publicId) {
               return $q.reject(spfDataStore.solutions.errMissingPublicId);
             }
@@ -182,11 +266,14 @@
             }
 
             return spfFirebase.obj(
-              ['singpath/solutions', problemId, publicId]
+              ['singpath/solutions', pathId, levelId, problemId, publicId]
             ).$loaded();
           },
 
           create: function(problem, publicId, solution) {
+            var level = problem.$ref().parent();
+            var path = level.parent();
+
             if (!publicId) {
               return $q.reject(spfDataStore.solutions.errMissingPublicId);
             }
@@ -196,13 +283,18 @@
             }
 
             return spfFirebase.set(
-              ['singpath/solutions', problem.$id, publicId], {
+              ['singpath/solutions', path.key(), level.key(), problem.$id, publicId], {
                 language: problem.language,
                 solution: solution.solution,
                 tests: problem.tests
               }
             ).then(function() {
-              return $http.post('/api/solution/' + problem.$id + '/' + publicId).catch(function(err) {
+              return $http.post([
+                '/api/paths', path.key(),
+                'levels', level.key(),
+                'problems', problem.$id,
+                'solutions', publicId
+              ].join('/')).catch(function(err) {
                 $log.error(err);
                 return $q.reject(spfDataStore.solutions.errStartVerifcation);
               });
@@ -225,7 +317,10 @@
 
           _Factory: $firebaseObject.$extend({
             $init: function() {
-              var self = this;
+              var problem = this.$ref().parent();
+              var level = problem.parent();
+              var path = level.parent();
+              var publicId = this.$id;
 
               if (this.$value !== null) {
                 return $q.reject(spfDataStore.resolutions.errCannotStart);
@@ -242,9 +337,11 @@
               }).then(function(snapshot) {
                 return spfFirebase.set([
                   'singpath/userProfiles',
-                  self.$id,
+                  publicId,
                   'solutions',
-                  self.$ref().parent().key()
+                  path.key(),
+                  level.key(),
+                  problem.key()
                 ], {
                   startedAt: snapshot.val().startedAt
                 });
@@ -276,9 +373,9 @@
             }
           }),
 
-          get: function(problemId, publicId) {
+          get: function(pathId, levelId, problemId, publicId) {
             return new spfDataStore.resolutions._Factory(spfFirebase.ref(
-              ['singpath/resolutions', problemId, publicId]
+              ['singpath/resolutions', pathId, levelId, problemId, publicId]
             )).$loaded();
           }
 
