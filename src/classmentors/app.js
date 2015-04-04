@@ -12,11 +12,10 @@
   angular.module('clm', [
     'angular-loading-bar',
     'firebase',
-    'mgcrea.ngStrap',
     'ngAnimate',
     'ngMessages',
     'ngRoute',
-    'spf.shared'
+    'spf.shared.material'
   ]).
 
   /**
@@ -27,7 +26,9 @@
    */
   constant('routes', {
     home: '/events',
-    events: '/events'
+    events: '/events',
+    newEvent: '/new-event',
+    oneEvent: '/events/:eventId'
   }).
 
   /**
@@ -51,13 +52,40 @@
   factory('clmDataStore', [
     '$q',
     '$log',
+    '$firebaseObject',
     'spfFirebase',
     'spfAuth',
+    'spfAuthData',
     'spfCrypto',
-    function clmDataStoreFactory($q, $log, spfFirebase, spfAuth, spfCrypto) {
-      var api;
+    function clmDataStoreFactory($q, $log, $firebaseObject, spfFirebase, spfAuth, spfAuthData, spfCrypto) {
+      var clmDataStore;
 
-      api = {
+      clmDataStore = {
+        _profileFactory: $firebaseObject.$extend({}),
+
+        profile: function(publicId) {
+          return $q.when(publicId).then(function(id) {
+            return new clmDataStore._profileFactory(
+              spfFirebase.ref(['classMentors/userProfiles', id])
+            ).$loaded();
+          });
+        },
+
+        initProfile: function(userSync) {
+          if (!userSync || !userSync.publicId) {
+            return $q.reject(new Error('The user has not set a user public id.'));
+          }
+
+          return spfFirebase.set(
+            ['classMentors/userProfiles', userSync.publicId, 'user'], {
+              displayName: userSync.displayName,
+              gravatar: userSync.gravatar
+            }
+          ).then(function() {
+            return clmDataStore.profile(userSync.publicId);
+          });
+        },
+
         events: {
           list: function() {
             return spfFirebase.array(['classMentors/events'], {
@@ -66,19 +94,11 @@
             });
           },
 
-          create: function(collection, data, password) {
+          create: function(event, password) {
             var hash, eventId;
 
-            if (!spfAuth.user || !spfAuth.user.uid) {
-              return $q.reject(new Error('A user should be logged in to create an event.'));
-            }
-
-            if (!password) {
-              return $q.reject(new Error('An event should have a password.'));
-            }
-
-            return collection.$add(data).then(function(ref) {
-              eventId = ref.key();
+            return spfFirebase.push(['classMentors/events'], event).then(function(resp) {
+              eventId = resp.ref.key();
               hash = spfCrypto.password.newHash(password);
               var opts = {
                 hash: hash.value,
@@ -91,22 +111,17 @@
           },
 
           join: function(eventId, pw) {
-            if (!spfAuth.user || !spfAuth.user.uid) {
-              return $q.reject(new Error('A user should be logged in to create an event.'));
-            }
+            var paths;
 
-            var paths = {
-              hashOptions: ['classMentors/eventPasswords', eventId, 'options'],
-              application: ['classMentors/eventApplications', eventId, spfAuth.user.uid],
-              participation: ['classMentors/eventParticipants', eventId, spfAuth.user.uid]
-            };
-
-            // The owner can join without password.
-            if (pw === null) {
-              return spfFirebase.set(paths.participation, true);
-            }
-
-            return spfFirebase.obj(paths.hashOptions).$loaded().then(function(options) {
+            return spfAuthData.user().then(function(authData) {
+              paths = {
+                hashOptions: ['classMentors/eventPasswords', eventId, 'options'],
+                application: ['classMentors/eventApplications', eventId, spfAuth.user.uid],
+                participation: ['classMentors/eventParticipants', eventId, authData.publicId]
+              };
+            }).then(function() {
+              return spfFirebase.obj(paths.hashOptions).$loaded();
+            }).then(function(options) {
               var hash = spfCrypto.password.fromSalt(pw, options.$value.salt, options.$value);
               return spfFirebase.set(paths.application, hash.value);
             }).then(function() {
@@ -116,19 +131,17 @@
         },
 
         leave: function(eventId) {
-          if (!spfAuth.user || !spfAuth.user.uid) {
-            return $q.reject(new Error('A user should be logged in to create an event.'));
-          }
-
-          return spfFirebase.set([
-            'classMentors/eventParticipants',
-            eventId,
-            spfAuth.user.uid
-          ], false);
+          return spfAuthData.user().then(function(authData) {
+            return spfFirebase.set([
+              'classMentors/eventParticipants',
+              eventId,
+              authData.publicId
+            ], false);
+          });
         }
       };
 
-      return api;
+      return clmDataStore;
     }
   ])
 

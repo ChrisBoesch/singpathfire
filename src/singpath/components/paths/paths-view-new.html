@@ -25,11 +25,11 @@
         <div layout layout-sm="column">
             <md-input-container flex>
                 <label>Path Title</label>
-                <input ng-minlength="3" md-maxlength="30" required name="pathTitle" ng-model="ctrl.path.title">
+                <input ng-minlength="3" ng-maxlength="30" required name="pathTitle" ng-model="ctrl.path.title">
                 <div ng-messages="newPath.pathTitle.$error">
                     <div ng-message="required">This is required.</div>
                     <div ng-message="minlength">The title has to be more than 2 characters long.</div>
-                    <div ng-message="md-maxlength">The title has to be less than 30 characters long.</div>
+                    <div ng-message="maxlength">The title has to be less than 30 characters long.</div>
                 </div>
             </md-input-container>
             <spf-select-container flex layout="column">
@@ -44,11 +44,11 @@
 
         <md-input-container flex>
             <label>Description</label>
-            <textarea name="pathDescription" ng-model="ctrl.path.description" columns="1" required ng-minlength="1" md-maxlength="200"></textarea>
+            <textarea name="pathDescription" ng-model="ctrl.path.description" columns="1" required ng-minlength="1" ng-maxlength="200"></textarea>
             <div ng-messages="newPath.pathDescription.$error">
                 <div ng-message="required">This is required.</div>
                 <div ng-message="minlength">The description has to be more than 1 characters long.</div>
-                <div ng-message="md-maxlength">The screen name has to be less than 200 characters long.</div>
+                <div ng-message="maxlength">The screen name has to be less than 200 characters long.</div>
             </div>
         </md-input-container>
 

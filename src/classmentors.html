@@ -7,62 +7,102 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width">
-    <title ng-bind="page.title" ng-init="page={title: 'Class Mentors', menu:  {'title': 'Menu', 'contentTemplate': 'classmentors/components/menu/menu-view.html'}}">
+    <meta name="description" content="">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title ng-bind="page.title" ng-init="page={title: 'Class Mentors'}">
         Class Mentors
     </title>
 
-    <link href='//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700' rel='stylesheet' type='text/css'>
-    <link href='//fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
-
     <!-- build:css vendor.css -->
-    <link rel="stylesheet" href="vendor/bootstrap/dist/css/bootstrap.css">
-    <link rel="stylesheet" href="vendor/bootstrap/dist/css/bootstrap-theme.css">
     <link rel="stylesheet" href="vendor/angular-loading-bar/build/loading-bar.css">
-    <link rel="stylesheet" href="vendor/angular-motion/dist/angular-motion.css" />
-    <link rel="stylesheet" href="vendor/bootstrap-additions/dist/bootstrap-additions.css">
-    <link rel="stylesheet" href="vendor/alertifyjs/src/css/core.css">
-    <link rel="stylesheet" href="vendor/alertifyjs/src/css/themes/bootstrap3/bootstrap.css">
+    <link rel="stylesheet" href="vendor/angular-material/angular-material.css">
     <!-- Add denpencies style sheets here -->
 
     <!-- endbuild -->
     <!-- build:css app.css -->
     <link rel="stylesheet" href="classmentors/app.css">
-    <link rel="stylesheet" href="classmentors/components/menu/menu.css">
-    <link rel="stylesheet" href="shared/components/navbar/navbar.css">
-    <!-- Add Singpath Fire style sheets here.-->
+    <link rel="stylesheet" href="shared/components/alert/alert.css">
+    <link rel="stylesheet" href="shared/components/navbar/navbar-material.css">
+    <link rel="stylesheet" href="shared/components/select/select.css">
+    <!-- Add Classmentor Fire style sheets here.-->
 
     <!-- endbuild -->
 </head>
 
-<body>
-    <div id="wrap">
-        <div ng-include="'shared/components/navbar/navbar-view.html'"></div>
+<body layout="row">
 
-        <div class="container">
-            <div class="row">
+    <md-sidenav md-component-id="left" md-is-locked-open="$mdMedia('gt-md')" class="md-whiteframe-z2">
+        <md-toolbar>
+            <h1 class="md-toolbar-tools">
+                <a href="#/" ng-bind="page.title"></a>
+            </h1>
+        </md-toolbar>
+        <md-list flex>
+            <md-item>
+                <md-item-content>
+                    <md-button  class="md-padding" href="#/class-mentors">
+                        Events
+                    </md-button>
+                </md-item-content>
+            </md-item>
+        </md-list>
+    </md-sidenav>
 
-                <div class="col-md-2 hidden-sm hidden-xs">
-                    <div class="bs-sidebar hidden-print" role="complementary">
-                        <div ng-include="page.menu.contentTemplate"></div>
+    <div layout="column" role="main" flex>
+        <md-content>
+            <md-toolbar class="md-hue-2" layout="row" ng-controller="SpfSharedMaterialNavBarCtrl as navBar">
+                <div class="md-toolbar-tools">
+                    <md-button ng-click="navBar.openSideMenu('left')" hide-gt-md class="open-menu" aria-label="open side menu">
+                        <md-icon md-svg-icon="reorder" alt="open side menu"></md-icon>
+                    </md-button>
+
+                    <div hide-sm layout="row" ng-repeat="parent in navBar.currentPage.parents" class="nav-parent">
+                        <h2 ng-if="parent.title">
+                            <a ng-href="{{parent.url || ''}}">
+                                {{parent.title}}
+                            </a>
+                        </h2>
+
+                        <md-icon class="separator"
+                            md-svg-icon="keyboard-arrow-right"
+                            ng-if="navBar.currentPage.parent &amp;&amp; navBar.currentPage.section"
+                        ></md-icon>
                     </div>
+
+                    <h3 ng-bind="navBar.currentPage.section"></h3>
+
+                    <span flex></span>
+
+                    <md-button class="menu-item md-raised md-primary" ng-repeat="btn in navBar.currentPage.menuItems" ng-href="{{btn.url}}" aria-label="{{btn.title}}" ng-click="btn.onClick()">
+                        <md-icon md-svg-icon="{{btn.icon}}" ng-if="btn.icon"></md-icon>
+                        <span ng-bind="btn.title"></span>
+                    </md-button>
+
+                    <span ng-switch="navBar.auth.user.uid">
+                        <span ng-switch-when="undefined">
+                            <md-button ng-click="navBar.login()" class="md-raised md-accent">
+                                <md-icon md-svg-icon="launch"></md-icon>
+                                login
+                            </md-button>
+                        </span>
+                        <span ng-switch-default>
+                            <md-button ng-click="navBar.logout()" class="md-raised md-primary">
+                                <md-icon md-svg-icon="exit-to-app"></md-icon>
+                                logout
+                            </md-button>
+                        </span>
+                    </span>
                 </div>
+            </md-toolbar>
+        </md-content>
 
-                <div ng-view="" id="main-container" class="col-md-10"></div>
-
-            </div>
-        </div>
-
+        <md-content flex class="main-view" layout="column">
+            <div ng-view="" layout="column" flex></div>
+        </md-content>
     </div>
 
-    <footer>
-        <div class="container">
-            <p class="text-muted">&copy; 2015, Chris Boesch</p>
-        </div>
-    </footer>
 
     <!-- build:js vendor.js -->
-    <script src="vendor/alertifyjs/src/js/alertify.js"></script>
     <script src="vendor/crypto-js/src/core.js"></script>
     <script src="vendor/crypto-js/src/md5.js"></script>
     <script src="vendor/crypto-js/src/hmac.js"></script>
@@ -71,13 +111,14 @@
     <script src="vendor/crypto-js/src/sha256.js"></script>
     <script src="vendor/firebase/firebase.js"></script>
     <script src="vendor/moment/moment.js"></script>
+    <script src="vendor/ace-builds/src-noconflict/ace.js"></script>
     <script src="vendor/angular/angular.js"></script>
     <script src="vendor/angular-animate/angular-animate.js"></script>
     <script src="vendor/angular-route/angular-route.js"></script>
     <script src="vendor/angular-messages/angular-messages.js"></script>
+    <script src="vendor/angular-aria/angular-aria.js"></script>
+    <script src="vendor/angular-material/angular-material.js"></script>
     <script src="vendor/angular-loading-bar/build/loading-bar.js"></script>
-    <script src="vendor/angular-strap/dist/angular-strap.js"></script>
-    <script src="vendor/angular-strap/dist/angular-strap.tpl.js"></script>
     <script src="vendor/angularfire/dist/angularfire.js"></script>
     <script src="shared/components/polyfills/object.assign.js"></script>
     <!-- Add denpencies scripts here -->
@@ -89,6 +130,8 @@
     <!-- Important: load script creating modules first.-->
     <script src="classmentors/components/events/events.js"></script>
     <script src="shared/components/navbar/navbar.js"></script>
+    <script src="shared/components/icons/icons.js"></script>
+    <script src="shared/components/alert/alert.js"></script>
     <!-- Add Singpath Fire scripts above -->
     <!-- endbuild -->
 

@@ -1,0 +1,50 @@
+<md-content class="md-padding">
+    <form name="newEventForm" ng-submit="ctrl.save(ctrl.currentUser, ctrl.newEvent.data, ctrl.newEvent.password, newEventForm)">
+        <div layout layout-sm="column" ng-if="!ctrl.profile">
+            <md-input-container flex>
+                <label>Your Public Id</label>
+                <input ng-minlength="3" ng-maxlength="30" ng-pattern="/^[-a-z0-9]+$/" required name="userPublicId" ng-model="ctrl.currentUser.publicId">
+                <div ng-messages="newEventForm.userPublicId.$error">
+                    <div ng-message="required">This is required.</div>
+                    <div ng-message="minlength">The public id has to be more than 2 characters long.</div>
+                    <div ng-message="maxlength">The public id has to be less than 30 characters long.</div>
+                    <div ng-message="pattern">The public id should include letters, numbers and "-".</div>
+                </div>
+            </md-input-container>
+            <md-input-container flex>
+                <label>Your screen name</label>
+                <input ng-minlength="3" ng-maxlength="30" required name="userDisplayName" ng-model="ctrl.currentUser.displayName">
+                <div ng-messages="newEventForm.userDisplayName.$error">
+                    <div ng-message="required">This is required.</div>
+                    <div ng-message="minlength">The screen name has to be more than 2 characters long.</div>
+                    <div ng-message="maxlength">The screen name has to be less than 30 characters long.</div>
+                </div>
+            </md-input-container>
+        </div>
+
+        <md-input-container>
+            <label for="event-title">Event Name</label>
+            <input name="eventTitle" type="text" id="event-title" ng-model="ctrl.newEvent.data.title" ng-minlength="3" ng-maxlength="30" required="true"/>
+            <div ng-messages="newEventForm.eventTitle.$error">
+                <div ng-message="required">An event should have a name.</div>
+                <div ng-message="minlength">An event name shouldn't be shorten than 3 characters.</div>
+                <div ng-message="maxlength">An event name shouldn't be longer than 30 characters.</div>
+            </div>
+        </md-input-container>
+
+        <md-input-container>
+            <label for="event-pw">Event Password</label>
+            <input name="eventPw" type="text" id="event-pw" required ng-model="ctrl.newEvent.password" />
+            <div ng-messages="newEventForm.eventPw.$error">
+                <div ng-message="required">An event should have a password.</div>
+            </div>
+        </md-input-container>
+
+        <md-progress-circular ng-show="ctrl.creatingEvent" md-mode="indeterminate" style="margin: 16px auto"></md-progress-circular>
+
+        <div layout="row" layout-align="center center">
+            <md-button type="submit" class="md-raised md-primary" ng-disabled="newEventForm.$invalid || ctrl.creatingEvent">Create</md-button>
+            <md-button type="reset" class="md-raised" ng-click="ctrl.reset(newEventForm)" ng-disabled="ctrl.creatingEvent || newEventForm.$pristine">Reset</md-button>
+        </div>
+    </form>
+</md-content>
