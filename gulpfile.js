@@ -12,7 +12,6 @@ var minifyCSS = require('gulp-minify-css');
 var minimist = require('minimist');
 var path = require('path');
 var rename = require('gulp-rename');
-var replace = require('gulp-replace');
 var rev = require('gulp-rev');
 var revReplace = require('gulp-rev-replace');
 var targetHTML = require('gulp-targethtml');
@@ -44,12 +43,6 @@ var config = {
     dev: './build-dev',
     dist: './dist',
     e2e: './build-e2e'
-  },
-  bootstrap: {
-    assets: [
-      'src/vendor/bootstrap/dist/fonts/*'
-    ],
-    base: 'src/vendor/bootstrap/dist'
   },
   ace: {
     assets: [
@@ -129,13 +122,6 @@ function concatBuild(appName) {
     .pipe(useref())
     // Add compiled html templates and svg icons into app.js
     .pipe(gulpIf(/app\.js/, compilers[appName]()))
-    // Add boostrap assets
-    .pipe(gulp.src(config.bootstrap.assets, {
-      base: config.bootstrap.base,
-      passthrough: true
-    }))
-    // Bootstrap relative path to font changes form "../fonts" to "./fonts"
-    .pipe(gulpIf(/.+\.(js|css)$/, replace(/\.\.\/fonts\//g, './fonts/')))
     // Add ace assets
     .pipe(gulp.src(config.ace.assets, {
       base: config.ace.base,
