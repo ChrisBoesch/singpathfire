@@ -1,7 +1,7 @@
 (function() {
   'use strict';
 
-  angular.module('oep').
+  angular.module('clm').
 
   config([
     '$routeProvider',
@@ -10,28 +10,28 @@
       $routeProvider.
 
       when(routes.editProfile, {
-        templateUrl: 'badgetracker/components/profiles/profiles-view-edit.html',
-        controller: 'OepProfileCtrl',
+        templateUrl: 'classmentors/components/profiles/profiles-view-edit.html',
+        controller: 'ClmProfileCtrl',
         controllerAs: 'ctrl',
         resolve: {
           'initialData': [
-            'oepEditProfileInitialDataResolver',
-            function(oepEditProfileInitialDataResolver) {
-              return oepEditProfileInitialDataResolver();
+            'clmEditProfileInitialDataResolver',
+            function(clmEditProfileInitialDataResolver) {
+              return clmEditProfileInitialDataResolver();
             }
           ]
         }
       }).
 
       when(routes.profile, {
-        templateUrl: 'badgetracker/components/profiles/profiles-view-show.html',
-        controller: 'OepProfileCtrl',
+        templateUrl: 'classmentors/components/profiles/profiles-view-show.html',
+        controller: 'ClmProfileCtrl',
         controllerAs: 'ctrl',
         resolve: {
           'initialData': [
-            'oepShowProfileInitialDataResolver',
-            function(oepShowProfileInitialDataResolver) {
-              return oepShowProfileInitialDataResolver();
+            'clmShowProfileInitialDataResolver',
+            function(clmShowProfileInitialDataResolver) {
+              return clmShowProfileInitialDataResolver();
             }
           ]
         }
@@ -43,16 +43,16 @@
   ]).
 
   /**
-   * Used to resolve `initialData` of `OepProfileCtrl` the logged in user profile.
+   * Used to resolve `initialData` of `ClmProfileCtrl` the logged in user profile.
    *
    */
-  factory('oepEditProfileInitialDataResolver', [
+  factory('clmEditProfileInitialDataResolver', [
     '$q',
     'spfAuth',
     'spfAuthData',
-    'oepDataStore',
-    function oepEditProfileInitialDataResolverFactory($q, spfAuth, spfAuthData, oepDataStore) {
-      return function oepEditProfileInitialDataResolver() {
+    'clmDataStore',
+    function clmEditProfileInitialDataResolverFactory($q, spfAuth, spfAuthData, clmDataStore) {
+      return function clmEditProfileInitialDataResolver() {
         var userPromise = spfAuthData.user();
         var profilePromise;
         var errLoggedOff = new Error('The user should be logged in to edit her/his profile.');
@@ -69,9 +69,9 @@
             return;
           }
 
-          return oepDataStore.profile(userData.publicId).then(function(profile) {
+          return clmDataStore.profile(userData.publicId).then(function(profile) {
             if (profile && profile.$value === null) {
-              return oepDataStore.initProfile(userData);
+              return clmDataStore.initProfile(userData);
             }
 
             return profile;
@@ -88,17 +88,17 @@
   ]).
 
   /**
-   * Used to resolve `initialData` of `OepProfileCtrl` for a public profile.
+   * Used to resolve `initialData` of `ClmProfileCtrl` for a public profile.
    *
    */
-  factory('oepShowProfileInitialDataResolver', [
+  factory('clmShowProfileInitialDataResolver', [
     '$q',
     '$route',
     'spfAuth',
     'spfAuthData',
-    'oepDataStore',
-    function oepShowProfileInitialDataResolverFactory($q, $route, spfAuth, spfAuthData, oepDataStore) {
-      return function oepShowProfileInitialDataResolver() {
+    'clmDataStore',
+    function clmShowProfileInitialDataResolverFactory($q, $route, spfAuth, spfAuthData, clmDataStore) {
+      return function clmShowProfileInitialDataResolver() {
         var publicId = $route.current.params.publicId;
         var userPromise = spfAuthData.user();
         var profilePromise;
@@ -109,7 +109,7 @@
           return $q.reject(errNoPublicId);
         }
 
-        profilePromise = oepDataStore.profile(publicId).then(function(profile) {
+        profilePromise = clmDataStore.profile(publicId).then(function(profile) {
           if (profile.$value === null) {
             return $q.reject(errNoProfile);
           }
@@ -126,20 +126,23 @@
   ]).
 
   /**
-   * OepProfileCtrl
+   * ClmProfileCtrl
    *
    */
-  controller('OepProfileCtrl', [
+  controller('ClmProfileCtrl', [
     'spfAuthData',
+    'spfNavBarService',
     'initialData',
-    'oepDataStore',
+    'clmDataStore',
     'spfAlert',
-    function OepProfileCtrl(spfAuthData, initialData, oepDataStore, spfAlert) {
+    function ClmProfileCtrl(spfAuthData, spfNavBarService, initialData, clmDataStore, spfAlert) {
       var self = this;
 
       this.auth = initialData.auth;
       this.currentUser = initialData.currentUser;
       this.profile = initialData.profile;
+
+      spfNavBarService.update('Profile');
 
       this.settingPublicId = false;
 
@@ -147,7 +150,7 @@
         this.settingPublicId = true;
         spfAuthData.publicId(currentUser).then(function() {
           spfAlert.success('Public id set.');
-          return oepDataStore.profileInit(currentUser);
+          return clmDataStore.profileInit(currentUser);
         }).then(function(profile) {
           spfAlert.success('Profile setup.');
           self.profile = profile;
@@ -164,7 +167,7 @@
           id: undefined,
 
           save: function() {
-            return oepDataStore.services.codeSchool.saveDetails(self.currentUser, {
+            return clmDataStore.services.codeSchool.saveDetails(self.currentUser, {
               id: self.lookUp.codeSchool.id,
               name: self.lookUp.codeSchool.id
             }).then(function() {
@@ -184,13 +187,13 @@
             self.lookUp.codeCombat.errors.isLoggedToCodeCombat = undefined;
             self.lookUp.codeCombat.errors.hasACodeCombatName = undefined;
 
-            oepDataStore.services.codeCombat.currentUser().then(function(details) {
+            clmDataStore.services.codeCombat.currentUser().then(function(details) {
               self.lookUp.codeCombat.id = details.id;
               self.lookUp.codeCombat.name = details.name;
             }).catch(function(err) {
-              if (err === oepDataStore.services.codeCombat.errLoggedOff) {
+              if (err === clmDataStore.services.codeCombat.errLoggedOff) {
                 self.lookUp.codeCombat.errors.isLoggedToCodeCombat = true;
-              } else if (err === oepDataStore.services.codeCombat.errNoName) {
+              } else if (err === clmDataStore.services.codeCombat.errNoName) {
                 self.lookUp.codeCombat.errors.hasACodeCombatName = true;
               } else {
                 spfAlert.error(err.toString());
@@ -199,7 +202,7 @@
           },
 
           save: function() {
-            return oepDataStore.services.codeCombat.saveDetails(self.currentUser, {
+            return clmDataStore.services.codeCombat.saveDetails(self.currentUser, {
               id: self.lookUp.codeCombat.id,
               name: self.lookUp.codeCombat.name
             }).then(function() {
@@ -218,18 +221,18 @@
     }
   ]).
 
-  directive('oepProfile', [
+  directive('clmProfile', [
 
-    function oepProfileFactory() {
+    function clmProfileFactory() {
       return {
-        templateUrl: 'badgetracker/components/profiles/profiles-view-oep-profile.html',
+        templateUrl: 'classmentors/components/profiles/profiles-view-clm-profile.html',
         restrict: 'A',
         scope: {
-          serviceId: '@oepServiceId',
-          profile: '=oepProfile'
+          serviceId: '@clmServiceId',
+          profile: '=clmProfile'
         },
         controller: [
-          function OepProfileCtrl() {
+          function ClmProfileCtrl() {
             this.services = {
               codeCombat: {
                 name: 'Code Combat',
@@ -250,29 +253,32 @@
         ],
         controllerAs: 'ctrl',
         // arguments: scope, iElement, iAttrs, controller
-        link: function oepProfilePostLink() {}
+        link: function clmProfilePostLink() {}
       };
     }
   ]).
 
-  directive('oepServiceUserIdExists', [
+  directive('clmServiceUserIdExists', [
     '$q',
-    'oepDataStore',
-    function oepServiceUserIdExistsFactory($q, oepDataStore) {
+    'clmDataStore',
+    function clmServiceUserIdExistsFactory($q, clmDataStore) {
       return {
         restrict: 'A',
         scope: false,
         require: 'ngModel',
         // arguments: scope, iElement, iAttrs, controller
-        link: function oepServiceUserIdExistsPostLink(s, e, iAttrs, model) {
-          var serviceId = iAttrs.oepServiceUserIdExists;
+        link: function clmServiceUserIdExistsPostLink(s, e, iAttrs, model) {
+          var serviceId = iAttrs.clmServiceUserIdExists;
 
-          if (!serviceId || !oepDataStore.services[serviceId]) {
+          if (!serviceId || !clmDataStore.services[serviceId]) {
             return;
           }
 
-          model.$asyncValidators.oepServiceUserIdExists = function(modelValue, viewValue) {
-            return oepDataStore.services[serviceId].userIdExist(viewValue).then(function(exists) {
+          model.$asyncValidators.clmServiceUserIdExists = function(modelValue, viewValue) {
+            if (!viewValue) {
+              return $q.when(true);
+            }
+            return clmDataStore.services[serviceId].userIdExist(viewValue).then(function(exists) {
               if (!exists) {
                 return $q.reject(new Error(viewValue + 'does not exist or is not public'));
               }

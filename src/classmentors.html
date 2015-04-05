@@ -21,6 +21,7 @@
     <!-- endbuild -->
     <!-- build:css app.css -->
     <link rel="stylesheet" href="classmentors/app.css">
+    <link rel="stylesheet" href="classmentors/components/profiles/profiles.css">
     <link rel="stylesheet" href="shared/components/alert/alert.css">
     <link rel="stylesheet" href="shared/components/navbar/navbar-material.css">
     <link rel="stylesheet" href="shared/components/select/select.css">
@@ -40,8 +41,13 @@
         <md-list flex>
             <md-item>
                 <md-item-content>
-                    <md-button  class="md-padding" href="#/class-mentors">
+                    <md-button  class="md-padding" href="#{{ 'events' | urlFor }}">
                         Events
+                    </md-button>
+                </md-item-content>
+                <md-item-content>
+                    <md-button  class="md-padding" href="#{{ 'profile' | urlFor }}">
+                        Profile
                     </md-button>
                 </md-item-content>
             </md-item>
@@ -129,9 +135,10 @@
     <script src="shared/app.js"></script>
     <!-- Important: load script creating modules first.-->
     <script src="classmentors/components/events/events.js"></script>
-    <script src="shared/components/navbar/navbar.js"></script>
-    <script src="shared/components/icons/icons.js"></script>
+    <script src="classmentors/components/profiles/profiles.js"></script>
     <script src="shared/components/alert/alert.js"></script>
+    <script src="shared/components/icons/icons.js"></script>
+    <script src="shared/components/navbar/navbar.js"></script>
     <!-- Add Singpath Fire scripts above -->
     <!-- endbuild -->
 

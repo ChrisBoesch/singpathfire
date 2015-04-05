@@ -3,10 +3,28 @@
  *
  */
 
+html p, body p {
+  line-height: 1.25;
+}
+
 .md-button {
   margin: 16px 8px;
   padding: 0 8px;
   line-height: 36px;
+}
+
+md-sidenav md-list .md-button {
+  color: inherit;
+  font-weight: 500;
+  text-align: left;
+  width: 100%;
+  padding: 16px;
+  margin: 0;
+  line-height: normal;
+}
+md-toolbar .separator {
+  width: 48px;
+  height: 28px;
 }
 
 

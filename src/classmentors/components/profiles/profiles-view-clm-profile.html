@@ -1,4 +1,4 @@
-<div class="well clearfix" ng-if="profile.services[serviceId].details.id &amp;&amp; ctrl.services[serviceId]">
+<div class="service-card md-whiteframe-z1" ng-if="profile.services[serviceId].details.id &amp;&amp; ctrl.services[serviceId]">
     <h2>
         {{ctrl.services[serviceId].name}}
         <small>- registered as <em>{{profile.services[serviceId].details.name}}</em></small>
@@ -13,14 +13,13 @@
     </p>
 
     <div ng-if="!(profile.services[serviceId].badges|spfEmpty)" class="badges">
-        <h2>Levels completed:</h2>
-        <div class="row">
-            <div ng-repeat="badge in profile.services[serviceId].badges" class="col-xs-4 col-md-2">
-                <a ng-href="{{badge.url || ctrl.services[serviceId].url}}" class="thumbnail" title="earned the {{badge.name}} badge." target="_blank">
+        <md-grid-list md-cols="6" md-row-height="4:3" md-gutter="8px">
+            <md-grid-tile ng-repeat="badge in profile.services[serviceId].badges" md-rowspan="1" md-colspan="1">
+                <div class="badge">
                     <img ng-class="serviceId" ng-src="{{badge.iconUrl}}" alt="{{badge.name}}" title="earned the {{badge.name}} badge." />
-                </a>
-            </div>
-        </div>
+                </div>
+            </md-grid-tile>
+          </md-grid-list>
     </div>
 
     <p class="last-update" ng-if="profile.services[serviceId].lastUpdate"><small>last update from {{profile.services[serviceId].lastUpdate|date:'medium'}}</small></p>

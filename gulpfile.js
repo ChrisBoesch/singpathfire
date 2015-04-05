@@ -20,11 +20,9 @@ var templateCache = require('gulp-angular-templatecache');
 var uglify = require('gulp-uglify');
 var useref = require('gulp-useref');
 
-
 var argv = minimist(process.argv);
 
 var apps = [
-  'badgetracker',
   'classmentors',
   'singpath'
 ];
@@ -69,8 +67,7 @@ var config = {
   dest: argv.dest ? path.resolve(argv.dest) : null,
   noduleNames: {
     singpath: 'spf',
-    classmentors: 'clm',
-    badgetracker: 'oep'
+    classmentors: 'clm'
   }
 };
 
@@ -91,7 +88,6 @@ function copyBuid(target, dest) {
     }))
     .pipe(gulp.dest(dest));
 }
-
 
 var compilers = config.apps.reduce(function(prev, appName) {
   prev[appName] = lazypipe()

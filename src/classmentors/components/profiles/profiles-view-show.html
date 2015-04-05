@@ -1,0 +1,54 @@
+<md-content flex class="md-padding" layout="row">
+    <div class="profile" flex="33">
+        <div class="md-whiteframe-z1 avatar">
+            <img ng-src="{{ctrl.profile.user.gravatar}}?s=200&amp;r=g&amp;d=mm" alt="user avatar">
+            <h2>
+                {{ctrl.profile.user.displayName}}
+            </h2>
+        </div>
+    </div>
+
+    <div flex="67">
+
+        <div clm-profile="ctrl.profile" clm-service-id="codeCombat"></div>
+        <div clm-profile="ctrl.profile" clm-service-id="codeSchool"></div>
+        <div clm-profile="ctrl.profile" clm-service-id="treeHouse"></div>
+
+        <div id="register-codecombat" ng-if="!ctrl.profile.services.codeCombat.details.id" class="register-service md-whiteframe-z1">
+            <h2>Code Combat</h2>
+
+            <p>
+                <a href="http://codecombat.com/" target="_blank">Code Combat</a>,
+                learn to Code JavaScript by Playing a Game.
+            </p>
+        </div>
+
+        <div id="register-codeschool" ng-if="!ctrl.profile.services.codeSchool.details.id" class="register-service md-whiteframe-z1">
+            <h2>Code School</h2>
+
+            <p>
+                <a href="https://www.codeschool.com/" target="_blank">Code School</a>
+                teaches web technologies in the comfort of your browser with video lessons,
+                coding challenges, and screencasts. Registering is free, and the provides
+                free content to try out.
+            </p>
+
+        </div>
+
+        <div id="register-treehouse" class="register-service md-whiteframe-z1">
+            <h2>Treehouse</h2>
+
+            <p>
+                Learn HTML, CSS, iPhone apps &amp; more at
+                <a href="http://www.teamtreehouse.com/signup_code/singapore" target="_blank">
+                    Treehouse
+                </a>.
+                Treehouse offers a 14 days free trial.
+            </p>
+
+        </div>
+
+    </div>
+
+</md-content>
+
