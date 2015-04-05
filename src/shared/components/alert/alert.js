@@ -1,7 +1,7 @@
 (function() {
   'use strict';
 
-  angular.module('spf.shared.material').
+  angular.module('spf.shared').
 
   /**
    * Service to show notification m.

@@ -20,10 +20,11 @@
 
     <!-- endbuild -->
     <!-- build:css app.css -->
+    <link rel="stylesheet" href="shared/app.css">
     <link rel="stylesheet" href="classmentors/app.css">
     <link rel="stylesheet" href="classmentors/components/profiles/profiles.css">
     <link rel="stylesheet" href="shared/components/alert/alert.css">
-    <link rel="stylesheet" href="shared/components/navbar/navbar-material.css">
+    <link rel="stylesheet" href="shared/components/navbar/navbar.css">
     <link rel="stylesheet" href="shared/components/select/select.css">
     <!-- Add Classmentor Fire style sheets here.-->
 
@@ -54,58 +55,15 @@
         </md-list>
     </md-sidenav>
 
+
     <div layout="column" role="main" flex>
-        <md-content>
-            <md-toolbar class="md-hue-2" layout="row" ng-controller="SpfSharedMaterialNavBarCtrl as navBar">
-                <div class="md-toolbar-tools">
-                    <md-button ng-click="navBar.openSideMenu('left')" hide-gt-md class="open-menu" aria-label="open side menu">
-                        <md-icon md-svg-icon="reorder" alt="open side menu"></md-icon>
-                    </md-button>
-
-                    <div hide-sm layout="row" ng-repeat="parent in navBar.currentPage.parents" class="nav-parent">
-                        <h2 ng-if="parent.title">
-                            <a ng-href="{{parent.url || ''}}">
-                                {{parent.title}}
-                            </a>
-                        </h2>
-
-                        <md-icon class="separator"
-                            md-svg-icon="keyboard-arrow-right"
-                            ng-if="navBar.currentPage.parent &amp;&amp; navBar.currentPage.section"
-                        ></md-icon>
-                    </div>
-
-                    <h3 ng-bind="navBar.currentPage.section"></h3>
-
-                    <span flex></span>
-
-                    <md-button class="menu-item md-raised md-primary" ng-repeat="btn in navBar.currentPage.menuItems track by btn.url" ng-href="{{btn.url}}" aria-label="{{btn.title}}" ng-click="btn.onClick()">
-                        <md-icon md-svg-icon="{{btn.icon}}" ng-if="btn.icon"></md-icon>
-                        <span ng-bind="btn.title"></span>
-                    </md-button>
-
-                    <span ng-switch="navBar.auth.user.uid">
-                        <span ng-switch-when="undefined">
-                            <md-button ng-click="navBar.login()" class="md-raised md-accent">
-                                <md-icon md-svg-icon="launch"></md-icon>
-                                login
-                            </md-button>
-                        </span>
-                        <span ng-switch-default>
-                            <md-button ng-click="navBar.logout()" class="md-raised md-primary">
-                                <md-icon md-svg-icon="exit-to-app"></md-icon>
-                                logout
-                            </md-button>
-                        </span>
-                    </span>
-                </div>
-            </md-toolbar>
-        </md-content>
+        <md-content ng-include="'shared/components/navbar/navbar-view.html'"></md-content>
 
         <md-content flex class="main-view" layout="column">
             <div ng-view="" layout="column" flex></div>
         </md-content>
     </div>
+
 
 
     <!-- build:js vendor.js -->

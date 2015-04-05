@@ -15,7 +15,7 @@
     'ngAnimate',
     'ngMessages',
     'ngRoute',
-    'spf.shared.material'
+    'spf.shared'
   ]).
 
   /**

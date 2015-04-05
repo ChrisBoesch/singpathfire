@@ -5,24 +5,13 @@
 (function() {
   'use strict';
 
-  var coreModule = angular.module('spf.shared.core', [
-    'angular-loading-bar',
-    'firebase'
-  ]);
-
-  var bootstrapModule = angular.module('spf.shared', [
+  var module = angular.module('spf.shared', [
     'angular-loading-bar',
     'firebase',
-    'mgcrea.ngStrap',
-    'spf.shared.core'
+    'ngMaterial'
   ]);
 
-  var materialModule = angular.module('spf.shared.material', [
-    'ngMaterial',
-    'spf.shared.core'
-  ]);
-
-  coreModule.constant('routes', {
+  module.constant('routes', {
     home: '/'
   });
 
@@ -30,7 +19,7 @@
    * Configure cfpLoadingBar options.
    *
    */
-  coreModule.config([
+  module.config([
     'cfpLoadingBarProvider',
     function(cfpLoadingBarProvider) {
       cfpLoadingBarProvider.includeSpinner = false;
@@ -46,7 +35,7 @@
    * to the home route.
    *
    */
-  coreModule.run([
+  module.run([
     '$window',
     '$rootScope',
     '$location',
@@ -65,7 +54,7 @@
     }
   ]);
 
-  coreModule.factory('urlFor', [
+  module.factory('urlFor', [
     'routes',
     function urlForFactory(routes) {
       var routeFns = Object.keys(routes).reduce(function(fns, name) {
@@ -88,7 +77,7 @@
     }
   ]);
 
-  coreModule.filter('urlFor', [
+  module.filter('urlFor', [
     'urlFor',
     function urlForFilterFactory(urlFor) {
       return function urlForFilter(name, params) {
@@ -122,7 +111,7 @@
    *    ])
    *
    */
-  coreModule.provider('spfFirebaseRef', function OepFirebaseProvider() {
+  module.provider('spfFirebaseRef', function OepFirebaseProvider() {
     var baseUrl = 'https://singpath-play.firebaseio.com/';
 
     this.setBaseUrl = function(url) {
@@ -157,7 +146,7 @@
 
   });
 
-  coreModule.factory('spfFirebase', [
+  module.factory('spfFirebase', [
     '$q',
     '$firebaseObject',
     '$firebaseArray',
@@ -231,7 +220,7 @@
    * Returns an object with `user` (Firebase auth user data) property,
    * and login/logout methods.
    */
-  coreModule.factory('spfAuth', [
+  module.factory('spfAuth', [
     '$q',
     '$firebaseAuth',
     'spfFirebaseRef',
@@ -300,7 +289,7 @@
    * Service to interact with singpath firebase db
    *
    */
-  coreModule.factory('spfAuthData', [
+  module.factory('spfAuthData', [
     '$q',
     '$log',
     'spfFirebase',
@@ -428,7 +417,7 @@
    * and `spfAlert.danger` are shortcut for the spfAlert function.
    *
    */
-  coreModule.factory('spfAlert', [
+  module.factory('spfAlert', [
     function spfAlertFactory() {
       var spfAlert = angular.noop;
 
@@ -442,7 +431,7 @@
     }
   ]);
 
-  coreModule.provider('spfCrypto', [
+  module.provider('spfCrypto', [
     function cryptoProvider() {
       var saltSize = 128 / 8;
       var hashOpts = {
@@ -529,7 +518,7 @@
     }
   ]);
 
-  coreModule.filter('spfEmpty', [
+  module.filter('spfEmpty', [
     function spfEmptyFactory() {
       return function spfEmpty(obj) {
         if (!obj) {
@@ -549,104 +538,7 @@
     }
   ]);
 
-  /**
-   * Service to show notification message in top right corner of
-   * the window.
-   *
-   * Relies on Alert css properties sets in `src/app/app.css`.
-   *
-   * It takes as arguments the type of notification and the content
-   * of the nofication.
-   *
-   * The type is used as title of the notification and is user to set
-   * the class of the notication block: for type set `info`,
-   * the block class will be set `alert` and `alert-info` (always lowercase).
-   *
-   * `spfAlert.success`, `spfAlert.info`, `spfAlert.warning`
-   * and `spfAlert.danger` are shortcut for the spfAlert function.
-   *
-   * They take as agurment the notification content and set respectively the
-   * type to "Success", "Info", "Warning" and "Danger".
-   *
-   */
-  bootstrapModule.factory('spfAlert', [
-    '$window',
-    function spfAlertFactory($window) {
-      var ctx = $window.alertify;
-      var spfAlert = function(type, content) {
-        type = type ? type.toLowerCase() : undefined;
-        ctx.log(content, type);
-      };
-
-      spfAlert.success = spfAlert.bind(ctx, 'success');
-      spfAlert.info = spfAlert.bind(ctx, null);
-      spfAlert.warning = spfAlert.bind(ctx, 'error');
-      spfAlert.danger = spfAlert.bind(ctx, 'error');
-      spfAlert.error = spfAlert.bind(ctx, 'error');
-
-      return spfAlert;
-    }
-  ]);
-
-  bootstrapModule.directive('spfBsValidClass', [
-
-    function spfBsValidClassFactory() {
-      return {
-        restrict: 'A',
-        scope: false,
-        require: 'ngModel',
-        // arguments: scope, iElement, iAttrs, controller
-        link: function spfBsValidClassPostLink(s, iElement, a, model) {
-          var formControl;
-          var setPristine = model.$setPristine;
-
-          function findFormController(input, className) {
-            var formCtrl = input;
-            while (formCtrl.length > 0) {
-              formCtrl = formCtrl.parent();
-              if (formCtrl.hasClass(className)) {
-                return formCtrl;
-              }
-            }
-          }
-
-          formControl = findFormController(iElement, 'form-group');
-          if (!formControl) {
-            formControl = findFormController(iElement, 'radio');
-          }
-
-          if (!formControl) {
-            return;
-          }
-
-          model.$setPristine = function augmentedSetPristine() {
-            formControl.removeClass('has-error');
-            formControl.removeClass('has-success');
-            return setPristine.apply(model, arguments);
-          };
-
-          model.$viewChangeListeners.push(function spfBsValidClassOnChange() {
-
-            if (model.$pristine) {
-              formControl.removeClass('has-error');
-              formControl.removeClass('has-success');
-              return;
-            }
-
-            if (model.$valid) {
-              formControl.removeClass('has-error');
-              formControl.addClass('has-success');
-            } else {
-              formControl.addClass('has-error');
-              formControl.removeClass('has-success');
-            }
-          });
-        }
-      };
-    }
-  ]);
-
-  materialModule.config(function($mdThemingProvider) {
+  module.config(function($mdThemingProvider) {
     $mdThemingProvider.theme('default')
       .primaryPalette('brown')
       .accentPalette('amber')
