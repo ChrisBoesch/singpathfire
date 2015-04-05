@@ -79,129 +79,6 @@
 
       });
 
-      describe('spfAuthData', function() {
-        var spfFirebaseSync, spfAuth, sync, userObj;
-
-        beforeEach(module('spf.shared'));
-
-        beforeEach(function() {
-          sync = jasmine.createSpyObj('$angularfire', ['$asObject']);
-          userObj = jasmine.createSpyObj('$firebaseObject', ['$loaded', '$save']);
-          spfFirebaseSync = jasmine.createSpy().and.returnValue(sync);
-          sync.$asObject.and.returnValue(userObj);
-          spfAuth = {
-            user: {
-              uid: 'custome:1',
-              google: {
-                displayName: 'Bob Smith',
-                email: 'bob@example.com'
-              }
-            },
-            onAuth: angular.noop
-          };
-
-          module(function($provide) {
-            $provide.value('spfFirebaseSync', spfFirebaseSync);
-            $provide.value('spfAuth', spfAuth);
-          });
-        });
-
-        it('should resolved to user data', function() {
-          inject(function($q, $rootScope, spfAuthData) {
-            var result;
-
-            userObj.$loaded.and.returnValue($q.when(userObj));
-            spfAuthData.user().then(function(_result_) {
-              result = _result_;
-            });
-            $rootScope.$apply();
-
-            expect(result).toBe(userObj);
-            expect(userObj.$save).not.toHaveBeenCalled();
-          });
-        });
-
-        it('should return undefined if the user is not logged in', function() {
-          inject(function($rootScope, spfAuthData) {
-            var result, error;
-
-            spfAuth.user = null;
-            spfAuthData.user().then(function(_result_) {
-              result = _result_;
-            }, function(e) {
-              error = e;
-            });
-
-            $rootScope.$apply();
-            expect(result).toBeUndefined();
-            expect(error).toBeDefined();
-          });
-        });
-
-        it('should setup user data', function() {
-          inject(function($rootScope, $q, spfAuthData) {
-            var result;
-
-            userObj.$loaded.and.returnValue($q.when(userObj));
-            userObj.$save.and.returnValue($q.when(true));
-            userObj.$value = null;
-
-            spfAuthData.user().then(function(_result_) {
-              result = _result_;
-            });
-
-            $rootScope.$apply();
-            expect(result).toBe(userObj);
-            expect(userObj.$value).toEqual({
-              id: 'custome:1',
-              fullName: 'Bob Smith',
-              displayName: 'Bob Smith',
-              email: 'bob@example.com',
-              gravatar: '//www.gravatar.com/avatar/4b9bb80620f03eb3719e0a061c14283d',
-              createdAt: {
-                '.sv': 'timestamp'
-              }
-            });
-            expect(userObj.$save).toHaveBeenCalled();
-          });
-        });
-
-      });
-
-      describe('spfFirebaseSync', function() {
-        var $firebase, spfFirebaseRef, ref, sync;
-
-        beforeEach(module('spf.shared'));
-
-        beforeEach(function() {
-          ref = jasmine.createSpy('ref');
-          sync = jasmine.createSpy('sync');
-          $firebase = jasmine.createSpy('$firebase').and.returnValue(sync);
-          spfFirebaseRef = jasmine.createSpy('spfFirebaseRef').and.returnValue(ref);
-
-          module(function($provide) {
-            $provide.value('$firebase', $firebase);
-            $provide.value('spfFirebaseRef', spfFirebaseRef);
-          });
-        });
-
-        it('should create an angularFire object', inject(function(spfFirebaseSync) {
-          expect(spfFirebaseSync()).toBe(sync);
-          expect($firebase).toHaveBeenCalledWith(ref);
-          expect(spfFirebaseRef).toHaveBeenCalledWith();
-        }));
-
-        it('should create an angularFire object with ref to child', inject(function(spfFirebaseSync) {
-          spfFirebaseSync(['foo', 'bar'], {
-            limitToLast: 50
-          });
-          expect(spfFirebaseRef).toHaveBeenCalledWith(['foo', 'bar'], {
-            limitToLast: 50
-          });
-        }));
-
-      });
-
       describe('spfFirebaseRef', function() {
         var provider, factory, Firebase, firebaseSpy, spfFirebaseRef, ref;
 
@@ -269,6 +146,225 @@
 
       });
 
+      describe('spfFirebase', function() {
+        var firebaseObject, firebaseArray, spfFirebaseRef;
+
+        beforeEach(module('spf.shared'));
+
+        beforeEach(function() {
+          firebaseObject = jasmine.createSpy('firebaseObject');
+          firebaseArray = jasmine.createSpy('firebaseArray');
+          spfFirebaseRef = jasmine.createSpy('spfFirebaseRef');
+
+          module(function($provide) {
+            $provide.value('$firebaseObject', firebaseObject);
+            $provide.value('$firebaseArray', firebaseArray);
+            $provide.value('spfFirebaseRef', spfFirebaseRef);
+          });
+        });
+
+        describe('ref', function() {
+
+          it('should return a firebase ref', inject(function(spfFirebase) {
+            var expected = {};
+            var actual;
+
+            spfFirebaseRef.and.returnValue(expected);
+
+            actual = spfFirebase.ref(['foo']);
+
+            expect(actual).toBe(expected);
+            expect(spfFirebaseRef).toHaveBeenCalledWith(['foo']);
+          }));
+
+        });
+
+        describe('obj', function() {
+
+          it('should return a $firebaseObject obj', inject(function(spfFirebase) {
+            var expectedRef = {};
+            var expectedObj = {};
+
+            spfFirebaseRef.and.returnValue(expectedRef);
+            firebaseObject.and.returnValue(expectedObj);
+
+            expect(spfFirebase.obj(['foo'])).toBe(expectedObj);
+            expect(spfFirebaseRef).toHaveBeenCalledWith(['foo']);
+            expect(firebaseObject).toHaveBeenCalledWith(expectedRef);
+          }));
+
+        });
+
+        describe('array', function() {
+
+          it('should return a $firebaseArray obj', inject(function(spfFirebase) {
+            var expectedRef = {};
+            var expectedArr = {};
+
+            spfFirebaseRef.and.returnValue(expectedRef);
+            firebaseArray.and.returnValue(expectedArr);
+
+            expect(spfFirebase.array(['foo'], {'foo': 'bar'})).toBe(expectedArr);
+            expect(spfFirebaseRef).toHaveBeenCalledWith(['foo'], {'foo': 'bar'});
+            expect(firebaseArray).toHaveBeenCalledWith(expectedArr);
+          }));
+
+        });
+
+        describe('push', function() {
+
+          it('should resolve to a Firebase obj for the new item', inject(function($rootScope, spfFirebase) {
+            var newItem = {};
+            var expectedRef = jasmine.createSpyObj('Firebase', ['push']);
+            var expectedNewRef = {};
+            var actualRef;
+
+            spfFirebaseRef.and.returnValue(expectedRef);
+            expectedRef.push.and.returnValue(expectedNewRef);
+
+            spfFirebase.push(['foo'], newItem).then(function(ref) {
+              actualRef = ref;
+            });
+
+            expect(spfFirebaseRef).toHaveBeenCalledWith(['foo']);
+            expect(expectedRef.push).toHaveBeenCalledWith(newItem, jasmine.any(Function));
+
+            expectedRef.push.calls.first().args[1]();
+            $rootScope.$apply();
+
+            expect(actualRef).toBe(expectedNewRef);
+          }));
+
+          it('should resolve to an error', inject(function($rootScope, spfFirebase) {
+            var newItem = {};
+            var expectedRef = jasmine.createSpyObj('Firebase', ['push']);
+            var expectedNewRef = {};
+            var expectedError = new Error();
+            var actualRef;
+            var error;
+
+            spfFirebaseRef.and.returnValue(expectedRef);
+            expectedRef.push.and.returnValue(expectedNewRef);
+
+            spfFirebase.push(['foo'], newItem).then(function(ref) {
+              actualRef = ref;
+            }, function(err) {
+              error = err;
+            });
+
+            expect(expectedRef.push).toHaveBeenCalledWith(newItem, jasmine.any(Function));
+
+            expectedRef.push.calls.first().args[1](expectedError);
+            $rootScope.$apply();
+
+            expect(actualRef).toBeUndefined();
+            expect(error).toBe(expectedError);
+          }));
+
+        });
+
+        describe('set', function() {
+
+          it('should resolve to a Firebase obj for the new item', inject(function($rootScope, spfFirebase) {
+            var newValue = {};
+            var expectedRef = jasmine.createSpyObj('Firebase', ['set']);
+            var actualRef;
+
+            spfFirebaseRef.and.returnValue(expectedRef);
+            expectedRef.set.and.returnValue();
+
+            spfFirebase.set(['foo'], newValue).then(function(ref) {
+              actualRef = ref;
+            });
+
+            expect(spfFirebaseRef).toHaveBeenCalledWith(['foo']);
+            expect(expectedRef.set).toHaveBeenCalledWith(newValue, jasmine.any(Function));
+
+            expectedRef.set.calls.first().args[1]();
+            $rootScope.$apply();
+
+            expect(actualRef).toBe(expectedRef);
+          }));
+
+          it('should resolve to an error', inject(function($rootScope, spfFirebase) {
+            var newValue = {};
+            var expectedRef = jasmine.createSpyObj('Firebase', ['set']);
+            var actualRef;
+            var expectedError = new Error();
+            var error;
+
+            spfFirebaseRef.and.returnValue(expectedRef);
+            expectedRef.set.and.returnValue();
+
+            spfFirebase.set(['foo'], newValue).then(function(ref) {
+              actualRef = ref;
+            }, function(err) {
+              error = err;
+            });
+
+            expect(spfFirebaseRef).toHaveBeenCalledWith(['foo']);
+            expect(expectedRef.set).toHaveBeenCalledWith(newValue, jasmine.any(Function));
+
+            expectedRef.set.calls.first().args[1](expectedError);
+            $rootScope.$apply();
+
+            expect(actualRef).toBeUndefined();
+            expect(error).toBe(expectedError);
+          }));
+
+        });
+
+        describe('remove', function() {
+
+          it('should resolve to a Firebase obj for the new item', inject(function($rootScope, spfFirebase) {
+            var expectedRef = jasmine.createSpyObj('Firebase', ['remove']);
+            var actualRef;
+
+            spfFirebaseRef.and.returnValue(expectedRef);
+            expectedRef.remove.and.returnValue();
+
+            spfFirebase.remove(['foo']).then(function(ref) {
+              actualRef = ref;
+            });
+
+            expect(spfFirebaseRef).toHaveBeenCalledWith(['foo']);
+            expect(expectedRef.remove).toHaveBeenCalledWith(jasmine.any(Function));
+
+            expectedRef.remove.calls.first().args[0]();
+            $rootScope.$apply();
+
+            expect(actualRef).toBe(expectedRef);
+          }));
+
+          it('should resolve to an error', inject(function($rootScope, spfFirebase) {
+            var expectedRef = jasmine.createSpyObj('Firebase', ['remove']);
+            var actualRef;
+            var expectedError = new Error();
+            var error;
+
+            spfFirebaseRef.and.returnValue(expectedRef);
+            expectedRef.remove.and.returnValue();
+
+            spfFirebase.remove(['foo']).then(function(ref) {
+              actualRef = ref;
+            }, function(err) {
+              error = err;
+            });
+
+            expect(spfFirebaseRef).toHaveBeenCalledWith(['foo']);
+            expect(expectedRef.remove).toHaveBeenCalledWith(jasmine.any(Function));
+
+            expectedRef.remove.calls.first().args[0](expectedError);
+            $rootScope.$apply();
+
+            expect(actualRef).toBeUndefined();
+            expect(error).toBe(expectedError);
+          }));
+
+        });
+
+      });
+
       describe('spfAuth', function() {
         var auth, spfFirebaseRef;
 
@@ -277,9 +373,12 @@
         beforeEach(function() {
           var $firebaseAuth;
 
+          $firebaseAuth = jasmine.createSpy('$firebaseAuth');
           spfFirebaseRef = jasmine.createSpy('spfFirebaseRef');
-          auth = jasmine.createSpyObj('auth', ['$getAuth', '$authWithOAuthPopup', '$authWithOAuthRedirect', '$unauth']);
-          $firebaseAuth = jasmine.createSpy('$firebaseAuth').and.returnValue(auth);
+          auth = jasmine.createSpyObj('auth', [
+            '$getAuth', '$authWithOAuthPopup', '$authWithOAuthRedirect', '$unauth', '$onAuth'
+          ]);
+          $firebaseAuth.and.returnValue(auth);
 
           module(function($provide) {
             $provide.value('spfFirebaseRef', spfFirebaseRef);
@@ -474,75 +573,95 @@
 
       });
 
-      describe('spfAlert', function() {
-        var log, spfAlert;
+      describe('spfAuthData', function() {
+        var spfFirebase, spfAuth, spfCrypto;
 
         beforeEach(module('spf.shared'));
 
         beforeEach(function() {
+          spfFirebase = jasmine.createSpyObj('spfFirebase', ['loadedObj']);
+          spfCrypto = {
+            md5: jasmine.createSpy('spfCrypto.md5')
+          };
+          spfAuth = {
+            user: {
+              uid: 'custome:1',
+              google: {
+                displayName: 'Bob Smith',
+                email: 'bob@example.com'
+              }
+            },
+            onAuth: jasmine.createSpy('spfAuth.onAuth')
+          };
+
           module(function($provide) {
-            log = jasmine.createSpy();
-            log.and.returnValue(null);
-            $provide.value('$window', {
-              alertify: {
-                log: log
+            $provide.value('spfFirebase', spfFirebase);
+            $provide.value('spfCrypto', spfCrypto);
+            $provide.value('spfAuth', spfAuth);
+          });
+        });
+
+        it('should resolved to user data', function() {
+          inject(function($q, $rootScope, spfAuthData) {
+            var user = jasmine.createSpyObj('userSync', ['$save']);
+            var result;
+
+            spfFirebase.loadedObj.and.returnValue($q.when(user));
+            spfAuthData.user().then(function(_result_) {
+              result = _result_;
+            });
+            $rootScope.$apply();
+
+            expect(result).toBe(user);
+            expect(user.$save).not.toHaveBeenCalled();
+          });
+        });
+
+        it('should return undefined if the user is not logged in', function() {
+          inject(function($rootScope, spfAuthData) {
+            var result, error;
+
+            spfAuth.user = null;
+            spfAuthData.user().then(function(_result_) {
+              result = _result_;
+            }, function(e) {
+              error = e;
+            });
+
+            $rootScope.$apply();
+            expect(result).toBeUndefined();
+            expect(error).toBeDefined();
+          });
+        });
+
+        it('should setup user data', function() {
+          inject(function($rootScope, $q, spfAuthData) {
+            var user = jasmine.createSpyObj('userSync', ['$save']);
+            var result;
+
+            user.$value = null;
+            user.$save.and.returnValue($q.when(user));
+            spfCrypto.md5.and.returnValue('foo');
+
+            spfFirebase.loadedObj.and.returnValue($q.when(user));
+            spfAuthData.user().then(function(_result_) {
+              result = _result_;
+            });
+            $rootScope.$apply();
+
+            expect(result).toBe(user);
+            expect(user.$value).toEqual({
+              id: 'custome:1',
+              fullName: 'Bob Smith',
+              displayName: 'Bob Smith',
+              email: 'bob@example.com',
+              gravatar: '//www.gravatar.com/avatar/foo',
+              createdAt: {
+                '.sv': 'timestamp'
               }
             });
+            expect(user.$save).toHaveBeenCalled();
           });
-
-          inject(function(_spfAlert_) {
-            spfAlert = _spfAlert_;
-          });
-        });
-
-        it('should alert users', function() {
-          spfAlert('Type', 'Content');
-          expect(log).toHaveBeenCalledWith('Content', 'type');
-        });
-
-        describe('spfAlert.success', function() {
-
-          it('should send a notification of type "success"', function() {
-            spfAlert.success('Content');
-            expect(log).toHaveBeenCalledWith('Content', 'success');
-          });
-
-        });
-
-        describe('spfAlert.info', function() {
-
-          it('should send a notification of type "info"', function() {
-            spfAlert.info('Content');
-            expect(log).toHaveBeenCalledWith('Content', undefined);
-          });
-
-        });
-
-        describe('spfAlert.warning', function() {
-
-          it('should send a notification of type "warning"', function() {
-            spfAlert.warning('Content');
-            expect(log).toHaveBeenCalledWith('Content', 'error');
-          });
-
-        });
-
-        describe('spfAlert.danger', function() {
-
-          it('should send a notification of type "danger"', function() {
-            spfAlert.danger('Content');
-            expect(log).toHaveBeenCalledWith('Content', 'error');
-          });
-
-        });
-
-        describe('spfAlert.error', function() {
-
-          it('should send a notification of type "error"', function() {
-            spfAlert.error('Content');
-            expect(log).toHaveBeenCalledWith('Content', 'error');
-          });
-
         });
 
       });

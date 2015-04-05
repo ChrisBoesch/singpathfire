@@ -50,7 +50,7 @@
     function classMentorsEventListRsolverFactory($q, spfAuth, clmDataStore) {
       return function classMentorsEventRsolver() {
         return $q.all({
-          events: clmDataStore.events.list().$loaded(),
+          events: clmDataStore.events.list(),
           auth: spfAuth
         });
       };

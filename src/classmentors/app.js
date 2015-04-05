@@ -91,7 +91,7 @@
 
         events: {
           list: function() {
-            return spfFirebase.array(['classMentors/events'], {
+            return spfFirebase.loadedArray(['classMentors/events'], {
               orderByChild: 'timestamp',
               limitToLast: 50
             });
@@ -100,8 +100,8 @@
           create: function(event, password) {
             var hash, eventId;
 
-            return spfFirebase.push(['classMentors/events'], event).then(function(resp) {
-              eventId = resp.ref.key();
+            return spfFirebase.push(['classMentors/events'], event).then(function(ref) {
+              eventId = ref.key();
               hash = spfCrypto.password.newHash(password);
               var opts = {
                 hash: hash.value,
@@ -123,7 +123,7 @@
                 participation: ['classMentors/eventParticipants', eventId, authData.publicId]
               };
             }).then(function() {
-              return spfFirebase.obj(paths.hashOptions).$loaded();
+              return spfFirebase.loadedObj(paths.hashOptions);
             }).then(function(options) {
               var hash = spfCrypto.password.fromSalt(pw, options.$value.salt, options.$value);
               return spfFirebase.set(paths.application, hash.value);
@@ -176,7 +176,7 @@
           },
 
           userIdTaken: function(serviceId, userId) {
-            return spfFirebase.obj(['classMentors/servicesUserIds', serviceId, userId]).$loaded().then(function(sync) {
+            return spfFirebase.loadedObj(['classMentors/servicesUserIds', serviceId, userId]).then(function(sync) {
               return sync.$value !== null;
             });
           },
