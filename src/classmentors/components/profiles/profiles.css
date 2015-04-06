@@ -1,0 +1,41 @@
+.profile {
+    text-align: center;
+    padding: 16px;
+}
+
+.profile .avatar {
+  padding: 8px;
+}
+
+.profile img, .badge img {
+    max-width: 100%;
+    height: auto;
+    display: inline-block;
+}
+
+.register-service, .service-card {
+  padding: 8px 16px;
+  margin: 16px 0;
+}
+
+.badges img, .courses img {
+    text-align: center;
+    position: relative;
+    -webkit-box-reflect: below 0 -webkit-gradient(linear, left top, left bottom, from(transparent), color-stop(70%, transparent), to(rgba(255,255,255,0.2)));
+    -webkit-transition: top 0.5s ease-out;
+    -moz-transition: top 0.5s ease-out;
+    -o-transition: top 0.5s ease-out;
+}
+
+.badges {
+  background-color: transparent;
+  border: none;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.badges img:hover {
+  cursor:pointer;
+  top: -5px;
+  -webkit-box-reflect: below 10px -webkit-gradient(linear, left top, left bottom, from(transparent), color-stop(70%, transparent), to(rgba(255,255,255,0.2)));
+}

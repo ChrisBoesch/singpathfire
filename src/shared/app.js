@@ -5,24 +5,13 @@
 (function() {
   'use strict';
 
-  var coreModule = angular.module('spf.shared.core', [
-    'angular-loading-bar',
-    'firebase'
-  ]);
-
-  var bootstrapModule = angular.module('spf.shared', [
+  var module = angular.module('spf.shared', [
     'angular-loading-bar',
     'firebase',
-    'mgcrea.ngStrap',
-    'spf.shared.core'
+    'ngMaterial'
   ]);
 
-  var materialModule = angular.module('spf.shared.material', [
-    'ngMaterial',
-    'spf.shared.core'
-  ]);
-
-  coreModule.constant('routes', {
+  module.constant('routes', {
     home: '/'
   });
 
@@ -30,12 +19,19 @@
    * Configure cfpLoadingBar options.
    *
    */
-  coreModule.config([
+  module.config([
     'cfpLoadingBarProvider',
     function(cfpLoadingBarProvider) {
       cfpLoadingBarProvider.includeSpinner = false;
     }
   ]);
+
+  module.config(function($mdThemingProvider) {
+    $mdThemingProvider.theme('default')
+      .primaryPalette('brown')
+      .accentPalette('amber')
+      .warnPalette('deep-orange');
+  });
 
   /**
    * Listen for routing error to alert the user of the error and
@@ -46,7 +42,7 @@
    * to the home route.
    *
    */
-  coreModule.run([
+  module.run([
     '$window',
     '$rootScope',
     '$location',
@@ -65,7 +61,7 @@
     }
   ]);
 
-  coreModule.factory('urlFor', [
+  module.factory('urlFor', [
     'routes',
     function urlForFactory(routes) {
       var routeFns = Object.keys(routes).reduce(function(fns, name) {
@@ -88,7 +84,7 @@
     }
   ]);
 
-  coreModule.filter('urlFor', [
+  module.filter('urlFor', [
     'urlFor',
     function urlForFilterFactory(urlFor) {
       return function urlForFilter(name, params) {
@@ -122,7 +118,7 @@
    *    ])
    *
    */
-  coreModule.provider('spfFirebaseRef', function OepFirebaseProvider() {
+  module.provider('spfFirebaseRef', function OepFirebaseProvider() {
     var baseUrl = 'https://singpath-play.firebaseio.com/';
 
     this.setBaseUrl = function(url) {
@@ -157,40 +153,96 @@
 
   });
 
-  coreModule.factory('spfFirebase', [
+  /**
+   * Helpers for firebase Firebase, $firebaseObject and $firebaseArray object.
+   *
+   * Remove boilerplates:
+   * - get $firebaseObject or $firebaseArray object using a relative path
+   *   instead of Firebase obj.
+   * - wrap a promise around the Firebase operation (currently provide set,
+   *   remove and push).
+   * - limit the number of object and returned object to mock in tests; just
+   *   mock spfFirebase.
+   *
+   */
+  module.factory('spfFirebase', [
     '$q',
     '$firebaseObject',
     '$firebaseArray',
     'spfFirebaseRef',
     function spfFirebaseFactory($q, $firebaseObject, $firebaseArray, spfFirebaseRef) {
-      var spfFirebase = {
+      var spfFirebase;
+
+      spfFirebase = {
+
+        /**
+         * alias for spfFirebaseRef.
+         *
+         */
         ref: function() {
           return spfFirebaseRef.apply(this, arguments);
         },
 
+        /**
+         * Convenient function to return a $firebaseObject object.
+         *
+         * example:
+         *
+         *    var userPromise = spfFirebase.obj(['singpath/auth/users', userId]).$loaded();
+         *
+         */
         obj: function() {
           return $firebaseObject(spfFirebaseRef.apply(this, arguments));
         },
 
+        loadedObj: function() {
+          return spfFirebase.obj.apply(this, arguments).$loaded();
+        },
+
+        /**
+         * Convenient function to return a $firebaseArray object.
+         *
+         * example:
+         *
+         *     var usersPromise = spfFirebase.obj(['singpath/auth/users']).$loaded();
+         *
+         */
         array: function() {
           return $firebaseArray(spfFirebaseRef.apply(this, arguments));
         },
 
+        loadedArray: function() {
+          return spfFirebase.array.apply(this, arguments).$loaded();
+        },
+
+        /**
+         * Add data to a collection.
+         *
+         * Returns a promise resolving to an error on error or a Firebase
+         * reference to the new item in the collection.
+         *
+         */
         push: function(root, value) {
           return $q(function(resolve, reject) {
-            var ref = spfFirebaseRef(root).push(value, function(err) {
+            var ref;
+
+            ref = spfFirebaseRef(root).push(value, function(err) {
               if (err) {
                 reject(err);
               } else {
-                resolve({
-                  ref: ref,
-                  value: value
-                });
+                resolve(ref);
               }
             });
           });
         },
 
+        /**
+         * Set a firebase entry to the value.
+         *
+         * Returns a promise resolving to an error on error or to a Firebase
+         * reference to the firebase entry.
+         *
+         */
         set: function(path, value) {
           return $q(function(resolve, reject) {
             var ref = spfFirebaseRef(path);
@@ -199,15 +251,18 @@
               if (err) {
                 reject(err);
               } else {
-                resolve({
-                  ref: ref,
-                  value: value
-                });
+                resolve(ref);
               }
             });
           });
         },
 
+        /**
+         * Remove firebase entry to the value.
+         *
+         * Returns a promise resolving to an error on error or to a Firebase
+         * reference to empty firebase entry.
+         */
         remove: function(path) {
           return $q(function(resolve, reject) {
             var ref = spfFirebaseRef(path);
@@ -231,7 +286,7 @@
    * Returns an object with `user` (Firebase auth user data) property,
    * and login/logout methods.
    */
-  coreModule.factory('spfAuth', [
+  module.factory('spfAuth', [
     '$q',
     '$firebaseAuth',
     'spfFirebaseRef',
@@ -297,10 +352,10 @@
   ]);
 
   /**
-   * Service to interact with singpath firebase db
+   * Service to interact with '/auth/users' singpath firebase db entry
    *
    */
-  coreModule.factory('spfAuthData', [
+  module.factory('spfAuthData', [
     '$q',
     '$log',
     'spfFirebase',
@@ -318,7 +373,7 @@
       spfAuthData = {
 
         _user: function() {
-          return spfFirebase.obj(['auth/users', spfAuth.user.uid]);
+          return spfFirebase.loadedObj(['auth/users', spfAuth.user.uid]);
         },
 
         /**
@@ -341,7 +396,7 @@
             return $q.when(userDataPromise);
           }
 
-          return spfAuthData._user().$loaded().then(
+          return spfAuthData._user().then(
             spfAuthData.register
           ).then(function(data) {
             userData = data;
@@ -404,7 +459,7 @@
         },
 
         isPublicIdAvailable: function(publicId) {
-          return spfFirebase.obj(['auth/usedPublicIds', publicId]).$loaded().then(function(publicIdSync) {
+          return spfFirebase.loadedObj(['auth/usedPublicIds', publicId]).then(function(publicIdSync) {
             return !publicIdSync.$value;
           });
         }
@@ -414,35 +469,7 @@
     }
   ]);
 
-  /**
-   * Service to show notification m.
-   *
-   * It takes as arguments the type of notification and the content
-   * of the nofication.
-   *
-   * The type is used as title of the notification and is user to set
-   * the class of the notication block: for type set `info`,
-   * the block class will be set `alert` and `alert-info` (always lowercase).
-   *
-   * `spfAlert.success`, `spfAlert.info`, `spfAlert.warning`, `spfAlert.error`
-   * and `spfAlert.danger` are shortcut for the spfAlert function.
-   *
-   */
-  coreModule.factory('spfAlert', [
-    function spfAlertFactory() {
-      var spfAlert = angular.noop;
-
-      spfAlert.success = angular.noop;
-      spfAlert.info = angular.noop;
-      spfAlert.warning = angular.noop;
-      spfAlert.danger = angular.noop;
-      spfAlert.error = angular.noop;
-
-      return spfAlert;
-    }
-  ]);
-
-  coreModule.provider('spfCrypto', [
+  module.provider('spfCrypto', [
     function cryptoProvider() {
       var saltSize = 128 / 8;
       var hashOpts = {
@@ -529,7 +556,7 @@
     }
   ]);
 
-  coreModule.filter('spfEmpty', [
+  module.filter('spfEmpty', [
     function spfEmptyFactory() {
       return function spfEmpty(obj) {
         if (!obj) {
@@ -549,111 +576,7 @@
     }
   ]);
 
-  /**
-   * Service to show notification message in top right corner of
-   * the window.
-   *
-   * Relies on Alert css properties sets in `src/app/app.css`.
-   *
-   * It takes as arguments the type of notification and the content
-   * of the nofication.
-   *
-   * The type is used as title of the notification and is user to set
-   * the class of the notication block: for type set `info`,
-   * the block class will be set `alert` and `alert-info` (always lowercase).
-   *
-   * `spfAlert.success`, `spfAlert.info`, `spfAlert.warning`
-   * and `spfAlert.danger` are shortcut for the spfAlert function.
-   *
-   * They take as agurment the notification content and set respectively the
-   * type to "Success", "Info", "Warning" and "Danger".
-   *
-   */
-  bootstrapModule.factory('spfAlert', [
-    '$window',
-    function spfAlertFactory($window) {
-      var ctx = $window.alertify;
-      var spfAlert = function(type, content) {
-        type = type ? type.toLowerCase() : undefined;
-        ctx.log(content, type);
-      };
-
-      spfAlert.success = spfAlert.bind(ctx, 'success');
-      spfAlert.info = spfAlert.bind(ctx, null);
-      spfAlert.warning = spfAlert.bind(ctx, 'error');
-      spfAlert.danger = spfAlert.bind(ctx, 'error');
-      spfAlert.error = spfAlert.bind(ctx, 'error');
-
-      return spfAlert;
-    }
-  ]);
-
-  bootstrapModule.directive('spfBsValidClass', [
-
-    function spfBsValidClassFactory() {
-      return {
-        restrict: 'A',
-        scope: false,
-        require: 'ngModel',
-        // arguments: scope, iElement, iAttrs, controller
-        link: function spfBsValidClassPostLink(s, iElement, a, model) {
-          var formControl;
-          var setPristine = model.$setPristine;
-
-          function findFormController(input, className) {
-            var formCtrl = input;
-            while (formCtrl.length > 0) {
-              formCtrl = formCtrl.parent();
-              if (formCtrl.hasClass(className)) {
-                return formCtrl;
-              }
-            }
-          }
-
-          formControl = findFormController(iElement, 'form-group');
-          if (!formControl) {
-            formControl = findFormController(iElement, 'radio');
-          }
-
-          if (!formControl) {
-            return;
-          }
-
-          model.$setPristine = function augmentedSetPristine() {
-            formControl.removeClass('has-error');
-            formControl.removeClass('has-success');
-            return setPristine.apply(model, arguments);
-          };
-
-          model.$viewChangeListeners.push(function spfBsValidClassOnChange() {
-
-            if (model.$pristine) {
-              formControl.removeClass('has-error');
-              formControl.removeClass('has-success');
-              return;
-            }
-
-            if (model.$valid) {
-              formControl.removeClass('has-error');
-              formControl.addClass('has-success');
-            } else {
-              formControl.addClass('has-error');
-              formControl.removeClass('has-success');
-            }
-          });
-        }
-      };
-    }
-  ]);
-
-  materialModule.config(function($mdThemingProvider) {
-    $mdThemingProvider.theme('default')
-      .primaryPalette('brown')
-      .accentPalette('amber')
-      .warnPalette('deep-orange');
-  }).
-
-  directive('spfRequired', [
+  module.directive('spfRequired', [
 
     function spfRequiredFactory() {
       return {

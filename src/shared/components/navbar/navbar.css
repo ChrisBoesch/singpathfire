@@ -1,33 +1,28 @@
-.navbar-header {
-  width: 100%;
-}
-@media (min-width: 768px) and (max-width: 992px) {
-  .navbar-toggle {
-    display: block;
-  }
-  .navbar > .container .navbar-brand, .navbar > .container-fluid .navbar-brand {
-    margin-left: 0;
-  }
-  .navbar-toggle {
-    margin-left: 0 !important;
-  }
-}
-.navbar-toggle {
-  float: left;
-  margin-right: 0;
-  margin-left: 15px;
-}
-.navbar-text {
-  padding: 0 5px 0 5px;
-}
-
-.nav-logout {
-    color: #337ab7
-}
-
-.nav-login {
-    color: #a94442
-}
 .nav-parent > * {
   font-size: inherit;;
+}
+
+.menu-item.ng-move,
+.menu-item.ng-enter,
+.menu-item.ng-leave {
+    transition: all linear 0.3s;
+}
+
+.menu-item.ng-leave.ng-leave-active,
+.menu-item.ng-move,
+.menu-item.ng-enter {
+    max-width: 0;
+    min-width: 0;
+    margin: 16px 0;
+    padding: 0;
+    overflow: hidden
+}
+
+.menu-item.ng-leave,
+.menu-item.ng-move.ng-move-active,
+.menu-item.ng-enter.ng-enter-active {
+    margin: 16px 8px;
+    padding: 0 8px;
+    max-width: 150px;
+    min-width: 24px;
 }

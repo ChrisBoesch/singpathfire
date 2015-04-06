@@ -9,3 +9,4 @@ npm-debug.log
 phantomjsdriver.log
 bin/*.log
 bin/*.pid
+bower_components/**

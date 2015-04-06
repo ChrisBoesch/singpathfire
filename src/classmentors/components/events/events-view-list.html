@@ -1,0 +1,18 @@
+<md-content flex class="md-padding">
+    <p ng-show="!ctrl.events || ctrl.events.length == 0">No event.</p>
+
+    <md-list class="path-list">
+        <md-item ng-repeat="e in (ctrl.events | orderBy:'createdAt':true) track by e.$id">
+            <md-item-content>
+                <div class="md-tile-content">
+                    <h3 layout>
+                        <a href="#{{ 'oneEvent | urlFor: {eventId: e.$id}' }}">{{e.title}}</a>
+                    </h3>
+                    <h4>created by {{e.owner.displayName}} ({{e.createdAt|date}})</h4>
+                </div>
+            </md-item-content>
+            <md-divider ng-if="!$last"></md-divider>
+        </md-item>
+    </md-list>
+
+</md-content>

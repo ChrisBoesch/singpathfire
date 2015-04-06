@@ -10,21 +10,22 @@
     <meta name="description" content="">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
 
-    <title ng-bind="page.title" ng-init="page={title: 'Singpath', menu:  {'title': 'Menu', 'contentTemplate': 'singpath/components/menu/menu-view.html'}}">
+    <title ng-bind="page.title" ng-init="page={title: 'Singpath'}">
         Singpath
     </title>
 
     <!-- build:css vendor.css -->
-    <link rel="stylesheet" href="vendor/angular-loading-bar/build/loading-bar.css">
+    <link rel="stylesheet" href="vendor/angular-loading-bar/loading-bar.css">
     <link rel="stylesheet" href="vendor/angular-material/angular-material.css">
     <!-- Add denpencies style sheets here -->
 
     <!-- endbuild -->
     <!-- build:css app.css -->
-    <link rel="stylesheet" href="shared/components/alert/alert.css">
-    <link rel="stylesheet" href="shared/components/navbar/navbar-material.css">
-    <link rel="stylesheet" href="shared/components/select/select.css">
+    <link rel="stylesheet" href="shared/app.css">
     <link rel="stylesheet" href="singpath/app.css">
+    <link rel="stylesheet" href="shared/components/alert/alert.css">
+    <link rel="stylesheet" href="shared/components/navbar/navbar.css">
+    <link rel="stylesheet" href="shared/components/select/select.css">
     <link rel="stylesheet" href="singpath/components/ace/ace.css">
     <link rel="stylesheet" href="singpath/components/problems/problems.css">
     <!-- Add Singpath Fire style sheets here.-->
@@ -51,52 +52,7 @@
     </md-sidenav>
 
     <div layout="column" role="main" flex>
-        <md-content>
-            <md-toolbar class="md-hue-2" layout="row" ng-controller="SpfSharedMaterialNavBarCtrl as navBar">
-                <div class="md-toolbar-tools">
-                    <md-button ng-click="navBar.openSideMenu('left')" hide-gt-md class="open-menu" aria-label="open side menu">
-                        <md-icon md-svg-icon="reorder" alt="open side menu"></md-icon>
-                    </md-button>
-
-                    <div hide-sm layout="row" ng-repeat="parent in navBar.currentPage.parents" class="nav-parent">
-                        <h2 ng-if="parent.title">
-                            <a ng-href="{{parent.url || ''}}">
-                                {{parent.title}}
-                            </a>
-                        </h2>
-
-                        <md-icon class="separator"
-                            md-svg-icon="keyboard-arrow-right"
-                            ng-if="navBar.currentPage.parent &amp;&amp; navBar.currentPage.section"
-                        ></md-icon>
-                    </div>
-
-                    <h3 ng-bind="navBar.currentPage.section"></h3>
-
-                    <span flex></span>
-
-                    <md-button class="menu-item md-raised md-primary" ng-repeat="btn in navBar.currentPage.menuItems" ng-href="{{btn.url}}" aria-label="{{btn.title}}" ng-click="btn.onClick()">
-                        <md-icon md-svg-icon="{{btn.icon}}" ng-if="btn.icon"></md-icon>
-                        <span ng-bind="btn.title"></span>
-                    </md-button>
-
-                    <span ng-switch="navBar.auth.user.uid">
-                        <span ng-switch-when="undefined">
-                            <md-button ng-click="navBar.login()" class="md-raised md-accent">
-                                <md-icon md-svg-icon="launch"></md-icon>
-                                login
-                            </md-button>
-                        </span>
-                        <span ng-switch-default>
-                            <md-button ng-click="navBar.logout()" class="md-raised md-primary">
-                                <md-icon md-svg-icon="exit-to-app"></md-icon>
-                                logout
-                            </md-button>
-                        </span>
-                    </span>
-                </div>
-            </md-toolbar>
-        </md-content>
+        <md-content ng-include="'shared/components/navbar/navbar-view.html'"></md-content>
 
         <md-content flex class="main-view" layout="column">
             <div ng-view="" layout="column" flex></div>
@@ -105,23 +61,23 @@
 
 
     <!-- build:js vendor.js -->
-    <script src="vendor/crypto-js/src/core.js"></script>
-    <script src="vendor/crypto-js/src/md5.js"></script>
-    <script src="vendor/crypto-js/src/hmac.js"></script>
-    <script src="vendor/crypto-js/src/pbkdf2.js"></script>
-    <script src="vendor/crypto-js/src/sha1.js"></script>
-    <script src="vendor/crypto-js/src/sha256.js"></script>
+    <script src="vendor/crypto-js/core.js"></script>
+    <script src="vendor/crypto-js/md5.js"></script>
+    <script src="vendor/crypto-js/hmac.js"></script>
+    <script src="vendor/crypto-js/pbkdf2.js"></script>
+    <script src="vendor/crypto-js/sha1.js"></script>
+    <script src="vendor/crypto-js/sha256.js"></script>
     <script src="vendor/firebase/firebase.js"></script>
     <script src="vendor/moment/moment.js"></script>
-    <script src="vendor/ace-builds/src-noconflict/ace.js"></script>
+    <script src="vendor/ace-builds/ace.js"></script>
     <script src="vendor/angular/angular.js"></script>
     <script src="vendor/angular-animate/angular-animate.js"></script>
     <script src="vendor/angular-route/angular-route.js"></script>
     <script src="vendor/angular-messages/angular-messages.js"></script>
     <script src="vendor/angular-aria/angular-aria.js"></script>
     <script src="vendor/angular-material/angular-material.js"></script>
-    <script src="vendor/angular-loading-bar/build/loading-bar.js"></script>
-    <script src="vendor/angularfire/dist/angularfire.js"></script>
+    <script src="vendor/angular-loading-bar/loading-bar.js"></script>
+    <script src="vendor/angularfire/angularfire.js"></script>
     <script src="shared/components/polyfills/object.assign.js"></script>
     <!-- Add denpencies scripts here -->
     <!-- endbuild -->

@@ -1,0 +1,154 @@
+<md-content flex class="md-padding">
+
+    <div ng-if="!ctrl.profile">
+        <h1>Profile Setup</h1>
+
+        <form name="publicIdForm" ng-submit="ctrl.setPublicId(ctrl.currentUser)">
+            <md-input-container flex>
+                <label for="public-id">Your username</label>
+                <input type="text" id="public-id" name="publicId" placeholder="Pick a unique name" ng-model="ctrl.currentUser.publicId" required="true" ng-minlength="3" ng-maxlength="20" pattern="^[-\.a-zA-z0-9]+$"/>
+                <div ng-messages="publicIdForm.publicId.$error">
+                    <div ng-message="required">A user name is required.</div>
+                    <div ng-message="minlength">A user name shouldn't be shorten than 3 characters.</div>
+                    <div ng-message="maxlength">A user name shouldn't be longer than 20 characters.</div>
+                    <div ng-message="pattern">A user name should only be composed of letter, numbers, '.' and '-'</div>
+                </div>
+            </md-input-container>
+
+            <md-input-container flex>
+                <label for="screen-name">Your screen name</label>
+                <input type="text" id="screen-name" name="screenName" placeholder="A screen name" ng-model="ctrl.currentUser.displayName" ng-required="true" ng-minlength="3" ng-maxlength="20"/>
+                <div class="text-warning" ng-messages="publicIdForm.screenName.$error">
+                    <div ng-message="required">A screen name is required.</div>
+                    <div ng-message="minlength">A screen name shouldn't be shorten than 3 characters.</div>
+                    <div ng-message="maxlength">A screen name shouldn't be longer than 20 characters.</div>
+                </div>
+            </md-input-container>
+
+            <div layout="row" layout-align="center center">
+                <md-button type="submit" class="md-raised md-primary" ng-disabled="publicIdForm.$invalid || ctrl.settingPublicId">
+                    Setup
+                </md-button>
+            </div>
+
+        </form>
+    </div>
+
+    <div ng-if="ctrl.profile" layout="row">
+        <div class="profile" flex="33">
+            <div class="md-whiteframe-z1 avatar">
+                <img ng-src="{{ctrl.profile.user.gravatar}}?s=200&amp;r=g&amp;d=mm" alt="user avatar">
+                <h2>
+                    {{ctrl.profile.user.displayName}}
+                </h2>
+            </div>
+        </div>
+
+        <div flex="67">
+
+            <div clm-profile="ctrl.profile" clm-service-id="codeCombat"></div>
+            <div clm-profile="ctrl.profile" clm-service-id="codeSchool"></div>
+            <div clm-profile="ctrl.profile" clm-service-id="treeHouse"></div>
+
+            <div id="register-codecombat" ng-if="!ctrl.profile.services.codeCombat.details.id" class="register-service md-whiteframe-z1">
+                <h2>Code Combat</h2>
+
+                <p>
+                    <a href="http://codecombat.com/" target="_blank">Code Combat</a>,
+                    learn to Code JavaScript by Playing a Game.
+                </p>
+
+                <p ng-if="!ctrl.lookUp.codeCombat.id">
+                    <a href="" ng-click="ctrl.lookUp.codeCombat.find()">
+                        Look up my Code Combat details
+                    </a>
+                </p>
+
+                <div ng-if="ctrl.lookUp.codeCombat.id" layout="row" layout-align="center center">
+                    <p flex>You are logged in as "{{ctrl.lookUp.codeCombat.name}}".</p>
+                    <md-button ng-click="ctrl.lookUp.codeCombat.save()" class="md-raised md-primary">
+                        Save
+                    </md-button>
+                    <md-button ng-click="ctrl.lookUp.codeCombat.reset()" class="md-raised">
+                        This is not me
+                    </md-button>
+                </div>
+
+
+                <div ng-messages="ctrl.lookUp.codeCombat.errors">
+                    <div ng-message="isLoggedToCodeCombat">
+                        You're not logged on
+                        <a href="http://codecombat.com/" target="_blank">Code Combat</a>.
+                    </div>
+                    <div ng-message="hasACodeCombatName">
+                        You're Code Combat account doesn't have a user name. Head to your
+                        <a href="http://codecombat.com/account/settings" target="_blank">
+                            profile setting page
+                        </a>, add a user name and save your profile.
+                    </div>
+                </div>
+            </div>
+
+            <div id="register-codeschool" ng-if="!ctrl.profile.services.codeSchool.details.id" class="register-service md-whiteframe-z1">
+                <h2>Code School</h2>
+
+                <p>
+                    <a href="https://www.codeschool.com/" target="_blank">Code School</a>
+                    teaches web technologies in the comfort of your browser with video lessons,
+                    coding challenges, and screencasts. Registering is free, and the provides
+                    free content to try out.
+                </p>
+
+                <form name="codeSchoolForm" class="form-horizontal" ng-submit="ctrl.lookUp.codeSchool.save()">
+                    <div layout="row">
+                        <md-input-container flex>
+                            <label for="cc-username">Username</label>
+                            <input
+                                type="text" id="cc-username"
+                                name="ccUsername" placeholder="Your Code School username"
+                                ng-model="ctrl.lookUp.codeSchool.id"
+                                ng-model-options="{ updateOn: 'default blur', debounce: {'default': 1000, 'blur': 0} }"
+                                clm-service-user-id-exists="codeSchool"
+                                clm-service-user-id-uniq="codeSchool"
+                            />
+
+                            <div ng-messages="codeSchoolForm.ccUsername.$error">
+                                <div ng-message="clmServiceUserIdExists">
+                                    We couldn't find the profile for this username on Code School.
+                                    Misspell? Is it public?
+                                </div>
+                            </div>
+                        </md-input-container>
+
+                        <md-button type="submit" class="md-raised md-primary" ng-disabled="!codeSchoolForm.$valid || codeSchoolForm.$pristine">
+                            Save
+                        </md-button>
+                    </div>
+                    <p ng-if="!codeSchoolForm.ccUsername.$valid || codeSchoolForm.ccUsername.$pristine">
+                        You should visit your
+                        <a href="https://www.codeschool.com/account/edit" target="_blank">Code School profile page</a>,
+                        set a username,
+                        set your report card as public by unticking the "Keep Report Card Private?"
+                        and save.
+                    </p>
+                </form>
+            </div>
+
+            <div id="register-treehouse" class="register-service md-whiteframe-z1">
+                <h2>Treehouse</h2>
+
+                <p>
+                    Learn HTML, CSS, iPhone apps &amp; more at
+                    <a href="http://www.teamtreehouse.com/signup_code/singapore" target="_blank">
+                        Treehouse
+                    </a>.
+                    Treehouse offers a 14 days free trial.
+                </p>
+
+            </div>
+
+        </div>
+    </div>
+
+</md-content>
+

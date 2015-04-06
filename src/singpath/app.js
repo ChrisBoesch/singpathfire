@@ -15,7 +15,7 @@
     'ngAnimate',
     'ngMessages',
     'ngRoute',
-    'spf.shared.material'
+    'spf.shared'
   ]).
 
   /**
@@ -129,15 +129,15 @@
           }),
 
           list: function() {
-            return spfFirebase.array('singpath/paths', {
+            return spfFirebase.loadedArray('singpath/paths', {
               orderByKey: undefined,
               limitToLast: 50
-            }).$loaded();
+            });
           },
 
           create: function(path) {
-            return spfFirebase.push(['singpath/paths'], path).then(function(resp) {
-              return resp.ref;
+            return spfFirebase.push(['singpath/paths'], path).then(function(ref) {
+              return ref;
             });
           },
 
@@ -160,10 +160,10 @@
           }),
 
           list: function(pathId) {
-            return spfFirebase.array(['singpath/levels', pathId], {
+            return spfFirebase.loadedArray(['singpath/levels', pathId], {
               orderByKey: undefined,
               limitToLast: 50
-            }).$loaded();
+            });
           },
 
           get: function(pathId, levelId) {
@@ -173,8 +173,8 @@
           },
 
           create: function(pathId, level) {
-            return spfFirebase.push(['singpath/levels', pathId], level).then(function(resp) {
-              return resp.ref;
+            return spfFirebase.push(['singpath/levels', pathId], level).then(function(ref) {
+              return ref;
             });
           }
         },
@@ -223,8 +223,8 @@
           },
 
           create: function(pathId, levelId, problem) {
-            return spfFirebase.push(['singpath/problems', pathId, levelId], problem).then(function(resp) {
-              return resp.ref;
+            return spfFirebase.push(['singpath/problems', pathId, levelId], problem).then(function(ref) {
+              return ref;
             });
           },
 
@@ -265,9 +265,9 @@
               return $q.reject(spfDataStore.solutions.errMissingProblemId);
             }
 
-            return spfFirebase.obj(
+            return spfFirebase.loadedObj(
               ['singpath/solutions', pathId, levelId, problemId, publicId]
-            ).$loaded();
+            );
           },
 
           create: function(problem, publicId, solution) {

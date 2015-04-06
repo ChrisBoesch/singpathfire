@@ -1,26 +1,44 @@
-<header class="navbar navbar-default navbar-fixed-top" role="navigation" ng-controller="SpfSharedNavBarCtrl as navBar">
-    <div class="container">
-        <div class="navbar-header">
-            <button class="navbar-toggle" type="button" ng-click="navBar.openSideMenu(page.menu)">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a href="./" class="navbar-brand" ng-bind="page.title">Singpath</a>
+<md-toolbar class="md-hue-2" layout="row" ng-controller="SpfSharedMaterialNavBarCtrl as navBar">
+    <div class="md-toolbar-tools">
+        <md-button ng-click="navBar.openSideMenu('left')" hide-gt-md class="open-menu" aria-label="open side menu">
+            <md-icon md-svg-icon="reorder" alt="open side menu"></md-icon>
+        </md-button>
 
-            <a href="" class="nav-login btn btn-default navbar-btn pull-right" ng-click="navBar.login()" ng-if="!navBar.auth.user.google">
-                <i class="glyphicon glyphicon-off"></i>
-                <span>login</span>
+        <div hide-sm layout="row" ng-repeat="parent in navBar.currentPage.parents" class="nav-parent">
+            <h2 ng-if="parent.title">
+                <a ng-href="{{parent.url || ''}}">
+                    {{parent.title}}
+                </a>
+            </h2>
 
-            </a>
-            <a href="" class="nav-logout btn btn-default navbar-btn pull-right" ng-click="navBar.logout()" ng-if="navBar.auth.user.google">
-                <i class="glyphicon glyphicon-off"></i>
-                <span>logout</span>
-            </a>
-            <p class="navbar-text pull-right" ng-if="navBar.auth.user.google">
-                <span class="hidden-xs">Signed in as {{navBar.auth.user.google.displayName}}</span>
-            </p>
+            <md-icon class="separator"
+                md-svg-icon="keyboard-arrow-right"
+                ng-if="navBar.currentPage.parent &amp;&amp; navBar.currentPage.section"
+            ></md-icon>
         </div>
+
+        <h3 ng-bind="navBar.currentPage.section"></h3>
+
+        <span flex></span>
+
+        <md-button class="menu-item md-raised md-primary" ng-repeat="btn in navBar.currentPage.menuItems track by btn.url" ng-href="{{btn.url}}" aria-label="{{btn.title}}" ng-click="btn.onClick()">
+            <md-icon md-svg-icon="{{btn.icon}}" ng-if="btn.icon"></md-icon>
+            <span ng-bind="btn.title"></span>
+        </md-button>
+
+        <span ng-switch="navBar.auth.user.uid">
+            <span ng-switch-when="undefined">
+                <md-button ng-click="navBar.login()" class="md-raised md-accent">
+                    <md-icon md-svg-icon="launch"></md-icon>
+                    login
+                </md-button>
+            </span>
+            <span ng-switch-default>
+                <md-button ng-click="navBar.logout()" class="md-raised md-primary">
+                    <md-icon md-svg-icon="exit-to-app"></md-icon>
+                    logout
+                </md-button>
+            </span>
+        </span>
     </div>
-</header>
+</md-toolbar>

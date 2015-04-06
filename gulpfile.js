@@ -12,7 +12,6 @@ var minifyCSS = require('gulp-minify-css');
 var minimist = require('minimist');
 var path = require('path');
 var rename = require('gulp-rename');
-var replace = require('gulp-replace');
 var rev = require('gulp-rev');
 var revReplace = require('gulp-rev-replace');
 var targetHTML = require('gulp-targethtml');
@@ -20,11 +19,9 @@ var templateCache = require('gulp-angular-templatecache');
 var uglify = require('gulp-uglify');
 var useref = require('gulp-useref');
 
-
 var argv = minimist(process.argv);
 
 var apps = [
-  'badgetracker',
   'classmentors',
   'singpath'
 ];
@@ -47,12 +44,6 @@ var config = {
     dist: './dist',
     e2e: './build-e2e'
   },
-  bootstrap: {
-    assets: [
-      'src/vendor/bootstrap/dist/fonts/*'
-    ],
-    base: 'src/vendor/bootstrap/dist'
-  },
   ace: {
     assets: [
       'src/vendor/ace-builds/src-noconflict/mode-html.js',
@@ -69,8 +60,7 @@ var config = {
   dest: argv.dest ? path.resolve(argv.dest) : null,
   noduleNames: {
     singpath: 'spf',
-    classmentors: 'clm',
-    badgetracker: 'oep'
+    classmentors: 'clm'
   }
 };
 
@@ -91,7 +81,6 @@ function copyBuid(target, dest) {
     }))
     .pipe(gulp.dest(dest));
 }
-
 
 var compilers = config.apps.reduce(function(prev, appName) {
   prev[appName] = lazypipe()
@@ -133,13 +122,6 @@ function concatBuild(appName) {
     .pipe(useref())
     // Add compiled html templates and svg icons into app.js
     .pipe(gulpIf(/app\.js/, compilers[appName]()))
-    // Add boostrap assets
-    .pipe(gulp.src(config.bootstrap.assets, {
-      base: config.bootstrap.base,
-      passthrough: true
-    }))
-    // Bootstrap relative path to font changes form "../fonts" to "./fonts"
-    .pipe(gulpIf(/.+\.(js|css)$/, replace(/\.\.\/fonts\//g, './fonts/')))
     // Add ace assets
     .pipe(gulp.src(config.ace.assets, {
       base: config.ace.base,
