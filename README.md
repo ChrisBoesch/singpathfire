@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/ChrisBoesch/singpathfire.svg)](https://travis-ci.org/ChrisBoesch/singpathfire)
+
 # Class mentors
 
 An AngularFire-based version of SingPath
