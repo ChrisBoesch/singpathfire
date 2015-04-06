@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/ChrisBoesch/singpathfire.svg)](https://travis-ci.org/ChrisBoesch/singpathfire)
+[![Build Status](https://travis-ci.org/ChrisBoesch/singpathfire.svg)](https://travis-ci.org/ChrisBoesch/singpathfire)[![Coverage Status](https://coveralls.io/repos/ChrisBoesch/singpathfire/badge.svg)](https://coveralls.io/r/ChrisBoesch/singpathfire)
 
 # Class mentors
 
