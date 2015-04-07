@@ -1,10 +1,8 @@
+[![Build Status](https://travis-ci.org/ChrisBoesch/singpathfire.svg)](https://travis-ci.org/ChrisBoesch/singpathfire)
 [![Stories in Ready](https://badge.waffle.io/chrisboesch/singpathfire.png?label=ready&title=Ready)](https://waffle.io/chrisboesch/singpathfire)
-[![Build Status](https://travis-ci.org/ChrisBoesch/singpathfire.svg)](https://travis-ci.org/ChrisBoesch/singpathfire)[![Coverage Status](https://coveralls.io/repos/ChrisBoesch/singpathfire/badge.svg)](https://coveralls.io/r/ChrisBoesch/singpathfire)
+[![Coverage Status](https://coveralls.io/repos/ChrisBoesch/singpathfire/badge.svg)](https://coveralls.io/r/ChrisBoesch/singpathfire)
 
-# Class mentors
-
-An AngularFire-based version of SingPath
-
+# Class Mentors and SingPathFire
 
 ## Requirements
 
