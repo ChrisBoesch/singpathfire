@@ -26,6 +26,8 @@
    */
   constant('routes', {
     home: '/paths',
+    temp: '/temp',
+    temp1: '/temp1',
     profile: '/profile',
     paths: '/paths',
     newPath: '/paths/new-path',
