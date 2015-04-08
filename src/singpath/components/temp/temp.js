@@ -30,7 +30,7 @@
    */
   controller('TempCtrl', [
     function TempCtrl() {
-
+      this.name = 'Chris';
     }
   ]);
 
