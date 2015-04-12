@@ -39,10 +39,10 @@
             </tr>
             <tr ng-repeat="participant in ctrl.participants">
                 <th>{{ participant.user.displayName }}</th>
-                <td ng-repeat="task in ctrl.event.tasks">
-                    <span ng-switch on="participant.tasks[task.id].completed">
+                <td ng-repeat="(taskId, task) in ctrl.event.tasks">
+                    <span ng-switch on="participant.tasks[taskId].completed">
                         <span ng-switch-when="true">
-                            Done
+                            Completed
                         </span>
                         <span ng-switch-default>
                             <a ng-href="{{task.link}}" ng-if="task.link">link</a>
