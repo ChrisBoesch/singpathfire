@@ -1,0 +1,55 @@
+<md-content flex class="md-padding">
+    <h3>
+        Created by {{ ctrl.event.owner.displayName }}
+        on {{ ctrl.event.createdAt | date}}
+    </h3>
+
+    <h3>Tasks</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>
+                   Challenge
+                </th>
+                <th ng-if="ctrl.event.tasks | spfEmpty">
+                    <em>No challenge</em>
+                </th>
+                <th ng-repeat="task in ctrl.event.tasks">
+                    {{ task.title }}
+                </th>
+            </tr>
+            <tr>
+                <th>
+                   Description
+                </th>
+                <th ng-repeat="task in ctrl.event.tasks">
+                    {{ task.description }}
+                </th>
+            </tr>
+            <tr>
+                <th>
+                   Participants
+                </th>
+                <th ng-repeat="task in ctrl.event.tasks"></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-if="ctrl.participants | spfEmpty">
+                <td>No participants</td>
+            </tr>
+            <tr ng-repeat="participant in ctrl.participants">
+                <th>{{ participant.user.displayName }}</th>
+                <td ng-repeat="task in ctrl.event.tasks">
+                    <span ng-switch on="participant.tasks[task.id].completed">
+                        <span ng-switch-when="true">
+                            Done
+                        </span>
+                        <span ng-switch-default>
+                            <a ng-href="{{task.link}}" ng-if="task.link">link</a>
+                        </span>
+                    </span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</md-content>

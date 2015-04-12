@@ -6,7 +6,7 @@
             <md-item-content>
                 <div class="md-tile-content">
                     <h3 layout>
-                        <a href="#{{ 'oneEvent | urlFor: {eventId: e.$id}' }}">{{e.title}}</a>
+                        <a href="#{{ 'oneEvent' | urlFor: {eventId: e.$id} }}">{{e.title}}</a>
                     </h3>
                     <h4>created by {{e.owner.displayName}} ({{e.createdAt|date}})</h4>
                 </div>

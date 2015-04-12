@@ -1,0 +1,82 @@
+<md-content flex class="md-padding">
+    <form name="editTask" ng-submit="ctrl.saveTask(ctrl.event, ctrl.taskId, ctrl.task, editTask)">
+        <div>
+            <md-input-container>
+                <label for="edit-task-name">Name</label>
+                <input type="text" name="editTaskTitle" id="edit-task-name"
+                    ng-model="ctrl.task.title"
+                    required="required" ng-minLength="3" md-maxLength="30"
+                    placeholer="Challenge name"
+                />
+                <div ng-messages="editTask.editTaskTitle.$error">
+                    <div ng-message="required">A challenge needs a name.</div>
+                    <div ng-message="minlength">The name is too short.</div>
+                    <div ng-message="md-maxlength">The name is too long.</div>
+                </div>
+            </md-input-container>
+        </div>
+
+        <div>
+            <md-input-container>
+                <label for="edit-task-desc">Description</label>
+                <textarea name="editTaskDesc" id="edit-task-desc"
+                    ng-model="ctrl.task.description"
+                    required="required" ng-minLength="3" md-maxLength="100"
+                    placeholer="Challenge description"
+                ></textarea>
+                <div ng-messages="editTask.editTaskDesc.$error">
+                    <div ng-message="required">A challenge needs a description.</div>
+                    <div ng-message="minlength">The descriptiion is too short.</div>
+                    <div ng-message="md-maxlength">The description is too long.</div>
+                </div>
+            </md-input-container>
+        </div>
+
+        <div>
+            <md-input-container>
+                <label for="edit-task-link">Link</label>
+                <input type="text" name="editTaskLink" id="edit-task-link"
+                    ng-model="ctrl.task.link"
+                    required="required"
+                    pattern="^(https?://.+|#/).+$"
+                    placeholer="URL to Challenge"
+                />
+                <div ng-messages="editTask.editTaskLink.$error">
+                    <div ng-message="required">A challenge needs a link.</div>
+                    <div ng-message="pattern">Wrong format for an absolute or relative URL.</div>
+                </div>
+            </md-input-container>
+        </div>
+		
+        <div layout="row">
+            <spf-select-container flex layout="column">
+                <md-select flex name="editTaskServiceId"
+                    ng-model="ctrl.task.serviceId" spf-required placeholder="Select a Service">
+                    <md-option ng-value="opt" ng-repeat="opt in ['codeSchool', 'codeCombat', 'treeHouse']">
+                        {{opt}}
+                    </md-option>
+                </md-select>
+                <div ng-messages="editTask.editTaskServiceId.$error">
+                    <div ng-message="spf-required">A challenge needs a service id.</div>
+                </div>
+            </spf-select-container>
+            <md-input-container flex>
+                <label for="edit-task-priority">Priority</label>
+                <input type="number" name="editTaskPriority" id="edit-task-priority"
+                    ng-model="ctrl.task.priority"
+                    min="0" step="1"
+                    placeholer="Challenge priority"
+                />
+                <div ng-messages="editTask.editTaskPriority.$error">
+                    <div ng-message="min">The priority should be a possitive number.</div>
+                </div>
+            </md-input-container>
+        </div>
+
+        <div layout="row" layout-align="center center">
+            <md-button type="submit" class="md-raised md-primary" ng-disabled="editTask.$invalid || ctrl.savingTask">Save</md-button>
+            <md-button type="reset" class="md-raised" ng-href="#{{ 'editEvent' | urlFor: {eventId: ctrl.event.$id} }}">Back</md-button>
+        </div>
+
+    </form>
+</md-content>
