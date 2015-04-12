@@ -5,7 +5,7 @@
     </h3>
 
     <h3>Tasks</h3>
-    <table>
+    <table class="events">
         <thead>
             <tr>
                 <th>
@@ -22,22 +22,19 @@
                 <th>
                    Description
                 </th>
-                <th ng-repeat="task in ctrl.event.tasks">
+                <td ng-repeat="task in ctrl.event.tasks">
                     {{ task.description }}
-                </th>
+                </td>
             </tr>
             <tr>
                 <th>
                    Participants
                 </th>
-                <th ng-repeat="task in ctrl.event.tasks"></th>
+                <td ng-repeat="task in ctrl.event.tasks"></td>
             </tr>
         </thead>
         <tbody>
-            <tr ng-if="ctrl.participants | spfEmpty">
-                <td>No participants</td>
-            </tr>
-            <tr ng-repeat="participant in ctrl.participants">
+            <tr ng-repeat="participant in ctrl.participants" ng-class="'index-' + $index">
                 <th>{{ participant.user.displayName }}</th>
                 <td ng-repeat="(taskId, task) in ctrl.event.tasks">
                     <span ng-switch on="participant.tasks[taskId].completed">
@@ -49,6 +46,9 @@
                         </span>
                     </span>
                 </td>
+            </tr>
+            <tr ng-if="ctrl.participants | spfEmpty">
+                <td>No participants</td>
             </tr>
         </tbody>
     </table>
