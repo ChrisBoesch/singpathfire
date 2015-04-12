@@ -474,7 +474,7 @@
       var saltSize = 128 / 8;
       var hashOpts = {
         keySize: 256 / 32,
-        iterations: 2024
+        iterations: 1012
       };
 
       this.setSaltSize = function(size) {
