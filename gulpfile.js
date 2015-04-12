@@ -46,13 +46,13 @@ var config = {
   },
   ace: {
     assets: [
-      'src/vendor/ace-builds/src-noconflict/mode-html.js',
-      'src/vendor/ace-builds/src-noconflict/mode-javascript.js',
-      'src/vendor/ace-builds/src-noconflict/mode-python.js',
-      'src/vendor/ace-builds/src-noconflict/theme-twilight.js',
-      'src/vendor/ace-builds/src-noconflict/worker-html.js',
-      'src/vendor/ace-builds/src-noconflict/worker-javascript.js',
-      'src/vendor/ace-builds/src-noconflict/worker-html.js'
+      'src/vendor/ace-builds/mode-html.js',
+      'src/vendor/ace-builds/mode-javascript.js',
+      'src/vendor/ace-builds/mode-python.js',
+      'src/vendor/ace-builds/theme-twilight.js',
+      'src/vendor/ace-builds/worker-html.js',
+      'src/vendor/ace-builds/worker-javascript.js',
+      'src/vendor/ace-builds/worker-html.js'
     ],
     base: 'src/vendor/ace-builds/src-noconflict'
   },

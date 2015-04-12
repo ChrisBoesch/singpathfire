@@ -29,6 +29,9 @@
     events: '/events',
     newEvent: '/new-event',
     oneEvent: '/events/:eventId',
+    editEvent: '/events/:eventId/edit',
+    editEventTask: '/events/:eventId/task/:taskId',
+    addEventTask: '/events/:eventId/new-task',
     profile: '/profile/:publicId',
     editProfile: '/profile/'
   }).
@@ -90,6 +93,8 @@
         },
 
         events: {
+          errNoPublicId: new Error('You should have a public id to join an event'),
+
           list: function() {
             return spfFirebase.loadedArray(['classMentors/events'], {
               orderByChild: 'timestamp',
@@ -113,14 +118,46 @@
             });
           },
 
-          join: function(eventId, pw) {
-            var paths;
+          get: function(eventId) {
+            return spfFirebase.loadedObj(['classMentors/events', eventId]);
+          },
 
-            return spfAuthData.user().then(function(authData) {
+          addTask: function(eventId, task) {
+            var priority = task.priority || 0;
+
+            return spfFirebase.push(['classMentors/events', eventId, 'tasks'], task).then(function(ref) {
+              ref.setPriority(priority);
+              return ref;
+            });
+          },
+
+          updateTask: function(eventId, taskId, task) {
+            var priority = task.priority || 0;
+
+            return spfFirebase.set(['classMentors/events', eventId, 'tasks', taskId], task).then(function(ref) {
+              ref.setPriority(priority);
+              return ref;
+            });
+          },
+
+          participants: function(eventId) {
+            return spfFirebase.loadedArray(['classMentors/eventParticipants', eventId]);
+          },
+
+          join: function(eventId, pw) {
+            var paths, authData;
+
+            return spfAuthData.user().then(function(_authData) {
+              authData = _authData;
+
+              if (!authData.publicId) {
+                return $q.reject(clmDataStore.events.errNoPublicId);
+              }
+
               paths = {
                 hashOptions: ['classMentors/eventPasswords', eventId, 'options'],
                 application: ['classMentors/eventApplications', eventId, spfAuth.user.uid],
-                participation: ['classMentors/eventParticipants', eventId, authData.publicId]
+                participation: ['classMentors/eventParticipants', eventId, authData.publicId, 'user']
               };
             }).then(function() {
               return spfFirebase.loadedObj(paths.hashOptions);
@@ -128,7 +165,10 @@
               var hash = spfCrypto.password.fromSalt(pw, options.$value.salt, options.$value);
               return spfFirebase.set(paths.application, hash.value);
             }).then(function() {
-              return spfFirebase.set(paths.participation, true);
+              return spfFirebase.set(paths.participation, {
+                displayName: authData.displayName,
+                gravatar: authData.gravatar
+              });
             });
           },
 

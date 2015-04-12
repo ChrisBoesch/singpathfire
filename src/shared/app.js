@@ -576,6 +576,26 @@
     }
   ]);
 
+  module.filter('spfLength', [
+    function spfLengthFactory() {
+      return function spfLength(obj) {
+        if (!obj) {
+          return 0;
+        }
+
+        if (obj.hasOwnProperty('$value') && obj.$value === null) {
+          return 0;
+        }
+
+        if (obj.length !== undefined) {
+          return obj.length;
+        }
+
+        return Object.keys(obj).length;
+      };
+    }
+  ]);
+
   module.directive('spfRequired', [
 
     function spfRequiredFactory() {

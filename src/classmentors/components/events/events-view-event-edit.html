@@ -1,0 +1,25 @@
+<md-content flex class="md-padding">
+    <h2 hide show-sm>
+        {{ ctrl.event.title }}
+    </h2>
+        
+    <md-list>
+        <md-subheader class="md-no-sticky">{{ ctrl.event.tasks | spfLength }} challenges</md-subheader>
+        <md-list-item ng-repeat="(taskId, task) in ctrl.event.tasks">
+            <md-item-content>
+                <div class="md-tile-content">
+                  <h3>{{ task.title }}</h3>
+                  <h4>{{ task.description }}</h4>
+                  <p ng-if="task.badge.id">{{ task.badge.name}}</p>
+                </div>
+                <div class="md-title-right" layout="column" layout-align="center center">
+                    <md-button ng-href="#{{ 'editEventTask'|urlFor: {eventId: ctrl.event.$id, taskId: taskId} }}" layout layout-align="center center" class="md-raised md-primary" aria-label="Edit">
+                        <md-icon md-svg-icon="create"></md-icon>
+                        Edit
+                    </md-button>
+                </div>
+            </md-item-content>
+        </md-list-item>
+    </md-list>
+
+</md-content>
