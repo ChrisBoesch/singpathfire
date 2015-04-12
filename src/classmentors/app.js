@@ -162,8 +162,8 @@
             }).then(function() {
               return spfFirebase.loadedObj(paths.hashOptions);
             }).then(function(options) {
-              var hash = spfCrypto.password.fromSalt(pw, options.$value.salt, options.$value);
-              return spfFirebase.set(paths.application, hash.value);
+              var hash = spfCrypto.password.fromSalt(pw, options.salt, options);
+              return spfFirebase.set(paths.application, hash);
             }).then(function() {
               return spfFirebase.set(paths.participation, {
                 displayName: authData.displayName,
@@ -174,11 +174,11 @@
 
           leave: function(eventId) {
             return spfAuthData.user().then(function(authData) {
-              return spfFirebase.set([
+              return spfFirebase.remove([
                 'classMentors/eventParticipants',
                 eventId,
                 authData.publicId
-              ], false);
+              ]);
             });
           }
         },

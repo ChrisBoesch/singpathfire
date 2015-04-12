@@ -23,7 +23,7 @@
 
         <md-button class="menu-item md-raised md-primary" ng-repeat="btn in navBar.currentPage.menuItems track by btn.url" ng-href="{{btn.url}}" aria-label="{{btn.title}}" ng-click="btn.onClick()">
             <md-icon md-svg-icon="{{btn.icon}}" ng-if="btn.icon"></md-icon>
-            <span ng-bind="btn.title"></span>
+            <span ng-bind="btn.title" hide show-gt-sm></span>
         </md-button>
 
         <span ng-switch="navBar.auth.user.uid">
