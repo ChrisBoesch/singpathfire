@@ -180,6 +180,53 @@
                 authData.publicId
               ]);
             });
+          },
+
+          updateProgress: function(event) {
+            spfAuthData.user().then(function(currentUser) {
+              if (!currentUser.publicId) {
+                return $q.reject(new Error('You should have a public id'));
+              }
+
+              return clmDataStore.profile(currentUser.publicId);
+            }).then(function(profile) {
+              var progress = Object.keys(event.tasks).reduce(function(results, taskId) {
+                var task = event.tasks[taskId];
+                var serviceId = task.serviceId;
+
+                if (
+                  !profile.services ||
+                  !profile.services[serviceId] ||
+                  !profile.services[serviceId].details ||
+                  !profile.services[serviceId].details.id
+                ) {
+                  return results;
+                }
+
+                if (
+                  task.badge &&
+                  task.badge.id &&
+                  (
+                    !profile.services[serviceId].badges ||
+                    !profile.services[serviceId].badges[task.badge.id]
+                  )
+                ) {
+                  return results;
+                }
+
+                results[taskId] = {completed: true};
+                return results;
+              }, {});
+
+              console.log(progress);
+
+              return spfFirebase.set(
+                ['classMentors/eventParticipants', event.$id, profile.$id, 'tasks'],
+                progress
+              );
+            }).catch(function(err) {
+              $log.error(err);
+            });
           }
         },
 

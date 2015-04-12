@@ -377,7 +377,9 @@
           this.join = function(pw) {
             clmDataStore.events.join(self.event.$id, pw).then(function() {
               spfAlert.success('You joined this event');
+              clmDataStore.events.updateProgress(self.event, initialData.currentUser);
               updateNavbar();
+              $mdDialog.hide();
             }).catch(function(err) {
               spfAlert.error('Failed to add you: ' + err);
             });
