@@ -157,7 +157,8 @@
               paths = {
                 hashOptions: ['classMentors/eventPasswords', eventId, 'options'],
                 application: ['classMentors/eventApplications', eventId, spfAuth.user.uid],
-                participation: ['classMentors/eventParticipants', eventId, authData.publicId, 'user']
+                participation: ['classMentors/eventParticipants', eventId, authData.publicId, 'user'],
+                profile: ['classMentors/userProfiles', authData.publicId, 'events', eventId]
               };
             }).then(function() {
               return spfFirebase.loadedObj(paths.hashOptions);
@@ -169,11 +170,22 @@
                 displayName: authData.displayName,
                 gravatar: authData.gravatar
               });
+            }).then(function() {
+              return spfFirebase.set(paths.profile, true);
             });
           },
 
           leave: function(eventId) {
-            return spfAuthData.user().then(function(authData) {
+            return spfAuthData.user(function(authData) {
+              return spfFirebase.remove([
+                'classMentors/userProfiles',
+                authData.publicId,
+                'events',
+                eventId
+              ]).then(function() {
+                return authData;
+              });
+            }).thenthen(function(authData) {
               return spfFirebase.remove([
                 'classMentors/eventParticipants',
                 eventId,
@@ -217,8 +229,6 @@
                 results[taskId] = {completed: true};
                 return results;
               }, {});
-
-              console.log(progress);
 
               return spfFirebase.set(
                 ['classMentors/eventParticipants', event.$id, profile.$id, 'tasks'],
