@@ -1,0 +1,13 @@
+.events th, .events td {
+    text-align: center;
+    padding: 0 10px 0;
+}
+
+.events tr th:first-child {
+    text-align: left;
+    padding-left: 0;
+}
+
+.events tr.index-0 th, .events tr.index-0 td {
+    padding-top: 10px;
+}

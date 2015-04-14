@@ -31,6 +31,7 @@
   controller('TempCtrl', [
     function TempCtrl() {
       this.name = 'Chris';
+
       this.add = function(a, b) {
         return a + b;
       };

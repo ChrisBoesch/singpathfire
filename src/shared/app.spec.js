@@ -48,7 +48,7 @@
             expect(hash.options.prf).toBe('SHA256');
             expect(hash.value.length).toBe(256 / 8 * 2); // 256 bit hex encoded
             expect(hash.options.salt.length).toBe(128 / 8 * 2); // 64 bit hex encoded
-            expect(hash.options.iterations).toBe(2024);
+            expect(hash.options.iterations).toBe(1012);
           });
 
           it('should let you configure the hasher', function() {

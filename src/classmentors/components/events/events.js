@@ -302,29 +302,95 @@
    */
   controller('ViewEventCtrl', [
     'initialData',
+    '$document',
+    '$mdDialog',
+    'spfAlert',
     'urlFor',
     'spfNavBarService',
-    function ViewEventCtrl(initialData, urlFor, spfNavBarService) {
-      var options = [];
+    'clmDataStore',
+    function ViewEventCtrl(initialData, $document, $mdDialog, spfAlert, urlFor, spfNavBarService, clmDataStore) {
+      var self = this;
 
       this.currentUser = initialData.currentUser;
       this.event = initialData.event;
       this.participants = initialData.participants;
 
-      if (this.currentUser && this.event.owner.publicId === this.currentUser.publicId) {
-        options.push({
-          title: 'Edit',
-          url: '#' + urlFor('editEvent', {eventId: this.event.$id}),
-          icon: 'create'
-        });
+      updateNavbar();
+
+      function updateNavbar() {
+        spfNavBarService.update(
+          self.event.title, {
+            title: 'Events',
+            url: '#' + urlFor('events')
+          }, getOptions()
+        );
       }
 
-      spfNavBarService.update(
-        this.event.title, {
-          title: 'Events',
-          url: '#' + urlFor('events')
-        }, options
-      );
+      function getOptions() {
+        var options = [];
+
+        if (!self.currentUser || !self.currentUser.publicId) {
+          return options;
+        }
+
+        // add join/leave button
+        if (self.participants.$indexFor(self.currentUser.publicId) > -1) {
+          options.push({
+            title: 'Leave',
+            onClick: function() {
+              clmDataStore.events.leave(self.event.$id);
+              updateNavbar();
+            },
+            icon: 'highlight-remove'
+          });
+        } else {
+          options.push({
+            title: 'Join',
+            onClick: promptPassword,
+            icon: 'add-circle-outline'
+          });
+        }
+
+        // Add edit button
+        if (self.event.owner.publicId === self.currentUser.publicId) {
+          options.push({
+            title: 'Edit',
+            url: '#' + urlFor('editEvent', {eventId: self.event.$id}),
+            icon: 'create'
+          });
+        }
+
+        return options;
+      }
+
+      function promptPassword() {
+        $mdDialog.show({
+          parent: $document.body,
+          templateUrl: 'classmentors/components/events/events-view-password.html',
+          controller: DialogController,
+          controllerAs: 'ctrl'
+        });
+
+        function DialogController() {
+          this.pw = '';
+
+          this.join = function(pw) {
+            clmDataStore.events.join(self.event.$id, pw).then(function() {
+              spfAlert.success('You joined this event');
+              clmDataStore.events.updateProgress(self.event, initialData.currentUser);
+              updateNavbar();
+              $mdDialog.hide();
+            }).catch(function(err) {
+              spfAlert.error('Failed to add you: ' + err);
+            });
+            this.closeDialog();
+          };
+
+          this.closeDialog = function() {
+            $mdDialog.hide();
+          };
+        }
+      }
     }
   ]).
 
