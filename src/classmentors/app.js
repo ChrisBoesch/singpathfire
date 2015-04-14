@@ -185,7 +185,7 @@
               ]).then(function() {
                 return authData;
               });
-            }).thenthen(function(authData) {
+            }).then(function(authData) {
               return spfFirebase.remove([
                 'classMentors/eventParticipants',
                 eventId,
