@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/ChrisBoesch/singpathfire.svg)](https://travis-ci.org/ChrisBoesch/singpathfire)
 [![Stories in Ready](https://badge.waffle.io/chrisboesch/singpathfire.png?label=ready&title=Ready)](https://waffle.io/chrisboesch/singpathfire)
 [![Coverage Status](https://coveralls.io/repos/ChrisBoesch/singpathfire/badge.svg)](https://coveralls.io/r/ChrisBoesch/singpathfire)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ChrisBoesch/singpathfire?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 # Class Mentors and SingPathFire
 
