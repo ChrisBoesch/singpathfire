@@ -429,16 +429,16 @@
         data.canEdit = $q.all({
           currentUser: spfAuthData.user(),
           event: eventPromise
-        }).then(function(data) {
+        }).then(function(result) {
           if (
-            !data.currentUser.publicId ||
-            !data.event.owner ||
-            !data.event.owner.publicId ||
-            data.event.owner.publicId !== data.currentUser.publicId
+            !result.currentUser.publicId ||
+            !result.event.owner ||
+            !result.event.owner.publicId ||
+            result.event.owner.publicId !== result.currentUser.publicId
           ) {
             return $q.reject(errNotAuthaurized);
           } else {
-            return data;
+            return result;
           }
         });
 
