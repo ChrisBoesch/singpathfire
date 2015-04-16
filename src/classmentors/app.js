@@ -58,22 +58,19 @@
     '$q',
     '$log',
     '$http',
-    '$firebaseObject',
     'spfFirebase',
     'spfAuth',
     'spfAuthData',
     'spfCrypto',
-    function clmDataStoreFactory($q, $log, $http, $firebaseObject, spfFirebase, spfAuth, spfAuthData, spfCrypto) {
+    function clmDataStoreFactory($q, $log, $http, spfFirebase, spfAuth, spfAuthData, spfCrypto) {
       var clmDataStore;
 
       clmDataStore = {
-        _profileFactory: $firebaseObject.$extend({}),
+        _profileFactory: spfFirebase.objFactory({}),
 
         profile: function(publicId) {
           return $q.when(publicId).then(function(id) {
-            return new clmDataStore._profileFactory(
-              spfFirebase.ref(['classMentors/userProfiles', id])
-            ).$loaded();
+            return clmDataStore._profileFactory(['classMentors/userProfiles', id]).$loaded();
           });
         },
 
