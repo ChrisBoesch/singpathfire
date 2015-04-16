@@ -176,7 +176,7 @@
           },
 
           leave: function(eventId) {
-            return spfAuthData.user(function(authData) {
+            return spfAuthData.user().then(function(authData) {
               return spfFirebase.remove([
                 'classMentors/userProfiles',
                 authData.publicId,
