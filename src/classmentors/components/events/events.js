@@ -69,9 +69,9 @@
         controllerAs: 'ctrl',
         resolve: {
           'initialData': [
-            'editCtrlInitialData',
-            function(editCtrlInitialData) {
-              return editCtrlInitialData();
+            'addEventTaskCtrlInitialData',
+            function(addEventTaskCtrlInitialData) {
+              return addEventTaskCtrlInitialData();
             }
           ]
         }
@@ -395,7 +395,7 @@
   ]).
 
   /**
-   * Used to resolve `initialData` of `EditCtrl` and `AddEventTaskCtrl`.
+   * Minimal resolver for `EditCtrl` and `AddEventTaskCtrl`.
    *
    * Load the event data and the current user data.
    *
@@ -403,13 +403,13 @@
    * is not the owner of the event.
    *
    */
-  factory('editCtrlInitialData', [
+  factory('baseEditCtrlInitialData', [
     '$q',
     '$route',
     'spfAuthData',
     'clmDataStore',
-    function editCtrlInitialDataFactory($q, $route, spfAuthData, clmDataStore) {
-      return function editCtrlInitialData() {
+    function baseEditCtrlInitialDataFactory($q, $route, spfAuthData, clmDataStore) {
+      return function baseEditCtrlInitialData() {
         var errNoEvent = new Error('Event not found');
         var errNotAuthaurized = new Error('You cannot edit this event');
         var eventId = $route.current.params.eventId;
@@ -421,7 +421,12 @@
           return event;
         });
 
-        return $q.all({
+        var data = {
+          currentUser: spfAuthData.user(),
+          event: eventPromise
+        };
+
+        data.canEdit = $q.all({
           currentUser: spfAuthData.user(),
           event: eventPromise
         }).then(function(data) {
@@ -436,6 +441,22 @@
             return data;
           }
         });
+
+        return data;
+      };
+    }
+  ]).
+
+  /**
+   * Used to resolve `initialData` for `EditCtrl`
+   *
+   */
+  factory('editCtrlInitialData', [
+    '$q',
+    'baseEditCtrlInitialData',
+    function($q, baseEditCtrlInitialData) {
+      return function editCtrlInitialData() {
+        return $q.all(baseEditCtrlInitialData());
       };
     }
   ]).
@@ -470,6 +491,20 @@
     }
   ]).
 
+  factory('addEventTaskCtrlInitialData', [
+    '$q',
+    'baseEditCtrlInitialData',
+    'clmDataStore',
+    function addEventTaskCtrlInitialData($q, baseEditCtrlInitialData, clmDataStore) {
+      return function addEventTaskCtrlInitialData() {
+        var data = baseEditCtrlInitialData();
+
+        data.badges = clmDataStore.badges.all();
+        return $q.all(data);
+      };
+    }
+  ]).
+
   /**
    * AddEventTaskCtrl
    *
@@ -477,14 +512,16 @@
   controller('AddEventTaskCtrl', [
     'initialData',
     '$location',
+    '$log',
     'spfAlert',
     'urlFor',
     'spfNavBarService',
     'clmDataStore',
-    function AddEventTaskCtrl(initialData, $location, spfAlert, urlFor, spfNavBarService, clmDataStore) {
+    function AddEventTaskCtrl(initialData, $location, $log, spfAlert, urlFor, spfNavBarService, clmDataStore) {
       var self = this;
 
       this.event = initialData.event;
+      this.badges = initialData.badges;
       this.task = {};
       this.savingTask = false;
 
@@ -502,12 +539,22 @@
       );
 
       this.saveTask = function(event, _, task) {
+        var copy = Object.assign({}, task);
+
+        copy.badge = Object.keys(task.badge).reduce(function(badge, key) {
+          if (key[0] !== '$') {
+            badge[key] = task.badge[key];
+          }
+          return badge;
+        }, {});
+
         self.creatingTask = true;
-        clmDataStore.events.addTask(event.$id, task).then(function() {
+        clmDataStore.events.addTask(event.$id, copy).then(function() {
           spfAlert.success('Task created');
           $location.path(urlFor('editEvent', {eventId: self.event.$id}));
         }).catch(function(err) {
-          spfAlert.error(err);
+          $log.error(err);
+          spfAlert.error('Failed to created new task');
         }).finally(function() {
           self.creatingTask = false;
         });
@@ -550,6 +597,7 @@
         return $q.all({
           currentUser: spfAuthData.user(),
           event: eventPromise,
+          badges: clmDataStore.badges.all(),
           taskId: taskId,
           task: taskPromise
         }).then(function(data) {
@@ -582,9 +630,21 @@
       var self = this;
 
       this.event = initialData.event;
+      this.badges = initialData.badges;
       this.taskId = initialData.taskId;
       this.task = initialData.task;
       this.savingTask = false;
+
+      // md-select badge list and the the ng-model are compared
+      // by reference.
+      if (
+        this.task.badge &&
+        this.task.badge.id &&
+        this.badges[this.task.serviceId] &&
+        this.badges[this.task.serviceId][this.task.badge.id]
+      ) {
+        this.task.badge = this.badges[this.task.serviceId][this.task.badge.id];
+      }
 
       spfNavBarService.update(
         this.task.title, [{
@@ -600,8 +660,17 @@
       );
 
       this.saveTask = function(event, taskId, task) {
+        var copy = Object.assign({}, task);
+
+        copy.badge = Object.keys(task.badge).reduce(function(badge, key) {
+          if (key[0] !== '$') {
+            badge[key] = task.badge[key];
+          }
+          return badge;
+        }, {});
+
         self.savingTask = true;
-        clmDataStore.events.updateTask(event.$id, taskId, task).then(function() {
+        clmDataStore.events.updateTask(event.$id, taskId, copy).then(function() {
           spfAlert.success('Task saved');
         }).catch(function(err) {
           spfAlert.error(err);

@@ -1,19 +1,32 @@
 <md-content flex class="md-padding">
     <form name="editTask" ng-submit="ctrl.saveTask(ctrl.event, ctrl.taskId, ctrl.task, editTask)">
         <div>
-            <md-input-container>
-                <label for="edit-task-name">Name</label>
-                <input type="text" name="editTaskTitle" id="edit-task-name"
-                    ng-model="ctrl.task.title"
-                    required="required" ng-minLength="3" md-maxLength="30"
-                    placeholer="Challenge name"
-                />
-                <div ng-messages="editTask.editTaskTitle.$error">
-                    <div ng-message="required">A challenge needs a name.</div>
-                    <div ng-message="minlength">The name is too short.</div>
-                    <div ng-message="md-maxlength">The name is too long.</div>
-                </div>
-            </md-input-container>
+            <div layout="row">
+                <md-input-container flex>
+                    <label for="edit-task-name">Name</label>
+                    <input type="text" name="editTaskTitle" id="edit-task-name"
+                        ng-model="ctrl.task.title"
+                        required="required" ng-minLength="3" md-maxLength="30"
+                        placeholer="Challenge name"
+                    />
+                    <div ng-messages="editTask.editTaskTitle.$error">
+                        <div ng-message="required">A challenge needs a name.</div>
+                        <div ng-message="minlength">The name is too short.</div>
+                        <div ng-message="md-maxlength">The name is too long.</div>
+                    </div>
+                </md-input-container>
+                <md-input-container flex>
+                    <label for="edit-task-priority">Priority</label>
+                    <input type="number" name="editTaskPriority" id="edit-task-priority"
+                        ng-model="ctrl.task.priority"
+                        min="0" step="1"
+                        placeholer="Challenge priority"
+                    />
+                    <div ng-messages="editTask.editTaskPriority.$error">
+                        <div ng-message="min">The priority should be a possitive number.</div>
+                    </div>
+                </md-input-container>
+            </div>
         </div>
 
         <div>
@@ -47,8 +60,7 @@
                 </div>
             </md-input-container>
         </div>
-		
-        <div layout="row">
+		<div layout="row">
             <spf-select-container flex layout="column">
                 <md-select flex name="editTaskServiceId"
                     ng-model="ctrl.task.serviceId" spf-required placeholder="Select a Service">
@@ -60,17 +72,16 @@
                     <div ng-message="spf-required">A challenge needs a service id.</div>
                 </div>
             </spf-select-container>
-            <md-input-container flex>
-                <label for="edit-task-priority">Priority</label>
-                <input type="number" name="editTaskPriority" id="edit-task-priority"
-                    ng-model="ctrl.task.priority"
-                    min="0" step="1"
-                    placeholer="Challenge priority"
-                />
-                <div ng-messages="editTask.editTaskPriority.$error">
-                    <div ng-message="min">The priority should be a possitive number.</div>
-                </div>
-            </md-input-container>
+            <spf-select-container flex layout="column" ng-if="ctrl.task.serviceId">
+                <md-select flex name="editTaskServiceId"
+                    ng-model="ctrl.task.badge"
+                    placeholder="Select a badge (optional)"
+                >
+                    <md-option ng-value="badge" ng-repeat="badge in ctrl.badges[ctrl.task.serviceId]">
+                        {{badge.name}}
+                    </md-option>
+                </md-select>
+            </spf-select-container>
         </div>
 
         <div layout="row" layout-align="center center">

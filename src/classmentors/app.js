@@ -336,6 +336,28 @@
         }
       };
 
+      /**
+       * Service to access list of badges.
+       *
+       */
+      var loader = function(serviceId) {
+        return spfFirebase.loadedObj(['classMentors/badges', serviceId]);
+      };
+
+      var services = ['codeCombat', 'codeSchool', 'treeHouse'];
+
+      clmDataStore.badges = services.reduce(function(all, serviceId) {
+        all[serviceId] = loader.bind(clmDataStore.badges, serviceId);
+        return all;
+      }, {});
+
+      clmDataStore.badges.all = function() {
+        return $q.all(services.reduce(function(all, serviceId) {
+          all[serviceId] = clmDataStore.badges[serviceId]();
+          return all;
+        }, {}));
+      };
+
       return clmDataStore;
     }
   ])
