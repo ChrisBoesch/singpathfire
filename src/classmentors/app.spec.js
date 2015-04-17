@@ -85,6 +85,222 @@
           }));
 
         });
+
+        describe('singPath', function() {
+
+          describe('paths', function() {
+
+            it('should return a map of available path at singpath', inject(function($rootScope, $q, clmDataStore) {
+              var expected = {
+                someId: {
+                  id: 'someId',
+                  title: 'some title',
+                  url: '/singpath/#/paths/someId/levels'
+                }
+              };
+              var actual;
+
+              spfFirebase.loadedObj.and.returnValue(
+                $q.when({
+                  someId: {
+                    title: 'some title',
+                    description: 'discard'
+                  }
+                })
+              );
+
+              clmDataStore.singPath.paths().then(function(paths) {
+                actual = paths;
+              });
+
+              $rootScope.$apply();
+              expect(actual).toEqual(expected);
+            }));
+
+            it('should get path at /singpath/paths/', inject(function($rootScope, $q, clmDataStore) {
+              spfFirebase.loadedObj.and.returnValue(
+                $q.when({})
+              );
+
+              clmDataStore.singPath.paths();
+
+              $rootScope.$apply();
+              expect(spfFirebase.loadedObj).toHaveBeenCalledWith(['singpath/paths']);
+            }));
+
+            it('should skip firebaseObject special properties', inject(function($rootScope, $q, clmDataStore) {
+              var expected = {
+                someId: {
+                  id: 'someId',
+                  title: 'some title',
+                  url: '/singpath/#/paths/someId/levels'
+                }
+              };
+              var actual;
+
+              spfFirebase.loadedObj.and.returnValue(
+                $q.when({
+                  $foo: {},
+                  someId: {
+                    title: 'some title',
+                    description: 'discard'
+                  }
+                })
+              );
+
+              clmDataStore.singPath.paths().then(function(paths) {
+                actual = paths;
+              });
+
+              $rootScope.$apply();
+              expect(actual).toEqual(expected);
+            }));
+
+          });
+
+          describe('levels', function() {
+
+            it('should return a map of available path at singpath', inject(function($rootScope, $q, clmDataStore) {
+              var expected = {
+                someOtherId: {
+                  id: 'someOtherId',
+                  title: 'some title',
+                  url: '/singpath/#/paths/someId/levels/someOtherId/problems'
+                }
+              };
+              var actual;
+
+              spfFirebase.loadedObj.and.returnValue(
+                $q.when({
+                  someOtherId: {
+                    title: 'some title',
+                    description: 'discard'
+                  }
+                })
+              );
+
+              clmDataStore.singPath.levels('someId').then(function(paths) {
+                actual = paths;
+              });
+
+              $rootScope.$apply();
+              expect(actual).toEqual(expected);
+            }));
+
+            it('should get path at /singpath/levels/<path-id>/', inject(function($rootScope, $q, clmDataStore) {
+              spfFirebase.loadedObj.and.returnValue(
+                $q.when({})
+              );
+
+              clmDataStore.singPath.levels('foo');
+
+              $rootScope.$apply();
+              expect(spfFirebase.loadedObj).toHaveBeenCalledWith(['singpath/levels', 'foo']);
+            }));
+
+            it('should skip firebaseObject properties', inject(function($rootScope, $q, clmDataStore) {
+              var expected = {
+                someOtherId: {
+                  id: 'someOtherId',
+                  title: 'some title',
+                  url: '/singpath/#/paths/someId/levels/someOtherId/problems'
+                }
+              };
+              var actual;
+
+              spfFirebase.loadedObj.and.returnValue(
+                $q.when({
+                  $foo: {},
+                  someOtherId: {
+                    title: 'some title',
+                    description: 'discard'
+                  }
+                })
+              );
+
+              clmDataStore.singPath.levels('someId').then(function(paths) {
+                actual = paths;
+              });
+
+              $rootScope.$apply();
+              expect(actual).toEqual(expected);
+            }));
+
+          });
+
+          describe('problems', function() {
+
+            it('should return a map of available path at singpath', inject(function($rootScope, $q, clmDataStore) {
+              var expected = {
+                lastId: {
+                  id: 'lastId',
+                  title: 'some title',
+                  url: '/singpath/#/paths/someId/levels/someOtherId/problems/lastId/play'
+                }
+              };
+              var actual;
+
+              spfFirebase.loadedObj.and.returnValue(
+                $q.when({
+                  lastId: {
+                    title: 'some title',
+                    description: 'discard'
+                  }
+                })
+              );
+
+              clmDataStore.singPath.problems('someId', 'someOtherId').then(function(paths) {
+                actual = paths;
+              });
+
+              $rootScope.$apply();
+              expect(actual).toEqual(expected);
+            }));
+
+            it('should get path at /singpath/problems/<path-id>/<level-id>/>', inject(
+              function($rootScope, $q, clmDataStore) {
+                spfFirebase.loadedObj.and.returnValue(
+                  $q.when({})
+                );
+
+                clmDataStore.singPath.problems('foo', 'bar');
+
+                $rootScope.$apply();
+                expect(spfFirebase.loadedObj).toHaveBeenCalledWith(['singpath/problems', 'foo', 'bar']);
+              }
+            ));
+
+            it('should skip firebaseObject properties', inject(function($rootScope, $q, clmDataStore) {
+              var expected = {
+                lastId: {
+                  id: 'lastId',
+                  title: 'some title',
+                  url: '/singpath/#/paths/someId/levels/someOtherId/problems/lastId/play'
+                }
+              };
+              var actual;
+
+              spfFirebase.loadedObj.and.returnValue(
+                $q.when({
+                  $foo: {},
+                  lastId: {
+                    title: 'some title',
+                    description: 'discard'
+                  }
+                })
+              );
+
+              clmDataStore.singPath.problems('someId', 'someOtherId').then(function(paths) {
+                actual = paths;
+              });
+
+              $rootScope.$apply();
+              expect(actual).toEqual(expected);
+            }));
+
+          });
+
+        });
       });
 
     });

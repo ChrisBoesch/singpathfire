@@ -333,6 +333,69 @@
               });
             }
           }
+        },
+
+        singPath: {
+          /**
+           * Return a map of available paths at SingPath
+           *
+           */
+          paths: function() {
+            return spfFirebase.loadedObj(['singpath/paths']).then(function(paths) {
+              return Object.keys(paths).reduce(function(all, id) {
+                if (!id || id[0] === '$') {
+                  return all;
+                }
+                all[id] = {
+                  id: id,
+                  title: paths[id].title,
+                  url: '/singpath/#/paths/' + id + '/levels'
+                };
+                return all;
+              }, {});
+            });
+          },
+
+          /**
+           * Return a map of available levels at SingPath for a specific path
+           *
+           */
+          levels: function(pathId) {
+            return spfFirebase.loadedObj(['singpath/levels', pathId]).then(function(levels) {
+              return Object.keys(levels).reduce(function(all, id) {
+                if (!id || id[0] === '$') {
+                  return all;
+                }
+                all[id] = {
+                  id: id,
+                  title: levels[id].title,
+                  url: '/singpath/#/paths/' + pathId + '/levels/' + id + '/problems'
+                };
+                return all;
+              }, {});
+            });
+          },
+
+          /**
+           * Return a map of available problems at SingPath for a specific level
+           *
+           */
+          problems: function(pathId, levelId) {
+            return spfFirebase.loadedObj(['singpath/problems', pathId, levelId]).then(function(problems) {
+              return Object.keys(problems).reduce(function(all, id) {
+                if (!id || id[0] === '$') {
+                  return all;
+                }
+
+                all[id] = {
+                  id: id,
+                  title: problems[id].title,
+                  url: '/singpath/#/paths/' + pathId + '/levels/' + levelId + '/problems/' + id + '/play'
+                };
+                return all;
+              }, {});
+            });
+          }
         }
       };
 

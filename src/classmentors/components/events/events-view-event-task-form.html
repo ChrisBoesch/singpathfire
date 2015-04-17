@@ -64,7 +64,7 @@
             <spf-select-container flex layout="column">
                 <md-select flex name="editTaskServiceId"
                     ng-model="ctrl.task.serviceId" spf-required placeholder="Select a Service">
-                    <md-option ng-value="opt" ng-repeat="opt in ['codeSchool', 'codeCombat', 'treeHouse']">
+                    <md-option ng-value="opt" ng-repeat="opt in ['codeSchool', 'codeCombat', 'treeHouse', 'singPath']">
                         {{opt}}
                     </md-option>
                 </md-select>
@@ -72,8 +72,8 @@
                     <div ng-message="spf-required">A challenge needs a service id.</div>
                 </div>
             </spf-select-container>
-            <spf-select-container flex layout="column" ng-if="ctrl.task.serviceId">
-                <md-select flex name="editTaskServiceId"
+            <spf-select-container flex layout="column" ng-if="ctrl.task.serviceId &amp;&amp; ctrl.task.serviceId != 'singPath'">
+                <md-select flex name="editTaskBadge"
                     ng-model="ctrl.task.badge"
                     placeholder="Select a badge (optional)"
                 >
@@ -81,6 +81,48 @@
                         {{badge.name}}
                     </md-option>
                 </md-select>
+            </spf-select-container>
+        </div>
+        <div layout="row" ng-if="ctrl.task.serviceId == 'singPath'">
+            <spf-select-container flex layout="column">
+                <md-select flex name="editTaskSingPathPath"
+                    ng-model="ctrl.task.singPathProblem.path"
+                    placeholder="Select a Path (optional)"
+                >
+                    <md-option ng-value="opt" ng-repeat="opt in ctrl.singPath.paths">
+                        {{opt.title}}
+                    </md-option>
+                </md-select>
+            </spf-select-container>
+            <spf-select-container flex layout="column" ng-if="ctrl.task.singPathProblem.path">
+                <md-select flex name="editTaskSingPathLevel"
+                    ng-model="ctrl.task.singPathProblem.level"
+                    spf-required
+                    md-on-open="ctrl.loadLevels(ctrl.task.singPathProblem)"
+                    placeholder="Select a Level"
+                >
+                    <md-option ng-value="opt" ng-repeat="opt in ctrl.singPath.levels">
+                        {{opt.title}}
+                    </md-option>
+                </md-select>
+                <div ng-messages="editTask.editTaskSingPathLevel.$error">
+                    <div ng-message="spf-required">A challenge needs a service id.</div>
+                </div>
+            </spf-select-container>
+            <spf-select-container flex layout="column" ng-if="ctrl.task.singPathProblem.level">
+                <md-select flex name="editTaskSingPathProblem"
+                    ng-model="ctrl.task.singPathProblem.problem"
+                    spf-required
+                    md-on-open="ctrl.loadProblems(ctrl.task.singPathProblem)"
+                    placeholder="Select a Problem"
+                >
+                    <md-option ng-value="opt" ng-repeat="opt in ctrl.singPath.problems">
+                        {{opt.title}}
+                    </md-option>
+                </md-select>
+                <div ng-messages="editTask.editTaskSingPathProblem.$error">
+                    <div ng-message="spf-required">A challenge needs a service id.</div>
+                </div>
             </spf-select-container>
         </div>
 

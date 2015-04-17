@@ -500,6 +500,11 @@
         var data = baseEditCtrlInitialData();
 
         data.badges = clmDataStore.badges.all();
+        data.singPath = $q.all({
+          paths: clmDataStore.singPath.paths(),
+          levels: [],
+          problems: []
+        });
         return $q.all(data);
       };
     }
@@ -523,6 +528,7 @@
       this.event = initialData.event;
       this.badges = initialData.badges;
       this.task = {};
+      this.singPath = initialData.singPath;
       this.savingTask = false;
 
       spfNavBarService.update(
@@ -538,15 +544,32 @@
         }]
       );
 
-      this.saveTask = function(event, _, task) {
-        var copy = Object.assign({}, task);
+      this.loadLevels = function(selected) {
+        return clmDataStore.singPath.levels(selected.path.id).then(function(levels) {
+          self.singPath.levels = levels;
+        });
+      };
 
-        copy.badge = Object.keys(task.badge).reduce(function(badge, key) {
-          if (key[0] !== '$') {
-            badge[key] = task.badge[key];
+      this.loadProblems = function(selected) {
+        return clmDataStore.singPath.problems(selected.path.id, selected.level.id).then(function(problems) {
+          self.singPath.problems = problems;
+        });
+      };
+
+      this.saveTask = function(event, _, task) {
+        var copy = cleanObject(task);
+
+        if (copy.serviceId === 'singPath') {
+          delete copy.badge;
+          if (copy.singPathProblem) {
+            copy.singPathProblem.path = cleanObject(task.singPathProblem.path);
+            copy.singPathProblem.level = cleanObject(task.singPathProblem.level);
+            copy.singPathProblem.problem = cleanObject(task.singPathProblem.problem);
           }
-          return badge;
-        }, {});
+        } else {
+          delete copy.singPathProblem;
+          copy.badge = cleanObject(task.badge);
+        }
 
         self.creatingTask = true;
         clmDataStore.events.addTask(event.$id, copy).then(function() {
@@ -660,14 +683,19 @@
       );
 
       this.saveTask = function(event, taskId, task) {
-        var copy = Object.assign({}, task);
+        var copy = cleanObject(task);
 
-        copy.badge = Object.keys(task.badge).reduce(function(badge, key) {
-          if (key[0] !== '$') {
-            badge[key] = task.badge[key];
+        if (copy.serviceId === 'singPath') {
+          delete copy.badge;
+          if (copy.singPathProblem) {
+            copy.singPathProblem.path = cleanObject(task.singPathProblem.path);
+            copy.singPathProblem.level = cleanObject(task.singPathProblem.level);
+            copy.singPathProblem.problem = cleanObject(task.singPathProblem.problem);
           }
-          return badge;
-        }, {});
+        } else {
+          delete copy.singPathProblem;
+          copy.badge = cleanObject(task.badge);
+        }
 
         self.savingTask = true;
         clmDataStore.events.updateTask(event.$id, taskId, copy).then(function() {
@@ -682,5 +710,38 @@
   ])
 
   ;
+
+  var invalidChar = ['.', '#', '$', '/', '[', ']'];
+
+  function cleanObject(obj) {
+    if (
+      obj == null ||
+      !angular.isObject(obj) ||
+      angular.isArray(obj) ||
+      angular.isNumber(obj) ||
+      angular.isString(obj) ||
+      angular.isDate(obj)
+    ) {
+      return obj;
+    }
+
+    return Object.keys(obj).reduce(function(copy, key) {
+      if (!key) {
+        return copy;
+      }
+
+      for (var i = 0; i < invalidChar.length; i++) {
+        if (key.indexOf(invalidChar[i]) !== -1) {
+          return copy;
+        }
+      }
+
+      if (!key || key[0] === '$') {
+        return copy;
+      }
+      copy[key] = obj[key];
+      return copy;
+    }, {});
+  }
 
 })();
