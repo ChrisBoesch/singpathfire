@@ -191,34 +191,77 @@
             });
           },
 
+          _hasRegistered: function(task, clmProfile, spfProfile) {
+            var serviceId = task.serviceId;
+
+            if (serviceId === 'singPath') {
+              return !!spfProfile;
+            } else {
+              return (
+                clmProfile.services &&
+                clmProfile.services[serviceId] &&
+                clmProfile.services[serviceId].details &&
+                clmProfile.services[serviceId].details.id
+              );
+            }
+          },
+
+          _hasBadge: function(task, profile) {
+            var serviceId = task.serviceId;
+
+            return (
+              profile.services[serviceId].badges &&
+              profile.services[serviceId].badges[task.badge.id]
+            );
+          },
+
+          _hasSolved: function(task, profile) {
+            var path = task.singPathProblem.path.id;
+            var level = task.singPathProblem.level.id;
+            var problem = task.singPathProblem.problem.id;
+            return (
+              profile.solutions &&
+              profile.solutions[path] &&
+              profile.solutions[path][level] &&
+              profile.solutions[path][level][problem]
+            );
+          },
+
           updateProgress: function(event) {
-            spfAuthData.user().then(function(currentUser) {
+            return spfAuthData.user().then(function(currentUser) {
               if (!currentUser.publicId) {
                 return $q.reject(new Error('You should have a public id'));
               }
 
-              return clmDataStore.profile(currentUser.publicId);
-            }).then(function(profile) {
+              return $q.all({
+                classMentors: clmDataStore.profile(currentUser.publicId),
+                singPath: clmDataStore.singPath.profile(currentUser.publicId)
+              });
+            }).then(function(profiles) {
               var progress = Object.keys(event.tasks).reduce(function(results, taskId) {
                 var task = event.tasks[taskId];
-                var serviceId = task.serviceId;
 
-                if (
-                  !profile.services ||
-                  !profile.services[serviceId] ||
-                  !profile.services[serviceId].details ||
-                  !profile.services[serviceId].details.id
-                ) {
+                if (!clmDataStore.events._hasRegistered(task, profiles.classMentors, profiles.singPath)) {
                   return results;
                 }
 
                 if (
                   task.badge &&
                   task.badge.id &&
-                  (
-                    !profile.services[serviceId].badges ||
-                    !profile.services[serviceId].badges[task.badge.id]
-                  )
+                  !clmDataStore.events._hasBadge(task, profiles.classMentors)
+                ) {
+                  return results;
+                }
+
+                if (
+                  task.singPathProblem &&
+                  task.singPathProblem.path &&
+                  task.singPathProblem.path.id &&
+                  task.singPathProblem.level &&
+                  task.singPathProblem.level.id &&
+                  task.singPathProblem.problem &&
+                  task.singPathProblem.problem.id &&
+                  !clmDataStore.events._hasSolved(task, profiles.singPath)
                 ) {
                   return results;
                 }
@@ -228,7 +271,7 @@
               }, {});
 
               return spfFirebase.set(
-                ['classMentors/eventParticipants', event.$id, profile.$id, 'tasks'],
+                ['classMentors/eventParticipants', event.$id, profiles.classMentors.$id, 'tasks'],
                 progress
               );
             }).catch(function(err) {
@@ -336,6 +379,16 @@
         },
 
         singPath: {
+          /**
+           * Return user's singpath profile
+           *
+           */
+          profile: function(publicId) {
+            return $q.when(publicId).then(function(id) {
+              return spfFirebase.loadedObj(['singPath/userProfiles', id]);
+            });
+          },
+
           /**
            * Return a map of available paths at SingPath
            *
