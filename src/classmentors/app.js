@@ -58,22 +58,19 @@
     '$q',
     '$log',
     '$http',
-    '$firebaseObject',
     'spfFirebase',
     'spfAuth',
     'spfAuthData',
     'spfCrypto',
-    function clmDataStoreFactory($q, $log, $http, $firebaseObject, spfFirebase, spfAuth, spfAuthData, spfCrypto) {
+    function clmDataStoreFactory($q, $log, $http, spfFirebase, spfAuth, spfAuthData, spfCrypto) {
       var clmDataStore;
 
       clmDataStore = {
-        _profileFactory: $firebaseObject.$extend({}),
+        _profileFactory: spfFirebase.objFactory({}),
 
         profile: function(publicId) {
           return $q.when(publicId).then(function(id) {
-            return new clmDataStore._profileFactory(
-              spfFirebase.ref(['classMentors/userProfiles', id])
-            ).$loaded();
+            return clmDataStore._profileFactory(['classMentors/userProfiles', id]).$loaded();
           });
         },
 
@@ -176,7 +173,7 @@
           },
 
           leave: function(eventId) {
-            return spfAuthData.user(function(authData) {
+            return spfAuthData.user().then(function(authData) {
               return spfFirebase.remove([
                 'classMentors/userProfiles',
                 authData.publicId,
@@ -194,34 +191,77 @@
             });
           },
 
+          _hasRegistered: function(task, clmProfile, spfProfile) {
+            var serviceId = task.serviceId;
+
+            if (serviceId === 'singPath') {
+              return !!spfProfile;
+            } else {
+              return (
+                clmProfile.services &&
+                clmProfile.services[serviceId] &&
+                clmProfile.services[serviceId].details &&
+                clmProfile.services[serviceId].details.id
+              );
+            }
+          },
+
+          _hasBadge: function(task, profile) {
+            var serviceId = task.serviceId;
+
+            return (
+              profile.services[serviceId].badges &&
+              profile.services[serviceId].badges[task.badge.id]
+            );
+          },
+
+          _hasSolved: function(task, profile) {
+            var path = task.singPathProblem.path.id;
+            var level = task.singPathProblem.level.id;
+            var problem = task.singPathProblem.problem.id;
+            return (
+              profile.solutions &&
+              profile.solutions[path] &&
+              profile.solutions[path][level] &&
+              profile.solutions[path][level][problem]
+            );
+          },
+
           updateProgress: function(event) {
-            spfAuthData.user().then(function(currentUser) {
+            return spfAuthData.user().then(function(currentUser) {
               if (!currentUser.publicId) {
                 return $q.reject(new Error('You should have a public id'));
               }
 
-              return clmDataStore.profile(currentUser.publicId);
-            }).then(function(profile) {
+              return $q.all({
+                classMentors: clmDataStore.profile(currentUser.publicId),
+                singPath: clmDataStore.singPath.profile(currentUser.publicId)
+              });
+            }).then(function(profiles) {
               var progress = Object.keys(event.tasks).reduce(function(results, taskId) {
                 var task = event.tasks[taskId];
-                var serviceId = task.serviceId;
 
-                if (
-                  !profile.services ||
-                  !profile.services[serviceId] ||
-                  !profile.services[serviceId].details ||
-                  !profile.services[serviceId].details.id
-                ) {
+                if (!clmDataStore.events._hasRegistered(task, profiles.classMentors, profiles.singPath)) {
                   return results;
                 }
 
                 if (
                   task.badge &&
                   task.badge.id &&
-                  (
-                    !profile.services[serviceId].badges ||
-                    !profile.services[serviceId].badges[task.badge.id]
-                  )
+                  !clmDataStore.events._hasBadge(task, profiles.classMentors)
+                ) {
+                  return results;
+                }
+
+                if (
+                  task.singPathProblem &&
+                  task.singPathProblem.path &&
+                  task.singPathProblem.path.id &&
+                  task.singPathProblem.level &&
+                  task.singPathProblem.level.id &&
+                  task.singPathProblem.problem &&
+                  task.singPathProblem.problem.id &&
+                  !clmDataStore.events._hasSolved(task, profiles.singPath)
                 ) {
                   return results;
                 }
@@ -231,7 +271,7 @@
               }, {});
 
               return spfFirebase.set(
-                ['classMentors/eventParticipants', event.$id, profile.$id, 'tasks'],
+                ['classMentors/eventParticipants', event.$id, profiles.classMentors.$id, 'tasks'],
                 progress
               );
             }).catch(function(err) {
@@ -336,7 +376,102 @@
               });
             }
           }
+        },
+
+        singPath: {
+          /**
+           * Return user's singpath profile
+           *
+           */
+          profile: function(publicId) {
+            return $q.when(publicId).then(function(id) {
+              return spfFirebase.loadedObj(['singPath/userProfiles', id]);
+            });
+          },
+
+          /**
+           * Return a map of available paths at SingPath
+           *
+           */
+          paths: function() {
+            return spfFirebase.loadedObj(['singpath/paths']).then(function(paths) {
+              return Object.keys(paths).reduce(function(all, id) {
+                if (!id || id[0] === '$') {
+                  return all;
+                }
+                all[id] = {
+                  id: id,
+                  title: paths[id].title,
+                  url: '/singpath/#/paths/' + id + '/levels'
+                };
+                return all;
+              }, {});
+            });
+          },
+
+          /**
+           * Return a map of available levels at SingPath for a specific path
+           *
+           */
+          levels: function(pathId) {
+            return spfFirebase.loadedObj(['singpath/levels', pathId]).then(function(levels) {
+              return Object.keys(levels).reduce(function(all, id) {
+                if (!id || id[0] === '$') {
+                  return all;
+                }
+                all[id] = {
+                  id: id,
+                  title: levels[id].title,
+                  url: '/singpath/#/paths/' + pathId + '/levels/' + id + '/problems'
+                };
+                return all;
+              }, {});
+            });
+          },
+
+          /**
+           * Return a map of available problems at SingPath for a specific level
+           *
+           */
+          problems: function(pathId, levelId) {
+            return spfFirebase.loadedObj(['singpath/problems', pathId, levelId]).then(function(problems) {
+              return Object.keys(problems).reduce(function(all, id) {
+                if (!id || id[0] === '$') {
+                  return all;
+                }
+
+                all[id] = {
+                  id: id,
+                  title: problems[id].title,
+                  url: '/singpath/#/paths/' + pathId + '/levels/' + levelId + '/problems/' + id + '/play'
+                };
+                return all;
+              }, {});
+            });
+          }
         }
+      };
+
+      /**
+       * Service to access list of badges.
+       *
+       */
+      var loader = function(serviceId) {
+        return spfFirebase.loadedObj(['classMentors/badges', serviceId]);
+      };
+
+      var services = ['codeCombat', 'codeSchool', 'treeHouse'];
+
+      clmDataStore.badges = services.reduce(function(all, serviceId) {
+        all[serviceId] = loader.bind(clmDataStore.badges, serviceId);
+        return all;
+      }, {});
+
+      clmDataStore.badges.all = function() {
+        return $q.all(services.reduce(function(all, serviceId) {
+          all[serviceId] = clmDataStore.badges[serviceId]();
+          return all;
+        }, {}));
       };
 
       return clmDataStore;

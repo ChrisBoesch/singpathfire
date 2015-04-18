@@ -275,6 +275,21 @@
               }
             });
           });
+        },
+
+        /**
+         * Return a factory extending `$firebaseObject`.
+         *
+         * Unlike `$firebaseObject.$extend`, it return a plain function and not
+         * a contructor. It also takes as argument path and options like
+         * `spfFirebase.ref`.
+         *
+         */
+        objFactory: function(mixin) {
+          var Obj = $firebaseObject.$extend(mixin);
+          return function factory() {
+            return new Obj(spfFirebase.ref.apply(spfFirebase, arguments));
+          };
         }
       };
 

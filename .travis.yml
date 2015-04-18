@@ -5,6 +5,4 @@ node_js:
 script:
 - npm run lint
 - npm test
-env:
-  global:
-    secure: K9zpIpShbVtXJDT0DCGBgcdT5DYaIzctwHNNL0AXUm5fKHMY7UjqaX+J2CNm0y6QwL6PnCQtQQYChRRX+/NJMkRpO9SXtQWSFmJfM7i+0GYxiOj9CBsMbu7k7e3y2W6vWTfus2cwFqLz9NrFyH523qF416ZcaaNNFgJSRHBQan0=
+- npm run send-to-coveralls
