@@ -11,6 +11,7 @@
     "fmt": "./node_modules/.bin/jscs -x src/",
     "lint": "./node_modules/.bin/eslint src/ && ./node_modules/.bin/jscs src/",
     "postinstall": "./node_modules/.bin/webdriver-manager update && ./node_modules/.bin/bower-installer",
+    "send-to-coveralls": "cat ./coverage/**/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "serve-build": "./node_modules/.bin/gulp && ./bin/server.js --root=./build --port=8886",
     "serve-build-debug": "./node_modules/.bin/gulp build:debug && ./bin/server.js --root=./build-debug --port=8886",
     "serve-build-dev": "./node_modules/.bin/gulp build:dev && ./bin/server.js --root=./build-dev --port=8887",
@@ -33,6 +34,7 @@
   "homepage": "https://github.com/ChrisBoesch/singpathfire",
   "devDependencies": {
     "bower-installer": "^1.2.0",
+    "coveralls": "^2.11.2",
     "del": "^1.1.1",
     "eslint": "^0.17.1",
     "express": "^4.11.1",
@@ -55,7 +57,6 @@
     "jscs": "^1.12.0",
     "karma": "^0.12.31",
     "karma-coverage": "^0.2.7",
-    "karma-coveralls": "^0.1.5",
     "karma-jasmine": "^0.3.5",
     "karma-phantomjs-launcher": "^0.1.4",
     "lazypipe": "^0.2.2",

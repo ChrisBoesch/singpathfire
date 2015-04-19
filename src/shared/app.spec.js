@@ -156,6 +156,9 @@
           firebaseArray = jasmine.createSpy('firebaseArray');
           spfFirebaseRef = jasmine.createSpy('spfFirebaseRef');
 
+          firebaseObject.$extend = jasmine.createSpy('$extend');
+          firebaseArray.$extend = jasmine.createSpy('$extend');
+
           module(function($provide) {
             $provide.value('$firebaseObject', firebaseObject);
             $provide.value('$firebaseArray', firebaseArray);
@@ -359,6 +362,33 @@
 
             expect(actualRef).toBeUndefined();
             expect(error).toBe(expectedError);
+          }));
+
+        });
+
+        describe('objFactory', function() {
+
+          it('should call $firebaseObject.$extend', inject(function(spfFirebase) {
+            var mixin = {noop: function() {}};
+            var path = ['classMentors/userProfile', 'bob'];
+            var isConstructor = false;
+            var expected = {};
+            var actual, factory;
+            var extendedfirebaseObject = function(ref) {
+              isConstructor = this instanceof extendedfirebaseObject;
+              actual = ref;
+            };
+
+            spfFirebaseRef.and.returnValue(expected);
+            firebaseObject.$extend.and.returnValue(extendedfirebaseObject);
+
+            factory = spfFirebase.objFactory(mixin);
+            factory(path);
+
+            expect(firebaseObject.$extend).toHaveBeenCalledWith(mixin);
+            expect(spfFirebaseRef).toHaveBeenCalledWith(path);
+            expect(isConstructor).toBe(true);
+            expect(actual).toBe(expected);
           }));
 
         });
