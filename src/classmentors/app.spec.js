@@ -103,7 +103,7 @@
               $rootScope.$apply();
               expect(actual).toBe(expected);
               expect(spfFirebase.loadedObj).toHaveBeenCalledWith(
-                ['singPath/userProfiles', 'bob']
+                ['singpath/userProfiles', 'bob']
               );
             }));
 

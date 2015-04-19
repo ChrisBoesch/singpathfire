@@ -385,7 +385,7 @@
            */
           profile: function(publicId) {
             return $q.when(publicId).then(function(id) {
-              return spfFirebase.loadedObj(['singPath/userProfiles', id]);
+              return spfFirebase.loadedObj(['singpath/userProfiles', id]);
             });
           },
 
