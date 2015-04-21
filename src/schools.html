@@ -1,0 +1,287 @@
+<meta name="robots" content="noindex">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Singapore Schools</title>
+  <link rel="stylesheet" href=
+  "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" type=
+  "text/css" />
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.9/angular.min.js"
+  type="text/javascript">
+</script>
+    <script src="https://cdn.firebase.com/js/client/2.0.4/firebase.js"></script>
+    <script src="https://cdn.firebase.com/libs/angularfire/0.8.0/angularfire.min.js"></script>
+
+    <!--Google Analytics -->
+    <script src="https://dl.dropboxusercontent.com/u/4972572/temp/angulartics-master/dist/angulartics.min.js"></script>
+    <script src="https://dl.dropboxusercontent.com/u/4972572/temp/angulartics-master/dist/angulartics-ga.min.js"></script>
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-60478752-1', { 'cookieDomain': 'none' });
+    </script>
+    <!-- Anagular-char data -->
+    <link rel="stylesheet" href="https://cdn.rawgit.com/jtblin/angular-chart.js/master/dist/angular-chart.css" type="text/css" />  
+    <script src="https://cdn.rawgit.com/nnnick/Chart.js/master/Chart.min.js" type="text/javascript"></script>
+    <script src="https://cdn.rawgit.com/jtblin/angular-chart.js/master/dist/angular-chart.js" type="text/javascript"></script>
+
+</head>
+
+<body ng-app="schools">
+  <div class="panel panel-default" ng-controller="TableCtrl" ng-init="predicate='-percentage'">
+    <table class="table table-striped">
+      <tr>
+        <th></th>
+        <th></th>
+        <th></th>
+        <th>2004</th>
+        <th>2003</th>
+        <th>2002</th>
+        <th>2001</th>
+        <th>2000</th>
+        <th>1999</th>
+      </tr>
+      <tr>
+        <th>Crest</th>
+        <th><a href="" analytics-on="click" analytics-event="Name Sort" analytics-category="Stats Table" ng-click="predicate = 'name'">School</a></th>
+        <th><a href="" analytics-on="click" analytics-event="Integrated Sort" analytics-category="Stats Table" ng-click="predicate = 'integrated'">Integrated</a></th>
+        <th>Sec1</th>
+        <th>Sec2</th>
+        <th>Sec3</th>
+        <th>Sec4</th>
+        <th>JC1</th>
+        <th>JC2</th>
+        <th><a href="" analytics-on="click" analytics-event="Ambassador Sort" analytics-category="Stats Table" ng-click="predicate = 'ambassador'">Student Ambassador</a></th>
+        <th><a href="" analytics-on="click" analytics-event="Size Sort" analytics-category="Stats Table" ng-click="predicate = 'size'">Cohort Size</a></th>
+        <th><a href="" analytics-on="click" analytics-event="Badge Earners" analytics-category="Stats Table" ng-click="predicate = '-badgeEarners'">Tried Coding</a></th>
+        <th><a href="" analytics-on="click" analytics-event="JCR"  analytics-category="Stats Table" ng-click="predicate = 'jcr'">JCR</a>
+        </th>
+        <th><a href="" analytics-on="click" analytics-event="Percent Sort" analytics-category="Stats Table" ng-click="predicate = '-percentage'">Tried Percentage</a>
+            <a href="" analytics-on="click" analytics-event="-Percent Sort" analytics-category="Stats Table" ng-click="predicate = 'percentage'">^</a>
+        </th>
+      </tr>
+      <tr ng-repeat="school in schools | orderBy : predicate" ng-show="school.name"> 
+        <td><img height="24" width="24" title="{{school.name}}" ng-src="{{school.crest}}"></td>
+        <td>{{school.name}}</td>
+        <td>{{school.integrated}}</td>
+        <td>0</td>
+        <td>0</td>
+        <td>0</td>
+        <td>0</td>
+        <td>{{school.badgeEarners/2 |number:0}}</td>
+        <td>{{school.badgeEarners/2 |number:0}}</td>
+        <td ng-show="school.ambassador">{{school.ambassador}}</td>
+        <td ng-hide="school.ambassador">
+          <a  analytics-on="click" analytics-event="Nominate" analytics-category="Stats Table" href="https://docs.google.com/forms/d/1_tCXpdFnZVtsfjIiMiyPRfJOSdoHawaDj2y4V7aD6MU/viewform?usp=send_form">
+            Nominate someone
+          </a></td>
+        <td>{{school.size}}</td>
+        <td>{{school.badgeEarners}}</td>
+        <td>{{school.jcr}}</td>
+        <td>{{school.percentage | number:2}}% </td>
+      </tr>
+      <tr class="bold">
+        
+          <th>Total</th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th>({{numAmbassadors}} of {{schools.length}})</th>
+          <th>{{numStudents}}</th>
+          <th>{{numCoders}}</th>
+          <th>{{numJCR}}</th>
+          <th>{{100 * numCoders / numStudents | number:4}}%</th>
+      
+      </tr>
+    </table>
+    <br>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        Charts
+      </div>
+      <!-- 
+      class="chart chart-line"
+      class="chart chart-bar"
+      -->
+      <div class="panel-body">
+        <canvas id="line1" class="chart chart-bar" data="nonZeroData" labels="labels" legend="true" click="onClick" series="nonZeroSeries"></canvas>
+      </div>
+
+      <div class="panel-body">
+        <canvas id="line3" class="chart chart-bar" data="ambassadorsData" labels="labels" legend="true" click="onClick" series="ambassadorsSeries"></canvas>
+      </div>
+
+      <div class="panel-body">
+        <canvas id="line2a" class="chart chart-bar" data="onePercentData" labels="labels" legend="true" click="onClick" series="onePercentSeries"></canvas>
+      </div>
+
+      <div class="panel-body">
+        <canvas id="line" class="chart chart-bar" data="badgeEarnersData" labels="labels" legend="true" click="onClick" series="badgeEarnersSeries"></canvas>
+      </div>
+
+      <div class="panel-body">
+        <canvas id="line2b" class="chart chart-bar" data="eventRegistrationData" labels="labels" legend="true" click="onClick" series="eventRegistrationSeries"></canvas>
+      </div>
+
+      <div class="panel-body">
+        <canvas id="line2" class="chart chart-bar" data="badgeTotalData" labels="labels" legend="true" click="onClick" series="badgeTotalSeries"></canvas>
+      </div>
+
+    </div>
+  </div>
+
+<script id="jsbin-javascript">
+
+var app = angular.module("schools", ["firebase","chart.js",'angulartics', 'angulartics.google.analytics']).config(function ($analyticsProvider) {
+            $analyticsProvider.firstPageview(true); 
+            $analyticsProvider.withAutoBase(true);  
+    });
+
+/*var app = angular.module("schools", ["firebase","chart.js"])*/
+
+app.controller("TableCtrl", ['$scope','$http','$firebase', function ($scope, $http, $firebase) {
+   
+   $scope.numStudents = 0;
+   $scope.numCoders = 0;
+   $scope.numAmbassadors = 0;
+   $scope.numJCR = 0;
+
+    var theFirebaseURL = "https://codevantage.firebaseio.com";
+    var ref = new Firebase(theFirebaseURL);
+    $scope.schools = $firebase(ref.child("schools")).$asArray(); 
+    $scope.metrics = $firebase(ref.child("metrics")).$asArray(); 
+        
+
+    $scope.get_totals = function(){
+       $scope.numStudents = 0;
+       $scope.numCoders = 0;
+       $scope.numAmbassadors = 0;
+       $scope.numJCR = 0;
+       
+       for(var i=0; i<$scope.schools.length; i++){
+         if($scope.schools[i].size){
+           $scope.numStudents += $scope.schools[i].size;
+         }
+         if($scope.schools[i].badgeEarners){
+           $scope.numCoders += $scope.schools[i].badgeEarners;
+         }
+        if($scope.schools[i].size && $scope.schools[i].badgeEarners){
+            $scope.schools[i].percentage = 100 * $scope.schools[i].badgeEarners / $scope.schools[i].size; 
+        }
+        else{
+            $scope.schools[i].percentage = 0;
+        }
+        if($scope.schools[i].ambassador){
+           $scope.numAmbassadors += 1;
+         }
+
+         var jcr = Math.ceil($scope.schools[i].size * 0.01 - $scope.schools[i].badgeEarners);
+         if(jcr > 0 && $scope.schools[i].group == "Junior College"){
+            $scope.schools[i].jcr = jcr;
+            $scope.numJCR += jcr;
+         }
+
+       }
+    };
+    
+    // angular-charts starter data shown before first click. 
+    $scope.labels = [];
+    $scope.badgeEarnersSeries = ['JC and Poly Badge Earners'];
+    $scope.badgeEarnersData = [ [] ];
+    $scope.badgeTotalSeries = ['Total Badges'];
+    $scope.badgeTotalData = [ [] ];
+    $scope.ambassadorsSeries = ['Student Ambassadors'];
+    $scope.ambassadorsData = [ [] ];
+    $scope.onePercentSeries = ['Schools with > 1.0%'];
+    $scope.onePercentData = [ [] ];
+    $scope.nonZeroSeries = ['Schools with > 0.0%'];
+    $scope.nonZeroData = [ [] ];
+    $scope.eventRegistrationSeries = ['NIC Event Registrations'];
+    $scope.eventRegistrationData = [ [] ];
+
+    //Update the totals after schools loaded from Firebase. 
+    $scope.schools.$loaded().then(function() {
+        $scope.get_totals();
+     });
+
+
+    //Recalculate the totals and update the ranking on school changes. 
+    var unwatch_schools = $scope.schools.$watch(function() {
+        console.log("schools data changed!");
+        $scope.get_totals();
+    });
+    //unwatch_schools();
+
+    var unwatch_metrics = $scope.metrics.$watch(function() {
+        console.log("metrics data changed!");
+        $scope.updateAll();
+    });
+    //unwatch_metrics();
+
+    $scope.onClick = function(){
+        //$scope.updateAll();
+        //$scope.get_totals();
+    };
+
+    $scope.updateAll = function(){
+        
+        $scope.labels = [];
+        $scope.badgeEarnersSeries = ['JC and Poly Badge Earners'];
+        $scope.badgeEarnersData = [ [] ];
+        $scope.badgeTotalSeries = ['Total Badges'];
+        $scope.badgeTotalData = [ [] ];
+        $scope.ambassadorsSeries = ['Student Ambassadors'];
+        $scope.ambassadorsData = [ [] ];
+        $scope.onePercentSeries = ['Schools with > 1.0%'];
+        $scope.onePercentData = [ [] ];
+        $scope.nonZeroSeries = ['Schools with > 0.0%'];
+        $scope.nonZeroData = [ [] ];
+        $scope.eventRegistrationSeries = ['NIC Event Registrations'];
+        $scope.eventRegistrationData = [ [] ];
+
+        for(var i=0; i<$scope.metrics.length; i++){
+            $scope.labels.push($scope.metrics[i].$id)
+            $scope.badgeEarnersData[0].push($scope.metrics[i].badgeEarners)
+            $scope.badgeTotalData[0].push($scope.metrics[i].totalBadges)
+            $scope.ambassadorsData[0].push($scope.metrics[i].ambassadors)
+            if ($scope.metrics[i].onePercent){
+                $scope.onePercentData[0].push($scope.metrics[i].onePercent)
+                $scope.nonZeroData[0].push($scope.metrics[i].nonZero)
+            } else{
+                $scope.onePercentData[0].push(0);
+                $scope.nonZeroData[0].push(0);
+            }
+            if ($scope.metrics[i].eventRegistration){
+                $scope.eventRegistrationData[0].push($scope.metrics[i].eventRegistration)
+            } else{
+                $scope.eventRegistrationData[0].push(0);
+            }
+             
+        }
+    };
+
+    $scope.github_login = function(){
+        console.log('testing');
+        var ref = new Firebase("https://codevantage.firebaseio.com");
+        ref.authWithOAuthPopup("github", function(error, authData) {
+              if (error) {
+                console.log("Login Failed!", error);
+              } else {
+                console.log("Authenticated successfully with payload:", authData);
+              }
+        });
+    }
+
+
+
+}]);
+</script>
+</body>
+</html>
+
