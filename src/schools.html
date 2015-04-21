@@ -45,7 +45,7 @@
       <tr>
         <th>Crest</th>
         <th><a href="" analytics-on="click" analytics-event="Name Sort" analytics-category="Stats Table" ng-click="predicate = 'name'">School</a></th>
-        <th><a href="" analytics-on="click" analytics-event="Integrated Sort" analytics-category="Stats Table" ng-click="predicate = 'integrated'">Integrated</a></th>
+        <th><a href="" analytics-on="click" analytics-event="Integrated Sort" analytics-category="Stats Table" ng-click="predicate = 'integrated'">School Type</a></th>
         <th>Sec1</th>
         <th>Sec2</th>
         <th>Sec3</th>
@@ -53,7 +53,6 @@
         <th>JC1</th>
         <th>JC2</th>
         <th><a href="" analytics-on="click" analytics-event="Badge Earners" analytics-category="Stats Table" ng-click="predicate = '-badgeEarners'">Total Registered</a></th>
-        <th><a href="" analytics-on="click" analytics-event="Ambassador Sort" analytics-category="Stats Table" ng-click="predicate = 'ambassador'">Student Ambassador</a></th>
         <th><a href="" analytics-on="click" analytics-event="Size Sort" analytics-category="Stats Table" ng-click="predicate = 'size'">Average Cohort Size</a></th>
         
         <th><a href="" analytics-on="click" analytics-event="Percent Sort" analytics-category="Stats Table" ng-click="predicate = '-percentage'">Tried Percentage</a>
@@ -63,19 +62,21 @@
       <tr ng-repeat="school in schools | orderBy : predicate" ng-show="school.name"> 
         <td><img height="24" width="24" title="{{school.name}}" ng-src="{{school.crest}}"></td>
         <td>{{school.name}}</td>
-        <td>{{school.integrated}}</td>
-        <td><span ng-show="school.integrated">1</span><span ng-hide="school.integrated">-</span></td>
-        <td><span ng-show="school.integrated">1</span><span ng-hide="school.integrated">-</span></td>
-        <td><span ng-show="school.integrated">1</span><span ng-hide="school.integrated">-</span></td>
-        <td><span ng-show="school.integrated">1</span><span ng-hide="school.integrated">-</span></td>
-        <td>{{school.badgeEarners/2 |number:0}}</td>
-        <td>{{school.badgeEarners/2 |number:0}}</td>
+        <td>{{school.group}}</td>
+        <td><span ng-show="school.integrated || school.group=='Secondary'">1</span>
+          <span ng-hide="school.integrated || school.group=='Secondary'">-</span></td>
+        <td><span ng-show="school.integrated || school.group=='Secondary'">1</span>
+          <span ng-hide="school.integrated || school.group=='Secondary'">-</span></td>
+        <td><span ng-show="school.integrated || school.group=='Secondary'">1</span>
+          <span ng-hide="school.integrated || school.group=='Secondary'">-</span></td>
+        <td><span ng-show="school.integrated || school.group=='Secondary'">1</span>
+          <span ng-hide="school.integrated || school.group=='Secondary'">-</span></td>
+        <td ng-show="school.group=='Junior College' || school.group=='Polytechnic'  ">{{school.badgeEarners/2 |number:0}}</td>
+        <td ng-hide="school.group=='Junior College' || school.group=='Polytechnic'  ">-</td>
+        
+        <td ng-show="school.group=='Junior College' || school.group=='Polytechnic'">{{school.badgeEarners/2 |number:0}}</td>
+        <td ng-hide="school.group=='Junior College' || school.group=='Polytechnic'">-</td>
         <td>{{school.badgeEarners}}</td>
-        <td ng-show="school.ambassador">{{school.ambassador}}</td>
-        <td ng-hide="school.ambassador">
-          <a  analytics-on="click" analytics-event="Nominate" analytics-category="Stats Table" href="https://docs.google.com/forms/d/1_tCXpdFnZVtsfjIiMiyPRfJOSdoHawaDj2y4V7aD6MU/viewform?usp=send_form">
-            Nominate someone
-          </a></td>
         <td>{{school.size}}</td>
         <td>{{school.percentage | number:2}}% </td>
       </tr>
@@ -90,50 +91,14 @@
           <th></th>
           <th></th>
           <th></th>
-          <th>({{numAmbassadors}} of {{schools.length}})</th>
-          <th>{{numStudents}}</th>
           <th>{{numCoders}}</th>
-          <th>{{numJCR}}</th>
+          <th>{{numStudents}}</th>
           <th>{{100 * numCoders / numStudents | number:4}}%</th>
       
       </tr>
     </table>
     <br>
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        Charts
-      </div>
-      <!-- 
-      class="chart chart-line"
-      class="chart chart-bar"
-      -->
-      <div class="panel-body">
-        <canvas id="line1" class="chart chart-bar" data="nonZeroData" labels="labels" legend="true" click="onClick" series="nonZeroSeries"></canvas>
-      </div>
-
-      <div class="panel-body">
-        <canvas id="line3" class="chart chart-bar" data="ambassadorsData" labels="labels" legend="true" click="onClick" series="ambassadorsSeries"></canvas>
-      </div>
-
-      <div class="panel-body">
-        <canvas id="line2a" class="chart chart-bar" data="onePercentData" labels="labels" legend="true" click="onClick" series="onePercentSeries"></canvas>
-      </div>
-
-      <div class="panel-body">
-        <canvas id="line" class="chart chart-bar" data="badgeEarnersData" labels="labels" legend="true" click="onClick" series="badgeEarnersSeries"></canvas>
-      </div>
-
-      <div class="panel-body">
-        <canvas id="line2b" class="chart chart-bar" data="eventRegistrationData" labels="labels" legend="true" click="onClick" series="eventRegistrationSeries"></canvas>
-      </div>
-
-      <div class="panel-body">
-        <canvas id="line2" class="chart chart-bar" data="badgeTotalData" labels="labels" legend="true" click="onClick" series="badgeTotalSeries"></canvas>
-      </div>
-
-    </div>
-  </div>
-
+    
 <script id="jsbin-javascript">
 
 var app = angular.module("schools", ["firebase","chart.js",'angulartics', 'angulartics.google.analytics']).config(function ($analyticsProvider) {
@@ -159,8 +124,7 @@ app.controller("TableCtrl", ['$scope','$http','$firebase', function ($scope, $ht
     $scope.get_totals = function(){
        $scope.numStudents = 0;
        $scope.numCoders = 0;
-       $scope.numAmbassadors = 0;
-       $scope.numJCR = 0;
+
        
        for(var i=0; i<$scope.schools.length; i++){
          if($scope.schools[i].size){
@@ -175,107 +139,15 @@ app.controller("TableCtrl", ['$scope','$http','$firebase', function ($scope, $ht
         else{
             $scope.schools[i].percentage = 0;
         }
-        if($scope.schools[i].ambassador){
-           $scope.numAmbassadors += 1;
-         }
-
-         var jcr = Math.ceil($scope.schools[i].size * 0.01 - $scope.schools[i].badgeEarners);
-         if(jcr > 0 && $scope.schools[i].group == "Junior College"){
-            $scope.schools[i].jcr = jcr;
-            $scope.numJCR += jcr;
-         }
 
        }
     };
     
-    // angular-charts starter data shown before first click. 
-    $scope.labels = [];
-    $scope.badgeEarnersSeries = ['JC and Poly Badge Earners'];
-    $scope.badgeEarnersData = [ [] ];
-    $scope.badgeTotalSeries = ['Total Badges'];
-    $scope.badgeTotalData = [ [] ];
-    $scope.ambassadorsSeries = ['Student Ambassadors'];
-    $scope.ambassadorsData = [ [] ];
-    $scope.onePercentSeries = ['Schools with > 1.0%'];
-    $scope.onePercentData = [ [] ];
-    $scope.nonZeroSeries = ['Schools with > 0.0%'];
-    $scope.nonZeroData = [ [] ];
-    $scope.eventRegistrationSeries = ['NIC Event Registrations'];
-    $scope.eventRegistrationData = [ [] ];
-
+ 
     //Update the totals after schools loaded from Firebase. 
     $scope.schools.$loaded().then(function() {
         $scope.get_totals();
      });
-
-
-    //Recalculate the totals and update the ranking on school changes. 
-    var unwatch_schools = $scope.schools.$watch(function() {
-        console.log("schools data changed!");
-        $scope.get_totals();
-    });
-    //unwatch_schools();
-
-    var unwatch_metrics = $scope.metrics.$watch(function() {
-        console.log("metrics data changed!");
-        $scope.updateAll();
-    });
-    //unwatch_metrics();
-
-    $scope.onClick = function(){
-        //$scope.updateAll();
-        //$scope.get_totals();
-    };
-
-    $scope.updateAll = function(){
-        
-        $scope.labels = [];
-        $scope.badgeEarnersSeries = ['JC and Poly Badge Earners'];
-        $scope.badgeEarnersData = [ [] ];
-        $scope.badgeTotalSeries = ['Total Badges'];
-        $scope.badgeTotalData = [ [] ];
-        $scope.ambassadorsSeries = ['Student Ambassadors'];
-        $scope.ambassadorsData = [ [] ];
-        $scope.onePercentSeries = ['Schools with > 1.0%'];
-        $scope.onePercentData = [ [] ];
-        $scope.nonZeroSeries = ['Schools with > 0.0%'];
-        $scope.nonZeroData = [ [] ];
-        $scope.eventRegistrationSeries = ['NIC Event Registrations'];
-        $scope.eventRegistrationData = [ [] ];
-
-        for(var i=0; i<$scope.metrics.length; i++){
-            $scope.labels.push($scope.metrics[i].$id)
-            $scope.badgeEarnersData[0].push($scope.metrics[i].badgeEarners)
-            $scope.badgeTotalData[0].push($scope.metrics[i].totalBadges)
-            $scope.ambassadorsData[0].push($scope.metrics[i].ambassadors)
-            if ($scope.metrics[i].onePercent){
-                $scope.onePercentData[0].push($scope.metrics[i].onePercent)
-                $scope.nonZeroData[0].push($scope.metrics[i].nonZero)
-            } else{
-                $scope.onePercentData[0].push(0);
-                $scope.nonZeroData[0].push(0);
-            }
-            if ($scope.metrics[i].eventRegistration){
-                $scope.eventRegistrationData[0].push($scope.metrics[i].eventRegistration)
-            } else{
-                $scope.eventRegistrationData[0].push(0);
-            }
-             
-        }
-    };
-
-    $scope.github_login = function(){
-        console.log('testing');
-        var ref = new Firebase("https://codevantage.firebaseio.com");
-        ref.authWithOAuthPopup("github", function(error, authData) {
-              if (error) {
-                console.log("Login Failed!", error);
-              } else {
-                console.log("Authenticated successfully with payload:", authData);
-              }
-        });
-    }
-
 
 
 }]);
