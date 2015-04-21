@@ -52,11 +52,10 @@
         <th>Sec4</th>
         <th>JC1</th>
         <th>JC2</th>
+        <th><a href="" analytics-on="click" analytics-event="Badge Earners" analytics-category="Stats Table" ng-click="predicate = '-badgeEarners'">Total Registered</a></th>
         <th><a href="" analytics-on="click" analytics-event="Ambassador Sort" analytics-category="Stats Table" ng-click="predicate = 'ambassador'">Student Ambassador</a></th>
-        <th><a href="" analytics-on="click" analytics-event="Size Sort" analytics-category="Stats Table" ng-click="predicate = 'size'">Cohort Size</a></th>
-        <th><a href="" analytics-on="click" analytics-event="Badge Earners" analytics-category="Stats Table" ng-click="predicate = '-badgeEarners'">Tried Coding</a></th>
-        <th><a href="" analytics-on="click" analytics-event="JCR"  analytics-category="Stats Table" ng-click="predicate = 'jcr'">JCR</a>
-        </th>
+        <th><a href="" analytics-on="click" analytics-event="Size Sort" analytics-category="Stats Table" ng-click="predicate = 'size'">Average Cohort Size</a></th>
+        
         <th><a href="" analytics-on="click" analytics-event="Percent Sort" analytics-category="Stats Table" ng-click="predicate = '-percentage'">Tried Percentage</a>
             <a href="" analytics-on="click" analytics-event="-Percent Sort" analytics-category="Stats Table" ng-click="predicate = 'percentage'">^</a>
         </th>
@@ -65,20 +64,19 @@
         <td><img height="24" width="24" title="{{school.name}}" ng-src="{{school.crest}}"></td>
         <td>{{school.name}}</td>
         <td>{{school.integrated}}</td>
-        <td>0</td>
-        <td>0</td>
-        <td>0</td>
-        <td>0</td>
+        <td><span ng-show="school.integrated">1</span><span ng-hide="school.integrated">-</span></td>
+        <td><span ng-show="school.integrated">1</span><span ng-hide="school.integrated">-</span></td>
+        <td><span ng-show="school.integrated">1</span><span ng-hide="school.integrated">-</span></td>
+        <td><span ng-show="school.integrated">1</span><span ng-hide="school.integrated">-</span></td>
         <td>{{school.badgeEarners/2 |number:0}}</td>
         <td>{{school.badgeEarners/2 |number:0}}</td>
+        <td>{{school.badgeEarners}}</td>
         <td ng-show="school.ambassador">{{school.ambassador}}</td>
         <td ng-hide="school.ambassador">
           <a  analytics-on="click" analytics-event="Nominate" analytics-category="Stats Table" href="https://docs.google.com/forms/d/1_tCXpdFnZVtsfjIiMiyPRfJOSdoHawaDj2y4V7aD6MU/viewform?usp=send_form">
             Nominate someone
           </a></td>
         <td>{{school.size}}</td>
-        <td>{{school.badgeEarners}}</td>
-        <td>{{school.jcr}}</td>
         <td>{{school.percentage | number:2}}% </td>
       </tr>
       <tr class="bold">
