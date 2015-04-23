@@ -167,10 +167,11 @@
    */
   module.factory('spfFirebase', [
     '$q',
+    '$log',
     '$firebaseObject',
     '$firebaseArray',
     'spfFirebaseRef',
-    function spfFirebaseFactory($q, $firebaseObject, $firebaseArray, spfFirebaseRef) {
+    function spfFirebaseFactory($q, $log, $firebaseObject, $firebaseArray, spfFirebaseRef) {
       var spfFirebase;
 
       spfFirebase = {
@@ -248,6 +249,22 @@
             var ref = spfFirebaseRef(path);
 
             ref.set(value, function(err) {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(ref);
+              }
+            });
+          });
+        },
+
+        patch: function(path, value) {
+          return $q(function(resolve, reject) {
+            var ref = spfFirebaseRef(path);
+
+            $log.debug('PATCH', JSON.stringify(value));
+
+            ref.update(value, function(err) {
               if (err) {
                 reject(err);
               } else {

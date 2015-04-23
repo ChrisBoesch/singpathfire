@@ -50,6 +50,227 @@
     }
   ]).
 
+  factory('clmService', [
+    '$q',
+    '$log',
+    'spfFirebase',
+    function clmServiceFactory($q, $log, spfFirebase) {
+      var availableBadges = {};
+      var availableBadgesPromise = {};
+
+      return function clmService(serviceId, mixin) {
+        var service = {
+          errNotImplemented: new Error('Not implemented'),
+
+          /**
+           * Return a promise resolving to all avalaible badges at
+           * that service.
+           */
+          availableBadges: function() {
+            if (availableBadges[serviceId]) {
+              return $q.when(availableBadges[serviceId]);
+            }
+
+            if (availableBadgesPromise[serviceId]) {
+              return availableBadgesPromise[serviceId];
+            }
+
+            availableBadgesPromise[serviceId] = spfFirebase.loadedObj(
+              ['classMentors/badges', serviceId]
+            ).then(function(badges) {
+              availableBadges[serviceId] = badges;
+              return badges;
+            });
+
+            return availableBadgesPromise[serviceId];
+          },
+
+          /**
+           * Return the list of saved badges for the service and user.
+           *
+           * @return {[type]} [description]
+           */
+          badges: function(profile) {
+            if (
+              profile &&
+              profile.services &&
+              profile.services[serviceId] &&
+              profile.services[serviceId].badges
+            ) {
+              return profile.services[serviceId].badges;
+            } else {
+              return {};
+            }
+          },
+
+          /**
+           * Return the details of of the user for that service.
+           *
+           * It will return undefined if the details are for that service are
+           * not set or if the user id is missing.
+           *
+           * @param  firebaseObj profile Class Mentor profile of a user
+           *
+           */
+          details: function(profile) {
+            if (
+              profile &&
+              profile.services &&
+              profile.services[serviceId] &&
+              profile.services[serviceId].details &&
+              profile.services[serviceId].details.id
+            ) {
+              return profile.services[serviceId].details;
+            }
+          },
+
+          /**
+           * Claim the user name for t
+           * @param  firebaseObj profile Class Mentor profile of a user.
+           * @param  Object      details object holding the user id and user name.
+           *                     of the user for that service.
+           * @return Promise     Promise resolving to the updated Class Mentor profile
+           *                     service details firebase ref.
+           */
+          saveDetails: function(profile, details) {
+            if (!profile || !profile.$id) {
+              return $q.reject(new Error('The classmentor profile should have an id.'));
+            }
+
+            if (!details || !details.id) {
+              return $q.reject(new Error(
+                'The user details for ' + serviceId + ' should include an id.'
+              ));
+            }
+
+            return spfFirebase.set(
+              ['classMentors/servicesUserIds', serviceId, details.id],
+              profile.$id
+            ).then(function() {
+              return spfFirebase.set(
+                ['classMentors/userProfiles', profile.$id, 'services', serviceId, 'details'], {
+                  id: details.id,
+                  name: details.name,
+                  registeredBefore: {
+                    '.sv': 'timestamp'
+                  }
+                }
+              );
+            }).catch(function(err) {
+              $log.error(err);
+              return $q.reject(new Error('Failed to save your details for ' + serviceId));
+            });
+          },
+
+          /**
+           * Test if a user name for a service is already claimed
+           *
+           * @param  String  userId The user id to test.
+           * @return Promise        resolve to the a boolean. True if taken, false
+           *                        otherwise.
+           */
+          userIdTaken: function(userId) {
+            return spfFirebase.loadedObj(['classMentors/servicesUserIds', serviceId, userId]).then(function(sync) {
+              return sync.$value !== null;
+            });
+          },
+
+          /**
+           * Return a promise resolving to true if the user id exist;
+           * resolved to false if it doesn't exist.
+           *
+           */
+          userIdExist: function(userId) {
+            if (!userId) {
+              return $q.when(false);
+            }
+            return service.fetchProfile(userId).then(function() {
+              return true;
+            }).catch(function() {
+              return false;
+            });
+          },
+
+          /**
+           * Fetch user's badges from 3rd party service and update user
+           * profile with missing badges.
+           *
+           * Requires the service to implement `fetchBadges(profile)`.
+           *
+           * @param  firebaseObj profile Class Mentor profile of a user.
+           * @return Promise             return promise resolving to a firebase ref
+           *                             to the service last update timestamp.
+           */
+          updateProfile: function(profile) {
+            var knownBadges = service.badges(profile);
+
+            return service.fetchBadges(profile).then(function(badges) {
+              return badges.reduce(function(newBadges, badge) {
+                if (!(badge.id in knownBadges)) {
+                  newBadges[badge.id] = badge;
+                }
+                return newBadges;
+              }, {});
+            }).then(function(patch) {
+              if (Object.keys(patch).length === 0) {
+                return;
+              }
+
+              return $q.all([
+                spfFirebase.patch([
+                  'classMentors/userProfiles', profile.$id,
+                  'services', serviceId, 'badges'
+                ], patch),
+                spfFirebase.set([
+                  'classMentors/userProfiles', profile.$id,
+                  'services', serviceId, 'lastUpdate'
+                ], {
+                  '.sv': 'timestamp'
+                })
+              ]);
+            });
+          },
+
+          /**
+           * Fetch a user profile.
+           *
+           * @param  string userId Class Mentor profile of a user.
+           * @return Promise       Promise resolving to profile.
+           */
+          fetchProfile: function(userId) {
+            /* eslint no-unused-vars: 0 */
+            return $q.reject(service.errNotImplemented);
+          },
+
+          /**
+           * Fetch the user list of badge and normalize them.
+           *
+           * @param  firebaseObj profile Class Mentor profile of a user.
+           * @return Promise             Promise resolving to an array of badge.
+           */
+          fetchBadges: function(profile) {
+            /* eslint no-unused-vars: 0 */
+            return $q.reject(service.errNotImplemented);
+          },
+
+          /**
+           * Return the current user details on a 3rd party site.
+           *
+           * Might not be supported by the service.
+           *
+           * @return Promise Promise resolving to the user details
+           *                 (an object holding the user id and name).
+           */
+          auth: function() {
+            return $q.reject(service.errNotImplemented);
+          }
+        };
+
+        return Object.assign(service, mixin || {});
+      };
+    }
+  ]).
+
   /**
    * Service to interact with singpath firebase db
    *
@@ -62,7 +283,8 @@
     'spfAuth',
     'spfAuthData',
     'spfCrypto',
-    function clmDataStoreFactory($q, $log, $http, spfFirebase, spfAuth, spfAuthData, spfCrypto) {
+    'clmService',
+    function clmDataStoreFactory($q, $log, $http, spfFirebase, spfAuth, spfAuthData, spfCrypto, clmService) {
       var clmDataStore;
 
       clmDataStore = {
@@ -281,49 +503,66 @@
         },
 
         services: {
-          errNoPublicId: new Error('The user has not set a user public id.'),
 
-          saveDetails: function(serviceId, userSync, details) {
-            if (!userSync || !userSync.publicId) {
-              return $q.reject(clmDataStore.services.errNoPublicId);
-            }
-
-            return spfFirebase.set(
-              ['classMentors/servicesUserIds', serviceId, details.id],
-              userSync.publicId
-            ).then(function() {
-              return spfFirebase.set(
-                ['classMentors/userProfiles', userSync.publicId, 'services', serviceId, 'details'], {
-                  id: details.id,
-                  name: details.name,
-                  registeredBefore: {
-                    '.sv': 'timestamp'
-                  }
-                }
-              );
-            }).then(function(profile) {
-              var url = '/api/badges/track/' + userSync.publicId + '/' + serviceId.toLowerCase();
-              return $http.post(url).then(function() {
-                return profile;
-              });
-            }).catch(function(err) {
-              $log.error(err);
-              return $q.reject(new Error('Failed to save user details for ' + serviceId));
-            });
-          },
-
-          userIdTaken: function(serviceId, userId) {
-            return spfFirebase.loadedObj(['classMentors/servicesUserIds', serviceId, userId]).then(function(sync) {
-              return sync.$value !== null;
-            });
-          },
-
-          codeCombat: {
+          codeCombat: clmService('codeCombat', {
             errServerError: new Error('Failed to get logged in user info from Code Combat.'),
             errLoggedOff: new Error('The user is not logged in to Code Combat.'),
+            errNoUserId: new Error('Your code combat user id is missing.'),
             errNoName: new Error('The user hasn\'t set a name.'),
 
-            currentUser: function() {
+            /**
+             * Return the the user's levels.
+             *
+             */
+            fetchProfile: function(userId) {
+              if (!userId) {
+                return $q.reject(clmDataStore.services.codeCombat.errNoUserId);
+              }
+
+              return $http.get(
+                '/proxy/codecombat.com/db/user/' + userId +
+                '/level.sessions?project=state.complete,levelID,levelName'
+              ).then(function(resp) {
+                return resp.data;
+              });
+            },
+
+            /**
+             * Query the user's level and return a promise resolving to a
+             * list of badge.
+             *
+             */
+            fetchBadges: function(profile) {
+              var details = clmDataStore.services.codeCombat.details(profile);
+
+              if (!details) {
+                return $q.reject(clmDataStore.services.codeCombat.errNoUserId);
+              }
+
+              return $q.all({
+                ccProfile: clmDataStore.services.codeCombat.fetchProfile(details.id),
+                badges: clmDataStore.services.codeCombat.availableBadges()
+              }).then(function(results) {
+                return results.ccProfile.map(function(level) {
+                  var badgeId = level.levelID;
+
+                  if (
+                    !badgeId ||
+                    !results.badges[badgeId] ||
+                    !level.state ||
+                    !level.state.complete
+                  ) {
+                    return;
+                  }
+
+                  return Object.assign({}, results.badges[badgeId]);
+                }).filter(function(badge) {
+                  return badge !== undefined;
+                });
+              });
+            },
+
+            auth: function() {
               return $http.jsonp('//codecombat.com/auth/whoami?callback=JSON_CALLBACK').then(function(resp) {
                 if (resp.data.anonymous) {
                   return $q.reject(clmDataStore.services.codeCombat.errLoggedOff);
@@ -335,47 +574,71 @@
 
                 return {
                   id: resp.data._id,
-                  name: resp.data.name,
-                  points: resp.data.point,
-                  levels: resp.data.earned.levels
+                  name: resp.data.name
                 };
               }, function(e) {
                 $log.error('Failed request to //codecombat.com/auth/whoami: ' + e.toString());
                 return $q.reject(clmDataStore.services.codeCombat.errServerError);
               });
-            },
-
-            saveDetails: function(userSync, details) {
-              return clmDataStore.services.saveDetails('codeCombat', userSync, details);
-            },
-
-            userIdTaken: function(userId) {
-              return clmDataStore.services.userIdTaken('codeCombat', userId);
             }
+          }),
 
-          },
+          codeSchool: clmService('codeSchool', {
+            errNoUserId: new Error('Your code school user id is missing'),
+            errInvalidBadgeUrl: new Error(
+              'A code school badge URL should start with "http://www.codeschool.com/courses/"'
+            ),
 
-          codeSchool: {
-            saveDetails: function(userSync, details) {
-              return clmDataStore.services.saveDetails('codeSchool', userSync, details);
-            },
+            _badgeId: function(url, name) {
+              var id;
 
-            userIdTaken: function(userId) {
-              return clmDataStore.services.userIdTaken('codeSchool', userId);
-            },
-
-            userIdExist: function(userId) {
-              if (!userId) {
-                return $q.when(false);
+              if (!url) {
+                throw clmDataStore.services.codeSchool.errNoUserId;
+              } else if (url.startsWith('http://www.codeschool.com/courses/')) {
+                id = url.slice(34) + '-' + name;
+              } else if (url.startsWith('https://www.codeschool.com/courses/')) {
+                id = url.slice(35) + '-' + name;
+              } else {
+                throw clmDataStore.services.codeSchool.errInvalidBadgeUrl;
               }
 
-              return $http.get('/api/services/codeschool/users/' + userId).then(function() {
-                return true;
-              }).catch(function() {
-                return false;
+              return id.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            },
+
+            fetchProfile: function(userId) {
+              if (!userId) {
+                return $q.reject(clmDataStore.services.codeSchool.errNoUserId);
+              }
+
+              return $http.get('/proxy/www.codeschool.com/users/' + userId + '.json').then(function(resp) {
+                return resp.data;
+              });
+            },
+
+            fetchBadges: function(profile) {
+              var details = clmDataStore.services.codeSchool.details(profile);
+
+              if (!details) {
+                return $q.reject(clmDataStore.services.codeSchool.errNoUserId);
+              }
+
+              return clmDataStore.services.codeSchool.fetchProfile(details.id).then(function(csProfile) {
+                var badges = csProfile.badges || [];
+
+                return badges.map(function(badge) {
+                  //jscs:disable requireCamelCaseOrUpperCaseIdentifiers
+                  return {
+                    'id': clmDataStore.services.codeSchool._badgeId(
+                      badge.course_url, badge.name
+                    ),
+                    'name': badge.name,
+                    'url': badge.course_url,
+                    'iconUrl': badge.badge
+                  };
+                });
               });
             }
-          }
+          })
         },
 
         singPath: {
@@ -452,26 +715,14 @@
         }
       };
 
-      /**
-       * Service to access list of badges.
-       *
-       */
-      var loader = function(serviceId) {
-        return spfFirebase.loadedObj(['classMentors/badges', serviceId]);
-      };
-
-      var services = ['codeCombat', 'codeSchool', 'treeHouse'];
-
-      clmDataStore.badges = services.reduce(function(all, serviceId) {
-        all[serviceId] = loader.bind(clmDataStore.badges, serviceId);
-        return all;
-      }, {});
-
-      clmDataStore.badges.all = function() {
-        return $q.all(services.reduce(function(all, serviceId) {
-          all[serviceId] = clmDataStore.badges[serviceId]();
-          return all;
-        }, {}));
+      // TODO: rename.
+      clmDataStore.badges = {
+        all: function() {
+          return $q.all(Object.keys(clmDataStore.services).reduce(function(all, serviceId) {
+            all[serviceId] = clmDataStore.services[serviceId].availableBadges();
+            return all;
+          }, {}));
+        }
       };
 
       return clmDataStore;

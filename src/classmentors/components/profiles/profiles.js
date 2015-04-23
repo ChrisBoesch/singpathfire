@@ -81,7 +81,8 @@
         return $q.all({
           auth: spfAuth,
           currentUser: userPromise,
-          profile: profilePromise
+          profile: profilePromise,
+          currentUserProfile: profilePromise
         });
       };
     }
@@ -119,6 +120,9 @@
         return $q.all({
           auth: spfAuth,
           currentUser: userPromise,
+          currentUserProfile: userPromise.then(function(user) {
+            return clmDataStore.profile(user.publicId);
+          }),
           profile: profilePromise
         });
       };
@@ -140,6 +144,7 @@
 
       this.auth = initialData.auth;
       this.currentUser = initialData.currentUser;
+      this.currentUserProfile = initialData.currentUserProfile;
       this.profile = initialData.profile;
 
       spfNavBarService.update('Profile');
@@ -167,7 +172,7 @@
           id: undefined,
 
           save: function() {
-            return clmDataStore.services.codeSchool.saveDetails(self.currentUser, {
+            return clmDataStore.services.codeSchool.saveDetails(self.profile, {
               id: self.lookUp.codeSchool.id,
               name: self.lookUp.codeSchool.id
             }).then(function() {
@@ -187,7 +192,7 @@
             self.lookUp.codeCombat.errors.isLoggedToCodeCombat = undefined;
             self.lookUp.codeCombat.errors.hasACodeCombatName = undefined;
 
-            clmDataStore.services.codeCombat.currentUser().then(function(details) {
+            clmDataStore.services.codeCombat.auth().then(function(details) {
               self.lookUp.codeCombat.id = details.id;
               self.lookUp.codeCombat.name = details.name;
             }).catch(function(err) {
@@ -202,7 +207,7 @@
           },
 
           save: function() {
-            return clmDataStore.services.codeCombat.saveDetails(self.currentUser, {
+            return clmDataStore.services.codeCombat.saveDetails(self.profile, {
               id: self.lookUp.codeCombat.id,
               name: self.lookUp.codeCombat.name
             }).then(function() {
@@ -229,10 +234,14 @@
         restrict: 'A',
         scope: {
           serviceId: '@clmServiceId',
-          profile: '=clmProfile'
+          profile: '=clmProfile',
+          currentUser: '=clmCurrentUser'
         },
         controller: [
-          function ClmProfileCtrl() {
+          '$scope',
+          'spfAuthData',
+          'clmDataStore',
+          function ClmProfileCtrl($scope, spfAuthData, clmDataStore) {
             this.services = {
               codeCombat: {
                 name: 'Code Combat',
@@ -248,6 +257,28 @@
                 name: 'Treehouse',
                 url: 'http://www.teamtreehouse.com/signup_code/singapore'
               }
+            };
+
+            this.canUpdate = function() {
+              if (
+                $scope.profile &&
+                $scope.currentUser &&
+                $scope.profile.$id === $scope.currentUser.$id
+              ) {
+                return true;
+              }
+
+              return (
+                $scope.currentUser &&
+                $scope.currentUser.user &&
+                $scope.currentUser.user.isAdmin
+              );
+            };
+
+            this.update = function() {
+              return clmDataStore.services[$scope.serviceId].updateProfile(
+                $scope.profile
+              );
             };
           }
         ],
