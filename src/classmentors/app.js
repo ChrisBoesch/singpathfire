@@ -37,6 +37,15 @@
   }).
 
   /**
+   * Root url for services
+   */
+  value('clmServicesUrl', {
+    singPath: '/singpath',
+    codeCombat: 'https://codecombat.com',
+    codeSchool: 'https://www.codeschool.com'
+  }).
+
+  /**
    * Configure routes default route and cfpLoadingBar options.
    *
    */

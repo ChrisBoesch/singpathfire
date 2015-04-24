@@ -20,7 +20,7 @@
             </tr>
             <tr>
                 <th>
-                   Description
+                   Details
                 </th>
                 <td ng-repeat="task in ctrl.event.tasks">
                     {{ task.description }}
@@ -28,22 +28,36 @@
             </tr>
             <tr>
                 <th>
-                   Participants
+                    Help
+                </th>
+                <td ng-repeat="task in ctrl.event.tasks">
+                    <a ng-href="{{task.link}}" ng-if="task.link">More details</a>
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    Completed
+                </th>
+                <td ng-repeat="(taskId, task) in ctrl.event.tasks">
+                    {{ctrl.completed(taskId) | number: 0}} %
+                </td>
+            </tr>
+            <tr>
+                <th>
+                   Class Participants
                 </th>
                 <td ng-repeat="task in ctrl.event.tasks"></td>
             </tr>
         </thead>
         <tbody>
-            <tr ng-repeat="participant in ctrl.participants" ng-class="'index-' + $index">
+            <tr ng-repeat="(publicId, participant) in ctrl.participants" ng-class="'index-' + $index">
                 <th>{{ participant.user.displayName }}</th>
                 <td ng-repeat="(taskId, task) in ctrl.event.tasks">
-                    <span ng-switch on="participant.tasks[taskId].completed">
-                        <span ng-switch-when="true">
-                            Completed
-                        </span>
-                        <span ng-switch-default>
-                            <a ng-href="{{task.link}}" ng-if="task.link">link</a>
-                        </span>
+                    <span ng-if="participant.tasks[taskId].completed">Completed</span>
+                    <span ng-if="!participant.tasks[taskId].completed &amp;&amp; ctrl.currentUser.publicId == participant.$id">
+                        <a class="md-raised md-primary" ng-href="{{ctrl.startLink(task)}}" target="_blank">
+                            Start challenge
+                        </a>
                     </span>
                 </td>
             </tr>
