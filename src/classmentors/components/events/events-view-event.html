@@ -51,7 +51,14 @@
         </thead>
         <tbody>
             <tr ng-repeat="(publicId, participant) in ctrl.participants" ng-class="'index-' + $index">
-                <th>{{ participant.user.displayName }}</th>
+                <th layout="row" layout-align="start center">
+                    <span flex>{{ participant.user.displayName }}</span>
+                    <span ng-if="ctrl.currentUser.publicId == participant.$id">
+                        <md-button class="md-fab md-mini md-primary" aria-label="Update">
+                            <md-icon md-svg-icon="loop" ng-click="ctrl.update(publicId)"></md-icon>
+                        </md-button>
+                    </span>
+                </th>
                 <td ng-repeat="(taskId, task) in ctrl.event.tasks">
                     <span ng-if="participant.tasks[taskId].completed">Completed</span>
                     <span ng-if="!participant.tasks[taskId].completed &amp;&amp; ctrl.currentUser.publicId == participant.$id">

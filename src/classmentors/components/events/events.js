@@ -379,7 +379,7 @@
           this.join = function(pw) {
             clmDataStore.events.join(self.event.$id, pw).then(function() {
               spfAlert.success('You joined this event');
-              clmDataStore.events.updateProgress(self.event, initialData.currentUser);
+              clmDataStore.events.updateProgress(self.event, self.currentUser);
               updateNavbar();
               $mdDialog.hide();
             }).catch(function(err) {
@@ -393,6 +393,10 @@
           };
         }
       }
+
+      this.update = function() {
+        return clmDataStore.events.updateProgress(self.event, self.currentUser);
+      };
 
       this.completed = function(taskId) {
         var participants, count;

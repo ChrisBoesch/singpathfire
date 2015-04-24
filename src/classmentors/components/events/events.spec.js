@@ -121,6 +121,28 @@
 
       });
 
+      describe('update', function() {
+
+        it('should update the current user task completeness', function() {
+          var ctrl = $controller('ViewEventCtrl', inject);
+
+          ctrl.update();
+
+          expect(inject.clmDataStore.events.updateProgress.calls.count()).toBe(1);
+          expect(
+            inject.clmDataStore.events.updateProgress.calls.argsFor(0)[0]
+          ).toBe(
+            inject.initialData.event
+          );
+          expect(
+            inject.clmDataStore.events.updateProgress.calls.argsFor(0)[1]
+          ).toBe(
+            inject.initialData.currentUser
+          );
+        });
+
+      });
+
     });
 
   });
