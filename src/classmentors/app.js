@@ -207,8 +207,8 @@
            * Requires the service to implement `fetchBadges(profile)`.
            *
            * @param  firebaseObj profile Class Mentor profile of a user.
-           * @return Promise             return promise resolving to a firebase ref
-           *                             to the service last update timestamp.
+           * @return Promise             return promise resolving to a map of
+           *                             of newly earned badges.
            */
           updateProfile: function(profile) {
             var knownBadges = service.badges(profile);
@@ -222,7 +222,7 @@
               }, {});
             }).then(function(patch) {
               if (Object.keys(patch).length === 0) {
-                return;
+                return {};
               }
 
               return $q.all([
@@ -236,7 +236,9 @@
                 ], {
                   '.sv': 'timestamp'
                 })
-              ]);
+              ]).then(function() {
+                return patch;
+              });
             });
           },
 
@@ -254,8 +256,12 @@
           /**
            * Fetch the user list of badge and normalize them.
            *
+           * If the user details for the services are not set, it should resolve
+           * to an empty array.
+           *
            * @param  firebaseObj profile Class Mentor profile of a user.
-           * @return Promise             Promise resolving to an array of badge.
+           * @return Promise             Promise resolving to an array of
+           *                             new earned badges.
            */
           fetchBadges: function(profile) {
             /* eslint no-unused-vars: 0 */
@@ -458,17 +464,34 @@
             );
           },
 
-          updateProgress: function(event) {
-            return spfAuthData.user().then(function(currentUser) {
-              if (!currentUser.publicId) {
-                return $q.reject(new Error('You should have a public id'));
-              }
+          updateProgress: function(event, publicId) {
+            var singPathProfilePromise = clmDataStore.singPath.profile(publicId);
 
+            // Get map of service used in that event.
+            // We are only intereted in task which require a badge to be
+            // earned.
+            var services = Object.keys(event.tasks || {}).map(function(key) {
+              return event.tasks[key];
+            }).filter(function(task) {
+              return task.badge && task.badge.id;
+            }).reduce(function(all, task) {
+              all[task.serviceId] = true;
+              return all;
+            }, {});
+
+            return clmDataStore.profile(publicId).then(function(profile) {
+              // 1. update profile badges.
+              return $q.all(Object.keys(services).map(function(serviceId) {
+                return clmDataStore.services[serviceId].updateProfile(profile);
+              }));
+            }).then(function() {
+              // 2. query updated profile and singpath profile
               return $q.all({
-                classMentors: clmDataStore.profile(currentUser.publicId),
-                singPath: clmDataStore.singPath.profile(currentUser.publicId)
+                classMentors: clmDataStore.profile(publicId),
+                singPath: singPathProfilePromise
               });
             }).then(function(profiles) {
+              // 3. check completeness
               var progress = Object.keys(event.tasks).reduce(function(results, taskId) {
                 var task = event.tasks[taskId];
 
@@ -501,12 +524,11 @@
                 return results;
               }, {});
 
+              // 4. save progress
               return spfFirebase.set(
                 ['classMentors/eventParticipants', event.$id, profiles.classMentors.$id, 'tasks'],
                 progress
               );
-            }).catch(function(err) {
-              $log.error(err);
             });
           }
         },
@@ -545,7 +567,7 @@
               var details = clmDataStore.services.codeCombat.details(profile);
 
               if (!details) {
-                return $q.reject(clmDataStore.services.codeCombat.errNoUserId);
+                return [];
               }
 
               return $q.all({
@@ -628,7 +650,7 @@
               var details = clmDataStore.services.codeSchool.details(profile);
 
               if (!details) {
-                return $q.reject(clmDataStore.services.codeSchool.errNoUserId);
+                return [];
               }
 
               return clmDataStore.services.codeSchool.fetchProfile(details.id).then(function(csProfile) {

@@ -684,6 +684,8 @@
                 var expectedReturn = {};
                 var actualReturn;
 
+                clmDataStore.services.codeCombat.updateProfile = jasmine.createSpy('codeCombat.updateProfile');
+                clmDataStore.services.codeSchool.updateProfile = jasmine.createSpy('codeSchool.updateProfile');
                 profileObj.$loaded.and.returnValue($q.when(profile));
                 spfFirebase.set.and.returnValue(expectedReturn);
                 spfAuthData.user.and.returnValue($q.when({
@@ -696,6 +698,8 @@
 
                 $rootScope.$apply();
                 expect(actualReturn).toEqual(expectedReturn);
+                expect(clmDataStore.services.codeCombat.updateProfile.calls.count()).toBe(0);
+                expect(clmDataStore.services.codeSchool.updateProfile.calls.count()).toBe(0);
                 expect(spfFirebase.set).toHaveBeenCalledWith([
                   'classMentors/eventParticipants', 'someEventId', 'bob', 'tasks'
                 ], expectedCompletedTask);
@@ -730,6 +734,8 @@
                 var expectedReturn = {};
                 var actualReturn;
 
+                clmDataStore.services.codeCombat.updateProfile = jasmine.createSpy('codeCombat.updateProfile');
+                clmDataStore.services.codeSchool.updateProfile = jasmine.createSpy('codeSchool.updateProfile');
                 profileObj.$loaded.and.returnValue($q.when(profile));
                 spfFirebase.set.and.returnValue(expectedReturn);
                 spfAuthData.user.and.returnValue($q.when({
@@ -742,6 +748,8 @@
 
                 $rootScope.$apply();
                 expect(actualReturn).toEqual(expectedReturn);
+                expect(clmDataStore.services.codeCombat.updateProfile.calls.count()).toBe(0);
+                expect(clmDataStore.services.codeSchool.updateProfile.calls.count()).toBe(0);
                 expect(spfFirebase.set).toHaveBeenCalledWith([
                   'classMentors/eventParticipants', 'someEventId', 'bob', 'tasks'
                 ], expectedCompletedTask);
@@ -782,6 +790,8 @@
                 var expectedReturn = {};
                 var actualReturn;
 
+                clmDataStore.services.codeCombat.updateProfile = jasmine.createSpy('codeCombat.updateProfile');
+                clmDataStore.services.codeSchool.updateProfile = jasmine.createSpy('codeSchool.updateProfile');
                 profileObj.$loaded.and.returnValue($q.when(profile));
                 spfFirebase.set.and.returnValue(expectedReturn);
                 spfAuthData.user.and.returnValue($q.when({
@@ -794,6 +804,9 @@
 
                 $rootScope.$apply();
                 expect(actualReturn).toEqual(expectedReturn);
+                expect(clmDataStore.services.codeCombat.updateProfile.calls.count()).toBe(0);
+                expect(clmDataStore.services.codeSchool.updateProfile.calls.count()).toBe(1);
+                expect(clmDataStore.services.codeSchool.updateProfile).toHaveBeenCalledWith(profile);
                 expect(spfFirebase.set).toHaveBeenCalledWith([
                   'classMentors/eventParticipants', 'someEventId', 'bob', 'tasks'
                 ], expectedCompletedTask);
@@ -827,6 +840,8 @@
                 var expectedReturn = {};
                 var actualReturn;
 
+                clmDataStore.services.codeCombat.updateProfile = jasmine.createSpy('codeCombat.updateProfile');
+                clmDataStore.services.codeSchool.updateProfile = jasmine.createSpy('codeSchool.updateProfile');
                 profileObj.$loaded.and.returnValue($q.when(profile));
                 spfFirebase.set.and.returnValue(expectedReturn);
                 spfAuthData.user.and.returnValue($q.when({
@@ -839,6 +854,9 @@
 
                 $rootScope.$apply();
                 expect(actualReturn).toEqual(expectedReturn);
+                expect(clmDataStore.services.codeCombat.updateProfile.calls.count()).toBe(0);
+                expect(clmDataStore.services.codeSchool.updateProfile.calls.count()).toBe(1);
+                expect(clmDataStore.services.codeSchool.updateProfile).toHaveBeenCalledWith(profile);
                 expect(spfFirebase.set).toHaveBeenCalledWith([
                   'classMentors/eventParticipants', 'someEventId', 'bob', 'tasks'
                 ], expectedCompletedTask);
@@ -884,6 +902,8 @@
                 var expectedReturn = {};
                 var actualReturn;
 
+                clmDataStore.services.codeCombat.updateProfile = jasmine.createSpy('codeCombat.updateProfile');
+                clmDataStore.services.codeSchool.updateProfile = jasmine.createSpy('codeSchool.updateProfile');
                 profileObj.$loaded.and.returnValue($q.when({$id: profile.$id}));
                 spfFirebase.loadedObj.and.returnValue($q.when(profile));
                 spfFirebase.set.and.returnValue(expectedReturn);
@@ -896,6 +916,8 @@
                 });
 
                 $rootScope.$apply();
+                expect(clmDataStore.services.codeCombat.updateProfile.calls.count()).toBe(0);
+                expect(clmDataStore.services.codeSchool.updateProfile.calls.count()).toBe(0);
                 expect(actualReturn).toEqual(expectedReturn);
                 expect(spfFirebase.set).toHaveBeenCalledWith([
                   'classMentors/eventParticipants', 'someEventId', 'bob', 'tasks'
@@ -937,6 +959,8 @@
                 var expectedReturn = {};
                 var actualReturn;
 
+                clmDataStore.services.codeCombat.updateProfile = jasmine.createSpy('codeCombat.updateProfile');
+                clmDataStore.services.codeSchool.updateProfile = jasmine.createSpy('codeSchool.updateProfile');
                 profileObj.$loaded.and.returnValue($q.when({$id: profile.$id}));
                 spfFirebase.loadedObj.and.returnValue($q.when(profile));
                 spfFirebase.set.and.returnValue(expectedReturn);
@@ -950,6 +974,8 @@
 
                 $rootScope.$apply();
                 expect(actualReturn).toEqual(expectedReturn);
+                expect(clmDataStore.services.codeCombat.updateProfile.calls.count()).toBe(0);
+                expect(clmDataStore.services.codeSchool.updateProfile.calls.count()).toBe(0);
                 expect(spfFirebase.set).toHaveBeenCalledWith([
                   'classMentors/eventParticipants', 'someEventId', 'bob', 'tasks'
                 ], expectedCompletedTask);

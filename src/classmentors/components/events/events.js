@@ -302,6 +302,7 @@
    */
   controller('ViewEventCtrl', [
     'initialData',
+    '$q',
     '$document',
     '$mdDialog',
     'spfAlert',
@@ -309,7 +310,9 @@
     'spfNavBarService',
     'clmDataStore',
     'clmServicesUrl',
-    function ViewEventCtrl(initialData, $document, $mdDialog, spfAlert, urlFor, spfNavBarService, clmDataStore, clmServicesUrl) {
+    function ViewEventCtrl(
+      initialData, $q, $document, $mdDialog, spfAlert, urlFor, spfNavBarService, clmDataStore, clmServicesUrl
+    ) {
       var self = this;
       var linkers;
 
@@ -353,12 +356,19 @@
           });
         }
 
-        // Add edit button
+        // Add edit and update button
         if (self.event.owner.publicId === self.currentUser.publicId) {
           options.push({
             title: 'Edit',
             url: '#' + urlFor('editEvent', {eventId: self.event.$id}),
             icon: 'create'
+          });
+          options.push({
+            title: 'Update',
+            onClick: function() {
+              self.updateAll();
+            },
+            icon: 'loop'
           });
         }
 
@@ -395,7 +405,18 @@
       }
 
       this.update = function() {
-        return clmDataStore.events.updateProgress(self.event, self.currentUser);
+        return clmDataStore.events.updateProgress(self.event);
+      };
+
+      this.updateAll = function() {
+        return $q.all(Object.keys(this.participants).filter(function(key) {
+          return key && key[0] !== '$';
+        }).map(function(index) {
+          return self.participants[index];
+        }).reduce(function(all, participant) {
+          all[participant.$id] = clmDataStore.events.updateProgress(self.event, participant.$id);
+          return all;
+        }, {}));
       };
 
       this.completed = function(taskId) {
