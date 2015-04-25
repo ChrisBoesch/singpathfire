@@ -29,36 +29,38 @@
 </head>
 
 <body ng-app="schools">
-  <div class="panel panel-default" ng-controller="TableCtrl" ng-init="predicate='-percentage'">
+  <div class="panel panel-default" ng-controller="TableCtrl" ng-init="predicate='-badgeEarners'">
     <table class="table table-striped">
       <tr>
         <th></th>
         <th></th>
         <th></th>
-        <th>2004</th>
-        <th>2003</th>
-        <th>2002</th>
-        <th>2001</th>
-        <th>2000</th>
-        <th>1999</th>
-      </tr>
-      <tr>
-        <th>Crest</th>
-        <th><a href="" analytics-on="click" analytics-event="Name Sort" analytics-category="Stats Table" ng-click="predicate = 'name'">School</a></th>
-        <th><a href="" analytics-on="click" analytics-event="Integrated Sort" analytics-category="Stats Table" ng-click="predicate = 'integrated'">School Type</a></th>
         <th>Sec1</th>
         <th>Sec2</th>
         <th>Sec3</th>
         <th>Sec4</th>
         <th>JC1</th>
         <th>JC2</th>
-        <th><a href="" analytics-on="click" analytics-event="Badge Earners" analytics-category="Stats Table" ng-click="predicate = '-badgeEarners'">Total Registered</a></th>
-        <th><a href="" analytics-on="click" analytics-event="Size Sort" analytics-category="Stats Table" ng-click="predicate = 'size'">Average Cohort Size</a></th>
-        
-        <th><a href="" analytics-on="click" analytics-event="Percent Sort" analytics-category="Stats Table" ng-click="predicate = '-percentage'">Tried Percentage</a>
-            <a href="" analytics-on="click" analytics-event="-Percent Sort" analytics-category="Stats Table" ng-click="predicate = 'percentage'">^</a>
-        </th>
+        <th></th>
+        <th></th>
       </tr>
+      <tr>
+        <th>Crest</th>
+        <th><a href="" analytics-on="click" analytics-event="Name Sort" analytics-category="Stats Table" ng-click="predicate = 'name'">School</a></th>
+        <th><a href="" analytics-on="click" analytics-event="Integrated Sort" analytics-category="Stats Table" ng-click="predicate = 'group'">School Type</a></th>
+        <th>2002</th>
+        <th>2001</th>
+        <th>2000</th>
+        <th>1999</th>
+        <th>1998</th>
+        <th>1997</th>
+        <th><a href="" analytics-on="click" analytics-event="Badge Earners" analytics-category="Stats Table" ng-click="predicate = '-badgeEarners'">Total Registered</a></th>
+        <th>Code Combat Auth</th>
+        <th>Github Auth</th>
+
+      </tr>
+
+
       <tr ng-repeat="school in schools | orderBy : predicate" ng-show="school.name"> 
         <td><img height="24" width="24" title="{{school.name}}" ng-src="{{school.crest}}"></td>
         <td>{{school.name}}</td>
@@ -77,8 +79,9 @@
         <td ng-show="school.group=='Junior College' || school.group=='Polytechnic'">{{school.badgeEarners/2 |number:0}}</td>
         <td ng-hide="school.group=='Junior College' || school.group=='Polytechnic'">-</td>
         <td>{{school.badgeEarners}}</td>
-        <td>{{school.size}}</td>
-        <td>{{school.percentage | number:2}}% </td>
+        <td>0</td>
+        <td>0</td>
+        
       </tr>
       <tr class="bold">
         
@@ -91,10 +94,7 @@
           <th></th>
           <th></th>
           <th></th>
-          <th>{{numCoders}}</th>
-          <th>{{numStudents}}</th>
-          <th>{{100 * numCoders / numStudents | number:4}}%</th>
-      
+          <th>{{numCoders}}</th>      
       </tr>
     </table>
     <br>
@@ -110,10 +110,7 @@ var app = angular.module("schools", ["firebase","chart.js",'angulartics', 'angul
 
 app.controller("TableCtrl", ['$scope','$http','$firebase', function ($scope, $http, $firebase) {
    
-   $scope.numStudents = 0;
    $scope.numCoders = 0;
-   $scope.numAmbassadors = 0;
-   $scope.numJCR = 0;
 
     var theFirebaseURL = "https://codevantage.firebaseio.com";
     var ref = new Firebase(theFirebaseURL);
@@ -122,28 +119,16 @@ app.controller("TableCtrl", ['$scope','$http','$firebase', function ($scope, $ht
         
 
     $scope.get_totals = function(){
-       $scope.numStudents = 0;
        $scope.numCoders = 0;
 
-       
        for(var i=0; i<$scope.schools.length; i++){
-         if($scope.schools[i].size){
-           $scope.numStudents += $scope.schools[i].size;
-         }
          if($scope.schools[i].badgeEarners){
            $scope.numCoders += $scope.schools[i].badgeEarners;
          }
-        if($scope.schools[i].size && $scope.schools[i].badgeEarners){
-            $scope.schools[i].percentage = 100 * $scope.schools[i].badgeEarners / $scope.schools[i].size; 
-        }
-        else{
-            $scope.schools[i].percentage = 0;
-        }
 
        }
     };
     
- 
     //Update the totals after schools loaded from Firebase. 
     $scope.schools.$loaded().then(function() {
         $scope.get_totals();
