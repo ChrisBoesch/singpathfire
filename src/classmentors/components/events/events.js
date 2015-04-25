@@ -302,14 +302,19 @@
    */
   controller('ViewEventCtrl', [
     'initialData',
+    '$q',
     '$document',
     '$mdDialog',
     'spfAlert',
     'urlFor',
     'spfNavBarService',
     'clmDataStore',
-    function ViewEventCtrl(initialData, $document, $mdDialog, spfAlert, urlFor, spfNavBarService, clmDataStore) {
+    'clmServicesUrl',
+    function ViewEventCtrl(
+      initialData, $q, $document, $mdDialog, spfAlert, urlFor, spfNavBarService, clmDataStore, clmServicesUrl
+    ) {
       var self = this;
+      var linkers;
 
       this.currentUser = initialData.currentUser;
       this.event = initialData.event;
@@ -351,12 +356,19 @@
           });
         }
 
-        // Add edit button
+        // Add edit and update button
         if (self.event.owner.publicId === self.currentUser.publicId) {
           options.push({
             title: 'Edit',
             url: '#' + urlFor('editEvent', {eventId: self.event.$id}),
             icon: 'create'
+          });
+          options.push({
+            title: 'Update',
+            onClick: function() {
+              self.updateAll();
+            },
+            icon: 'loop'
           });
         }
 
@@ -377,7 +389,7 @@
           this.join = function(pw) {
             clmDataStore.events.join(self.event.$id, pw).then(function() {
               spfAlert.success('You joined this event');
-              clmDataStore.events.updateProgress(self.event, initialData.currentUser);
+              clmDataStore.events.updateProgress(self.event, self.currentUser);
               updateNavbar();
               $mdDialog.hide();
             }).catch(function(err) {
@@ -391,6 +403,107 @@
           };
         }
       }
+
+      this.update = function() {
+        return clmDataStore.events.updateProgress(self.event);
+      };
+
+      this.updateAll = function() {
+        return $q.all(Object.keys(this.participants).filter(function(key) {
+          return key && key[0] !== '$';
+        }).map(function(index) {
+          return self.participants[index];
+        }).reduce(function(all, participant) {
+          all[participant.$id] = clmDataStore.events.updateProgress(self.event, participant.$id);
+          return all;
+        }, {}));
+      };
+
+      this.completed = function(taskId) {
+        var participants, count;
+
+        if (!this.participants) {
+          return 100;
+        }
+
+        participants = Object.keys(this.participants).filter(function(id) {
+          return id && id[0] !== '$';
+        }).map(function(id) {
+          return self.participants[id];
+        });
+
+        count = participants.length;
+        if (count === 0) {
+          return 100;
+        }
+
+        return participants.reduce(function(completed, participant) {
+          if (
+            participant &&
+            participant.tasks &&
+            participant.tasks[taskId] &&
+            participant.tasks[taskId].completed
+          ) {
+            completed += 1;
+          }
+
+          return completed;
+        }, 0) / count * 100;
+      };
+
+      this.startLink = function(task) {
+        if (
+          !task ||
+          !task.serviceId ||
+          !linkers[task.serviceId]
+        ) {
+          return '';
+        }
+
+        return linkers[task.serviceId](task);
+      };
+
+      function defaultLinker(task) {
+        if (
+          !task ||
+          !task.badge ||
+          !task.badge.url
+        ) {
+          return '#/profile';
+        }
+
+        return task.badge.url;
+      }
+
+      linkers = {
+        codeSchool: defaultLinker,
+        codeCombat: defaultLinker,
+
+        singPath: function(task) {
+          if (!task || task.serviceId !== 'singPath') {
+            return '';
+          }
+
+          if (
+            !task.singPathProblem ||
+            !task.singPathProblem.path ||
+            !task.singPathProblem.path.id ||
+            !task.singPathProblem.level ||
+            !task.singPathProblem.level.id ||
+            !task.singPathProblem.problem ||
+            !task.singPathProblem.problem.id
+          ) {
+            return clmServicesUrl.singPath;
+          }
+
+          return (
+            clmServicesUrl.singPath + '/#' +
+            '/paths/' + task.singPathProblem.path.id +
+            '/levels/' + task.singPathProblem.level.id +
+            '/problems/' + task.singPathProblem.problem.id + '/play'
+          );
+        }
+      };
     }
   ]).
 

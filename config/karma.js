@@ -33,6 +33,7 @@ module.exports = function(config) {
       'src/vendor/angular-loading-bar/loading-bar.js',
       'src/vendor/angularfire/angularfire.js',
       'src/shared/components/polyfills/object.assign.js',
+      'src/shared/components/polyfills/string.startswith.js',
       'src/vendor/angular-mocks/angular-mocks.js',
       'src/classmentors/app.js',
       'src/shared/app.js',

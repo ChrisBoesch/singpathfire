@@ -47,20 +47,19 @@
 
         <div>
             <md-input-container>
-                <label for="edit-task-link">Link</label>
+                <label for="edit-task-link">Help Link</label>
                 <input type="text" name="editTaskLink" id="edit-task-link"
                     ng-model="ctrl.task.link"
-                    required="required"
                     pattern="^(https?://.+|#/).+$"
                     placeholer="URL to Challenge"
                 />
                 <div ng-messages="editTask.editTaskLink.$error">
-                    <div ng-message="required">A challenge needs a link.</div>
                     <div ng-message="pattern">Wrong format for an absolute or relative URL.</div>
                 </div>
             </md-input-container>
         </div>
-		<div layout="row">
+
+        <div layout="row">
             <spf-select-container flex layout="column">
                 <md-select flex name="editTaskServiceId"
                     ng-model="ctrl.task.serviceId" spf-required placeholder="Select a Service">

@@ -4,11 +4,7 @@
         <small>- registered as <em>{{profile.services[serviceId].details.name}}</em></small>
     </h2>
 
-    <p ng-if="!profile.services[serviceId].lastUpdate">
-        We haven't look up your profile at {{ctrl.services[serviceId].name}} yet.
-    </p>
-
-    <p ng-if="profile.services[serviceId].lastUpdate &amp;&amp; (profile.services[serviceId].badges|spfEmpty)">
+    <p ng-if="profile.services[serviceId].badges | spfEmpty">
         No level completed yet.
     </p>
 
@@ -22,5 +18,15 @@
           </md-grid-list>
     </div>
 
-    <p class="last-update" ng-if="profile.services[serviceId].lastUpdate"><small>last update from {{profile.services[serviceId].lastUpdate|date:'medium'}}</small></p>
+    <div layout="row" layout-align="start center">
+        <p class="last-update" flex>
+            <small ng-if="profile.services[serviceId].lastUpdate">
+                last update from {{profile.services[serviceId].lastUpdate|date:'medium'}}
+            </small>
+        </p>
+        <md-button class="md-fab md-mini md-primary" aria-label="Update" ng-if="ctrl.canUpdate()">
+          <md-icon md-svg-icon="loop" ng-click="ctrl.update()"></md-icon>
+        </md-button>
+    </div>
+    
 </div>
