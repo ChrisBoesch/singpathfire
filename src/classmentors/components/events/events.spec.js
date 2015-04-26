@@ -16,10 +16,10 @@
     }));
 
     describe('ViewEventCtrl', function() {
-      var inject;
+      var deps;
 
       beforeEach(function() {
-        inject = {
+        deps = {
           initialData: {
             currentUser: {},
             event: {},
@@ -38,49 +38,49 @@
       it('should set currentUser, event, and participant properties', function() {
         var ctrl;
 
-        ctrl = $controller('ViewEventCtrl', inject);
+        ctrl = $controller('ViewEventCtrl', deps);
 
-        expect(ctrl.currentUser).toBe(inject.initialData.currentUser);
-        expect(ctrl.event).toBe(inject.initialData.event);
-        expect(ctrl.participants).toBe(inject.initialData.participants);
+        expect(ctrl.currentUser).toBe(deps.initialData.currentUser);
+        expect(ctrl.event).toBe(deps.initialData.event);
+        expect(ctrl.participants).toBe(deps.initialData.participants);
       });
 
       it('should set a menu title to event title', function() {
-        inject.initialData.event = {
+        deps.initialData.event = {
           title: 'some title'
         };
 
-        $controller('ViewEventCtrl', inject);
+        $controller('ViewEventCtrl', deps);
 
-        expect(inject.spfNavBarService.update).toHaveBeenCalledWith(
+        expect(deps.spfNavBarService.update).toHaveBeenCalledWith(
           'some title', jasmine.any(Object), jasmine.any(Array)
         );
       });
 
       it('should set a menu parent path to event list', function() {
-        inject.initialData.event = {
+        deps.initialData.event = {
           title: 'some title'
         };
 
-        $controller('ViewEventCtrl', inject);
+        $controller('ViewEventCtrl', deps);
 
-        expect(inject.spfNavBarService.update.calls.argsFor(0)[1]).toEqual(
+        expect(deps.spfNavBarService.update.calls.argsFor(0)[1]).toEqual(
           {title: 'Events', url: '#/events'}
         );
       });
 
       it('should not set any menu options if the user logged off', function() {
-        inject.initialData.event = {
+        deps.initialData.event = {
           title: 'some title'
         };
 
-        $controller('ViewEventCtrl', inject);
+        $controller('ViewEventCtrl', deps);
 
-        expect(inject.spfNavBarService.update.calls.argsFor(0)[2]).toEqual([]);
+        expect(deps.spfNavBarService.update.calls.argsFor(0)[2]).toEqual([]);
       });
 
       it('should set a join menu option if the user logged in', function() {
-        inject.initialData = {
+        deps.initialData = {
           event: {
             title: 'some title',
             owner: {}
@@ -93,17 +93,17 @@
           }
         };
 
-        inject.initialData.participants.$indexFor.and.returnValue(-1);
+        deps.initialData.participants.$indexFor.and.returnValue(-1);
 
-        $controller('ViewEventCtrl', inject);
+        $controller('ViewEventCtrl', deps);
 
-        expect(inject.spfNavBarService.update.calls.argsFor(0)[2]).toEqual(
+        expect(deps.spfNavBarService.update.calls.argsFor(0)[2]).toEqual(
           [{title: 'Join', onClick: jasmine.any(Function), icon: 'add-circle-outline'}]
         );
       });
 
       it('should set a leave menu option if the user logged in and a participant', function() {
-        inject.initialData = {
+        deps.initialData = {
           event: {
             title: 'some title',
             owner: {}
@@ -117,17 +117,17 @@
           }
         };
 
-        inject.initialData.participants.$indexFor.and.returnValue(0);
+        deps.initialData.participants.$indexFor.and.returnValue(0);
 
-        $controller('ViewEventCtrl', inject);
+        $controller('ViewEventCtrl', deps);
 
-        expect(inject.spfNavBarService.update.calls.argsFor(0)[2]).toEqual(
+        expect(deps.spfNavBarService.update.calls.argsFor(0)[2]).toEqual(
           [{title: 'Leave', onClick: jasmine.any(Function), icon: 'highlight-remove'}]
         );
       });
 
       it('should set an edit menu option if the user is the owner', function() {
-        inject.initialData = {
+        deps.initialData = {
           event: {
             $id: 'evenId',
             title: 'some title',
@@ -144,12 +144,12 @@
           }
         };
 
-        inject.initialData.participants.$indexFor.and.returnValue(0);
+        deps.initialData.participants.$indexFor.and.returnValue(0);
 
-        $controller('ViewEventCtrl', inject);
+        $controller('ViewEventCtrl', deps);
 
         expect(
-          inject.spfNavBarService.update.calls.argsFor(0)[2]
+          deps.spfNavBarService.update.calls.argsFor(0)[2]
         ).toEqual([
           jasmine.any(Object),
           {title: 'Edit', url: '#/events/evenId/edit', icon: 'create'},
@@ -158,7 +158,7 @@
       });
 
       it('should set an update menu option if the user is the owner', function() {
-        inject.initialData = {
+        deps.initialData = {
           event: {
             $id: 'evenId',
             title: 'some title',
@@ -175,12 +175,12 @@
           }
         };
 
-        inject.initialData.participants.$indexFor.and.returnValue(0);
+        deps.initialData.participants.$indexFor.and.returnValue(0);
 
-        $controller('ViewEventCtrl', inject);
+        $controller('ViewEventCtrl', deps);
 
         expect(
-          inject.spfNavBarService.update.calls.argsFor(0)[2]
+          deps.spfNavBarService.update.calls.argsFor(0)[2]
         ).toEqual([
           jasmine.any(Object),
           jasmine.any(Object),
@@ -191,13 +191,13 @@
       describe('completed', function() {
 
         it('should return 100 if there is no participants', function() {
-          var ctrl = $controller('ViewEventCtrl', inject);
+          var ctrl = $controller('ViewEventCtrl', deps);
 
           expect(ctrl.completed('12345')).toBe(100);
         });
 
         it('should return percentage of participants having completed the task', function() {
-          var ctrl = $controller('ViewEventCtrl', inject);
+          var ctrl = $controller('ViewEventCtrl', deps);
 
           ctrl.participants = {
             $id: 'eventId',
@@ -218,7 +218,7 @@
       describe('startLink', function() {
 
         it('should return a link to a singpath problem', function() {
-          var ctrl = $controller('ViewEventCtrl', inject);
+          var ctrl = $controller('ViewEventCtrl', deps);
           var task = {
             serviceId: 'singPath',
             singPathProblem: {
@@ -234,7 +234,7 @@
         });
 
         it('should return a link to a code school course', function() {
-          var ctrl = $controller('ViewEventCtrl', inject);
+          var ctrl = $controller('ViewEventCtrl', deps);
           var task = {
             serviceId: 'codeSchool',
             badge: {
@@ -248,7 +248,7 @@
         });
 
         it('should return a link to a code combat level', function() {
-          var ctrl = $controller('ViewEventCtrl', inject);
+          var ctrl = $controller('ViewEventCtrl', deps);
           var task = {
             serviceId: 'codeCombat',
             badge: {
@@ -265,20 +265,43 @@
 
       describe('update', function() {
 
-        it('should update the current user task completeness', function() {
-          var ctrl = $controller('ViewEventCtrl', inject);
+        it('should update the current user task completeness', inject(function($q) {
+          var ctrl = $controller('ViewEventCtrl', deps);
 
+          deps.clmDataStore.events.updateProgress.and.returnValue($q.when());
+
+          ctrl.currentUser = {publicId: 'bob'};
           ctrl.update();
 
-          expect(inject.clmDataStore.events.updateProgress).toHaveBeenCalledWith(inject.initialData.event);
-        });
+          expect(deps.clmDataStore.events.updateProgress).toHaveBeenCalledWith(deps.initialData.event, 'bob');
+        }));
+
+        it('should show success message on success', inject(function($q, $rootScope) {
+          var ctrl = $controller('ViewEventCtrl', deps);
+
+          deps.clmDataStore.events.updateProgress.and.returnValue($q.when());
+          ctrl.update();
+          $rootScope.$apply();
+
+          expect(deps.spfAlert.success).toHaveBeenCalled();
+        }));
+
+        it('should show error message on failure', inject(function($q, $rootScope) {
+          var ctrl = $controller('ViewEventCtrl', deps);
+
+          deps.clmDataStore.events.updateProgress.and.returnValue($q.reject(new Error()));
+          ctrl.update();
+          $rootScope.$apply();
+
+          expect(deps.spfAlert.error).toHaveBeenCalled();
+        }));
 
       });
 
       describe('updateAll', function() {
 
-        it('should update the current user task completeness', function() {
-          var ctrl = $controller('ViewEventCtrl', inject);
+        it('should update the all user task completeness', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
 
           ctrl.participants = {
             0: {$id: 'somePublicId'},
@@ -287,16 +310,16 @@
 
           ctrl.updateAll();
 
-          expect(inject.clmDataStore.events.updateProgress.calls.count()).toBe(2);
+          expect(deps.clmDataStore.events.updateProgress.calls.count()).toBe(2);
           expect(
-            inject.clmDataStore.events.updateProgress
+            deps.clmDataStore.events.updateProgress
           ).toHaveBeenCalledWith(
-            inject.initialData.event, 'somePublicId'
+            deps.initialData.event, 'somePublicId'
           );
           expect(
-            inject.clmDataStore.events.updateProgress
+            deps.clmDataStore.events.updateProgress
           ).toHaveBeenCalledWith(
-            inject.initialData.event, 'someOtherPublicId'
+            deps.initialData.event, 'someOtherPublicId'
           );
         });
 

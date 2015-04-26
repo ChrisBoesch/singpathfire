@@ -303,6 +303,7 @@
   controller('ViewEventCtrl', [
     'initialData',
     '$q',
+    '$log',
     '$document',
     '$mdDialog',
     'spfAlert',
@@ -311,7 +312,7 @@
     'clmDataStore',
     'clmServicesUrl',
     function ViewEventCtrl(
-      initialData, $q, $document, $mdDialog, spfAlert, urlFor, spfNavBarService, clmDataStore, clmServicesUrl
+      initialData, $q, $log, $document, $mdDialog, spfAlert, urlFor, spfNavBarService, clmDataStore, clmServicesUrl
     ) {
       var self = this;
       var linkers;
@@ -405,7 +406,12 @@
       }
 
       this.update = function() {
-        return clmDataStore.events.updateProgress(self.event);
+        return clmDataStore.events.updateProgress(self.event, self.currentUser.publicId).then(function() {
+          spfAlert.success('User progress updated');
+        }).catch(function(err) {
+          $log.error(err);
+          spfAlert.error('Failed to update progress');
+        });
       };
 
       this.updateAll = function() {

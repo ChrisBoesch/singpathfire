@@ -667,6 +667,33 @@
               spfFirebase.objFactory.and.returnValue(profileFactory);
             });
 
+            it('should reject if the public id is missing', inject(function($rootScope, $q, clmDataStore) {
+              var err;
+              var event = {
+                $id: 'someEventId',
+                tasks: {
+                  someTaskId: {
+                    serviceId: 'codeSchool'
+                  }
+                }
+              };
+
+              clmDataStore.services.codeCombat.updateProfile = jasmine.createSpy('codeCombat.updateProfile');
+              clmDataStore.services.codeSchool.updateProfile = jasmine.createSpy('codeSchool.updateProfile');
+              profileObj.$loaded.and.returnValue($q.when({$id: 'bob'}));
+              spfFirebase.set.and.returnValue({});
+
+              clmDataStore.events.updateProgress(event).catch(function(_err) {
+                err = _err;
+              });
+
+              $rootScope.$apply();
+              expect(err).toBeDefined();
+              expect(clmDataStore.services.codeCombat.updateProfile.calls.count()).toBe(0);
+              expect(clmDataStore.services.codeSchool.updateProfile.calls.count()).toBe(0);
+              expect(spfFirebase.set.calls.count()).toBe(0);
+            }));
+
             it('should not update progress when user has not joined the required service',
               inject(function($rootScope, $q, clmDataStore) {
                 var event = {
@@ -688,11 +715,8 @@
                 clmDataStore.services.codeSchool.updateProfile = jasmine.createSpy('codeSchool.updateProfile');
                 profileObj.$loaded.and.returnValue($q.when(profile));
                 spfFirebase.set.and.returnValue(expectedReturn);
-                spfAuthData.user.and.returnValue($q.when({
-                  publicId: 'bob'
-                }));
 
-                clmDataStore.events.updateProgress(event).then(function(completedTasks) {
+                clmDataStore.events.updateProgress(event, 'bob').then(function(completedTasks) {
                   actualReturn = completedTasks;
                 });
 
@@ -738,11 +762,8 @@
                 clmDataStore.services.codeSchool.updateProfile = jasmine.createSpy('codeSchool.updateProfile');
                 profileObj.$loaded.and.returnValue($q.when(profile));
                 spfFirebase.set.and.returnValue(expectedReturn);
-                spfAuthData.user.and.returnValue($q.when({
-                  publicId: 'bob'
-                }));
 
-                clmDataStore.events.updateProgress(event).then(function(completedTasks) {
+                clmDataStore.events.updateProgress(event, 'bob').then(function(completedTasks) {
                   actualReturn = completedTasks;
                 });
 
@@ -794,11 +815,8 @@
                 clmDataStore.services.codeSchool.updateProfile = jasmine.createSpy('codeSchool.updateProfile');
                 profileObj.$loaded.and.returnValue($q.when(profile));
                 spfFirebase.set.and.returnValue(expectedReturn);
-                spfAuthData.user.and.returnValue($q.when({
-                  publicId: 'bob'
-                }));
 
-                clmDataStore.events.updateProgress(event).then(function(completedTasks) {
+                clmDataStore.events.updateProgress(event, 'bob').then(function(completedTasks) {
                   actualReturn = completedTasks;
                 });
 
@@ -844,11 +862,8 @@
                 clmDataStore.services.codeSchool.updateProfile = jasmine.createSpy('codeSchool.updateProfile');
                 profileObj.$loaded.and.returnValue($q.when(profile));
                 spfFirebase.set.and.returnValue(expectedReturn);
-                spfAuthData.user.and.returnValue($q.when({
-                  publicId: 'bob'
-                }));
 
-                clmDataStore.events.updateProgress(event).then(function(completedTasks) {
+                clmDataStore.events.updateProgress(event, 'bob').then(function(completedTasks) {
                   actualReturn = completedTasks;
                 });
 
@@ -907,11 +922,8 @@
                 profileObj.$loaded.and.returnValue($q.when({$id: profile.$id}));
                 spfFirebase.loadedObj.and.returnValue($q.when(profile));
                 spfFirebase.set.and.returnValue(expectedReturn);
-                spfAuthData.user.and.returnValue($q.when({
-                  publicId: 'bob'
-                }));
 
-                clmDataStore.events.updateProgress(event).then(function(completedTasks) {
+                clmDataStore.events.updateProgress(event, 'bob').then(function(completedTasks) {
                   actualReturn = completedTasks;
                 });
 
@@ -964,11 +976,8 @@
                 profileObj.$loaded.and.returnValue($q.when({$id: profile.$id}));
                 spfFirebase.loadedObj.and.returnValue($q.when(profile));
                 spfFirebase.set.and.returnValue(expectedReturn);
-                spfAuthData.user.and.returnValue($q.when({
-                  publicId: 'bob'
-                }));
 
-                clmDataStore.events.updateProgress(event).then(function(completedTasks) {
+                clmDataStore.events.updateProgress(event, 'bob').then(function(completedTasks) {
                   actualReturn = completedTasks;
                 });
 
