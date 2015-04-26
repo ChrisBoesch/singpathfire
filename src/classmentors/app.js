@@ -465,6 +465,10 @@
           },
 
           updateProgress: function(event, publicId) {
+            if (!publicId) {
+              return $q.reject('User public id is missing missing.');
+            }
+
             var singPathProfilePromise = clmDataStore.singPath.profile(publicId);
 
             // Get map of service used in that event.
