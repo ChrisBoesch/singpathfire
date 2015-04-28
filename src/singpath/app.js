@@ -220,8 +220,7 @@
 
           list: function(pathId, levelId) {
             return new spfDataStore.problems._itemFactory(
-              spfFirebase.ref(['singpath/problems', pathId, levelId]
-            )).$loaded();
+              spfFirebase.ref(['singpath/problems', pathId, levelId])).$loaded();
           },
 
           create: function(pathId, levelId, problem) {

@@ -3,21 +3,21 @@
         <div layout layout-sm="column" ng-if="!ctrl.profile">
             <md-input-container flex>
                 <label>Your Public Id</label>
-                <input ng-minlength="3" md-maxlength="30" ng-pattern="/^[-a-z0-9]+$/" required name="userPublicId" ng-model="ctrl.currentUser.publicId">
+                <input ng-minlength="3" md-maxlength="64" ng-pattern="/^[-a-z0-9]+$/" required name="userPublicId" ng-model="ctrl.currentUser.publicId">
                 <div ng-messages="newPath.userPublicId.$error">
                     <div ng-message="required">This is required.</div>
                     <div ng-message="minlength">The public id has to be more than 2 characters long.</div>
-                    <div ng-message="md-maxlength">The public id has to be less than 30 characters long.</div>
+                    <div ng-message="md-maxlength">The public id has to be less than 64 characters long.</div>
                     <div ng-message="pattern">The public id should include letters, numbers and "-".</div>
                 </div>
             </md-input-container>
             <md-input-container flex>
                 <label>Your screen name</label>
-                <input ng-minlength="3" md-maxlength="30" required name="userDisplayName" ng-model="ctrl.currentUser.displayName">
+                <input ng-minlength="3" md-maxlength="64" required name="userDisplayName" ng-model="ctrl.currentUser.displayName">
                 <div ng-messages="newPath.userDisplayName.$error">
                     <div ng-message="required">This is required.</div>
                     <div ng-message="minlength">The screen name has to be more than 2 characters long.</div>
-                    <div ng-message="md-maxlength">The screen name has to be less than 30 characters long.</div>
+                    <div ng-message="md-maxlength">The screen name has to be less than 64 characters long.</div>
                 </div>
             </md-input-container>
         </div>
@@ -25,11 +25,11 @@
         <div layout layout-sm="column">
             <md-input-container flex>
                 <label>Path Title</label>
-                <input ng-minlength="3" ng-maxlength="30" required name="pathTitle" ng-model="ctrl.path.title">
+                <input ng-minlength="3" ng-maxlength="64" required name="pathTitle" ng-model="ctrl.path.title">
                 <div ng-messages="newPath.pathTitle.$error">
                     <div ng-message="required">This is required.</div>
                     <div ng-message="minlength">The title has to be more than 2 characters long.</div>
-                    <div ng-message="maxlength">The title has to be less than 30 characters long.</div>
+                    <div ng-message="maxlength">The title has to be less than 64 characters long.</div>
                 </div>
             </md-input-container>
             <spf-select-container flex layout="column">
