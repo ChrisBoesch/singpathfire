@@ -94,6 +94,27 @@
                     </tbody>
                 </table>
             </div>
+            <div ng-switch-when="javascript" layout layout-align="center center" class="solution-result javascript-result">
+
+                <div ng-if="ctrl.resolution.output.errors" class="md-whiteframe-z1 solution-errors">
+                    {{ctrl.resolution.output.errors}}
+                </div>
+
+                <table class="md-whiteframe-z1" ng-class="{'solved': ctrl.resolution.$solved()}" ng-if="!(ctrl.resolution.output.results|spfEmpty)">
+                    <thead>
+                        <th>Name</th>
+                        <th>Correct</th>
+                        <th>Error</th>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="test in ctrl.resolution.output.results" ng-class="{'failed': !test.correct}">
+                            <td>{{test.test}}</td>
+                            <td>{{test.correct}}</td>
+                            <td><span ng-if="test.error">{{test.error}}</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <div ng-switch-when="angularjs" layout layout-align="center center" class="solution-result angularjs-result">
 
                 <div ng-if="ctrl.resolution.output.errors" class="md-whiteframe-z1 solution-errors">
