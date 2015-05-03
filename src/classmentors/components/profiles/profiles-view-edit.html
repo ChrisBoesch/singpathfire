@@ -1,40 +1,21 @@
 <md-content flex class="md-padding">
 
-    <div ng-if="!ctrl.profile">
+    <div ng-if="!ctrl.profile || ctrl.profileNeedsUpdate">
         <h1>Profile Setup</h1>
 
         <form name="publicIdForm" ng-submit="ctrl.setPublicId(ctrl.currentUser)">
-            <md-input-container flex>
-                <label for="public-id">Your username</label>
-                <input type="text" id="public-id" name="publicId" placeholder="Pick a unique name" ng-model="ctrl.currentUser.publicId" required="true" ng-minlength="3" ng-maxlength="20" pattern="^[-\.a-zA-z0-9]+$"/>
-                <div ng-messages="publicIdForm.publicId.$error">
-                    <div ng-message="required">A user name is required.</div>
-                    <div ng-message="minlength">A user name shouldn't be shorten than 3 characters.</div>
-                    <div ng-message="maxlength">A user name shouldn't be longer than 20 characters.</div>
-                    <div ng-message="pattern">A user name should only be composed of letter, numbers, '.' and '-'</div>
-                </div>
-            </md-input-container>
-
-            <md-input-container flex>
-                <label for="screen-name">Your screen name</label>
-                <input type="text" id="screen-name" name="screenName" placeholder="A screen name" ng-model="ctrl.currentUser.displayName" ng-required="true" ng-minlength="3" ng-maxlength="20"/>
-                <div class="text-warning" ng-messages="publicIdForm.screenName.$error">
-                    <div ng-message="required">A screen name is required.</div>
-                    <div ng-message="minlength">A screen name shouldn't be shorten than 3 characters.</div>
-                    <div ng-message="maxlength">A screen name shouldn't be longer than 20 characters.</div>
-                </div>
-            </md-input-container>
+            <spf-sign-form current-user="ctrl.currentUser"></spf-sign-form>
 
             <div layout="row" layout-align="center center">
                 <md-button type="submit" class="md-raised md-primary" ng-disabled="publicIdForm.$invalid || ctrl.settingPublicId">
-                    Setup
+                    Save
                 </md-button>
             </div>
 
         </form>
     </div>
 
-    <div ng-if="ctrl.profile" layout="row">
+    <div ng-if="ctrl.profile &amp;&amp; !ctrl.profileNeedsUpdate" layout="row">
         <div class="profile" flex="33">
             <div class="md-whiteframe-z1 avatar">
                 <img ng-src="{{ctrl.profile.user.gravatar}}?s=200&amp;r=g&amp;d=mm" alt="user avatar">

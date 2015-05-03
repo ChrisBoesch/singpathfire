@@ -370,22 +370,185 @@
           spfAuth = jasmine.createSpyObj('spfAuth', ['login', 'logout', 'onAuth']);
           spfAuthData = jasmine.createSpyObj('spfAuthData', ['user']);
           spfFirebase = jasmine.createSpyObj('spfFirebase', [
-            'ref',
-            'obj',
-            'loadedObj',
             'array',
+            'cleanObj',
             'loadedArray',
-            'set',
+            'loadedObj',
+            'obj',
+            'objFactory',
+            'patch',
             'push',
+            'ref',
             'remove',
-            'objFactory'
+            'set'
           ]);
+
+          spfFirebase.cleanObj.and.callFake(function(obj) {
+            if (obj == null) {
+              return null;
+            }
+
+            if (angular.isString(obj) || angular.isNumber(obj) || typeof obj === 'boolean') {
+              return obj;
+            }
+
+            return Object.assign({}, obj);
+          });
 
           module(function($provide) {
             $provide.value('spfAuth', spfAuth);
             $provide.value('spfAuthData', spfAuthData);
             $provide.value('spfFirebase', spfFirebase);
           });
+        });
+
+        describe('profile', function() {
+
+          it('should extend firebaseObject', function() {
+              var extendedObj = {};
+              spfFirebase.objFactory.and.returnValue(extendedObj);
+              inject(function(clmDataStore) {
+                expect(clmDataStore._profileFactory).toBe(extendedObj);
+              });
+            }
+          );
+
+          it('should query the /classMentors/userProfiles', inject(function($rootScope, clmDataStore) {
+            var profileObj = jasmine.createSpyObj('profileObj', ['$loaded']);
+
+            clmDataStore._profileFactory = jasmine.createSpy('clmDataStore._profileFactory');
+            clmDataStore._profileFactory.and.returnValue(profileObj);
+            clmDataStore.profile('bob');
+            $rootScope.$apply();
+
+            expect(clmDataStore._profileFactory.calls.count()).toBe(1);
+            expect(clmDataStore._profileFactory.calls.argsFor(0)).toEqual(jasmine.any(Array));
+
+            var path = clmDataStore._profileFactory.calls.argsFor(0)[0].join('/');
+            expect(path).toBe('classMentors/userProfiles/bob');
+          }));
+
+        });
+
+        describe('currentUserProfile', function() {
+
+          it('should resolve to an empty profile if the user is not logged in', inject(
+            function($q, $rootScope, clmDataStore) {
+              var result;
+
+              spfAuth.user = undefined;
+              clmDataStore.currentUserProfile().then(function(profile) {
+                result = profile;
+              });
+              $rootScope.$apply();
+              expect(result).toBeUndefined();
+            }
+          ));
+
+          it('should query the current user data', inject(
+            function($q, clmDataStore) {
+              spfAuth.user = {uid: 'google:1'};
+              spfAuthData.user.and.returnValue($q.when({publicId: 'bob'}));
+              clmDataStore.currentUserProfile();
+              expect(spfAuthData.user).toHaveBeenCalled();
+            }
+          ));
+
+          it('should query the current user profile', inject(
+            function($q, $rootScope, clmDataStore) {
+              spfAuth.user = {uid: 'google:1'};
+              spfAuthData.user.and.returnValue($q.when({publicId: 'bob'}));
+              clmDataStore.profile = jasmine.createSpy('clmDataStore.profile');
+              clmDataStore.profile.and.returnValue({});
+
+              clmDataStore.currentUserProfile();
+              $rootScope.$apply();
+              expect(clmDataStore.profile).toHaveBeenCalledWith('bob');
+            }
+          ));
+
+          it('should return the user profile if profile is empty', inject(
+            function($q, $rootScope, clmDataStore) {
+              var actual;
+              var expected = {};
+
+              spfAuth.user = {uid: 'google:1'};
+              spfAuthData.user.and.returnValue($q.when({publicId: 'bob'}));
+              clmDataStore.profile = jasmine.createSpy('clmDataStore.profile');
+              clmDataStore.profile.and.returnValue(expected);
+
+              clmDataStore.currentUserProfile().then(function(resp) {
+                actual = resp;
+              });
+              $rootScope.$apply();
+              expect(actual).toBe(expected);
+            }
+          ));
+
+          it('should return the user profile if profile is set', inject(
+            function($q, $rootScope, clmDataStore) {
+              var actual;
+              var expected = {user: {}};
+
+              spfAuth.user = {uid: 'google:1'};
+              spfAuthData.user.and.returnValue($q.when({publicId: 'bob'}));
+              clmDataStore.profile = jasmine.createSpy('clmDataStore.profile');
+              clmDataStore.profile.and.returnValue(expected);
+
+              clmDataStore.currentUserProfile().then(function(resp) {
+                actual = resp;
+              });
+              $rootScope.$apply();
+              expect(actual).toBe(expected);
+            }
+          ));
+
+          it('should update profile if outdated', inject(
+            function($q, $rootScope, clmDataStore) {
+              var userData = {
+                publicId: 'bob',
+                displayName: 'bob',
+                gravatar: 'http://example.com/',
+                country: {name: 'Singapore', code: 'SG'},
+                yearOfbirth: 1990,
+                school: {name: 'Other', type: 'Other'}
+              };
+              var profile = {
+                user: {
+                  displayName: 'bob',
+                  gravatar: 'http://example.com/'
+                }
+              };
+              var result;
+
+              spfAuth.user = {uid: 'google:1'};
+              spfAuthData.user.and.returnValue($q.when(userData));
+              clmDataStore.profile = jasmine.createSpy('clmDataStore.profile');
+              clmDataStore.profile.and.returnValue(profile);
+              spfFirebase.patch.and.returnValue($q.when());
+
+              clmDataStore.currentUserProfile().then(function(resp) {
+                result = resp;
+              });
+              $rootScope.$apply();
+              expect(result).toBe(profile);
+              expect(spfFirebase.patch.calls.count()).toBe(1);
+              expect(spfFirebase.patch.calls.argsFor(0).length).toBe(2);
+              expect(
+                spfFirebase.patch.calls.argsFor(0)[0].join('/')
+              ).toBe(
+                'classMentors/userProfiles/bob/user'
+              );
+              expect(spfFirebase.patch.calls.argsFor(0)[1]).toEqual({
+                displayName: 'bob',
+                gravatar: 'http://example.com/',
+                country: {name: 'Singapore', code: 'SG'},
+                yearOfbirth: 1990,
+                school: {name: 'Other', type: 'Other'}
+              });
+            }
+          ));
+
         });
 
         describe('badges', function() {

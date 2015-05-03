@@ -2,6 +2,8 @@
     <md-tabs>
         <md-tab ng-repeat="problem in ctrl.problems" label="{{problem.title}}">
             <form name="editProblem" ng-submit="ctrl.saveProblem(ctrl.problems, $index)">
+                <spf-sign-form current-user="ctrl.currentUser" ng-if="ctrl.profileNeedsUpdate"></spf-sign-form>
+
                 <md-input-container flex>
                     <label>Problem Title</label>
                     <input ng-minlength="3" md-maxlength="64" required name="problemTitle" ng-model="problem.title">
@@ -52,27 +54,8 @@
     <h2>New Problem</h2>
 
     <form name="newProblem" ng-submit="ctrl.createProblem(ctrl.currentUser, ctrl.problems, ctrl.newProblem)">
-        <div layout layout-sm="column" ng-if="!ctrl.profile">
-            <md-input-container flex>
-                <label>Your Public Id</label>
-                <input ng-minlength="3" md-maxlength="64" ng-pattern="/^[-a-z0-9]+$/" required name="userPublicId" ng-model="ctrl.currentUser.publicId">
-                <div ng-messages="newProblem.userPublicId.$error">
-                    <div ng-message="required">This is required.</div>
-                    <div ng-message="minlength">The public id has to be more than 2 characters long.</div>
-                    <div ng-message="md-maxlength">The public id has to be less than 64 characters long.</div>
-                    <div ng-message="pattern">The public id should include letters, numbers and "-".</div>
-                </div>
-            </md-input-container>
-            <md-input-container flex>
-                <label>Your screen name</label>
-                <input ng-minlength="3" md-maxlength="64" required name="userDisplayName" ng-model="ctrl.currentUser.displayName">
-                <div ng-messages="newProblem.userDisplayName.$error">
-                    <div ng-message="required">This is required.</div>
-                    <div ng-message="minlength">The screen name has to be more than 2 characters long.</div>
-                    <div ng-message="md-maxlength">The screen name has to be less than 64 characters long.</div>
-                </div>
-            </md-input-container>
-        </div>
+        
+        <spf-sign-form current-user="ctrl.currentUser" ng-if="ctrl.profileNeedsUpdate"></spf-sign-form>
 
         <md-input-container flex>
             <label>Problem Title</label>

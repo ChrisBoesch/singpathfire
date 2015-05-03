@@ -393,6 +393,33 @@
 
         });
 
+        describe('arrayFactory', function() {
+
+          it('should call $firebaseArray.$extend', inject(function(spfFirebase) {
+            var mixin = {noop: function() {}};
+            var path = ['classMentors/userProfile', 'bob'];
+            var isConstructor = false;
+            var expected = {};
+            var actual, factory;
+            var extendedfirebaseArray = function(ref) {
+              isConstructor = this instanceof extendedfirebaseArray;
+              actual = ref;
+            };
+
+            spfFirebaseRef.and.returnValue(expected);
+            firebaseArray.$extend.and.returnValue(extendedfirebaseArray);
+
+            factory = spfFirebase.arrayFactory(mixin);
+            factory(path);
+
+            expect(firebaseArray.$extend).toHaveBeenCalledWith(mixin);
+            expect(spfFirebaseRef).toHaveBeenCalledWith(path);
+            expect(isConstructor).toBe(true);
+            expect(actual).toBe(expected);
+          }));
+
+        });
+
       });
 
       describe('spfAuth', function() {
@@ -609,13 +636,13 @@
         beforeEach(module('spf.shared'));
 
         beforeEach(function() {
-          spfFirebase = jasmine.createSpyObj('spfFirebase', ['loadedObj']);
+          spfFirebase = jasmine.createSpyObj('spfFirebase', ['objFactory']);
           spfCrypto = {
             md5: jasmine.createSpy('spfCrypto.md5')
           };
           spfAuth = {
             user: {
-              uid: 'custome:1',
+              uid: 'google:1',
               google: {
                 displayName: 'Bob Smith',
                 email: 'bob@example.com'
@@ -624,6 +651,14 @@
             onAuth: jasmine.createSpy('spfAuth.onAuth')
           };
 
+          spfFirebase.objFactory.and.callFake(function(mixin) {
+            var factory = jasmine.createSpy('objFactoryFactory');
+
+            expect(arguments.length).toBe(1);
+            factory._mixin = mixin;
+            return factory;
+          });
+
           module(function($provide) {
             $provide.value('spfFirebase', spfFirebase);
             $provide.value('spfCrypto', spfCrypto);
@@ -631,21 +666,42 @@
           });
         });
 
-        it('should resolved to user data', function() {
-          inject(function($q, $rootScope, spfAuthData) {
-            var user = jasmine.createSpyObj('userSync', ['$save']);
-            var result;
+        it('should extend $firebaseObject for user auth data', inject(function($rootScope, $q, spfAuthData) {
+          var userObj = jasmine.createSpyObj('userObj', ['$loaded']);
+          var result;
 
-            spfFirebase.loadedObj.and.returnValue($q.when(user));
-            spfAuthData.user().then(function(_result_) {
-              result = _result_;
-            });
-            $rootScope.$apply();
+          expect(spfAuthData._factory).toEqual(jasmine.any(Function));
 
-            expect(result).toBe(user);
-            expect(user.$save).not.toHaveBeenCalled();
+          spfAuthData._factory.and.returnValue(userObj);
+          userObj.$loaded.and.returnValue($q.when(userObj));
+
+          spfAuthData._user().then(function(resp) {
+            result = resp;
           });
-        });
+          $rootScope.$apply();
+
+          expect(result).toBe(userObj);
+        }));
+
+        it('should query auth user data', inject(function($q, $rootScope, spfAuthData) {
+          var userObj = jasmine.createSpyObj('userObj', ['$loaded']);
+
+          expect(spfAuthData._factory).toEqual(jasmine.any(Function));
+
+          spfAuthData._factory.and.returnValue(userObj);
+          userObj.$loaded.and.returnValue($q.when(userObj));
+
+          spfAuthData._user();
+          $rootScope.$apply();
+
+          expect(spfAuthData._factory.calls.count()).toBe(1);
+          expect(spfAuthData._factory.calls.argsFor(0).length).toBe(1);
+          expect(
+            spfAuthData._factory.calls.argsFor(0)[0].join('/')
+          ).toBe(
+            'auth/users/google:1'
+          );
+        }));
 
         it('should return undefined if the user is not logged in', function() {
           inject(function($rootScope, spfAuthData) {
@@ -664,34 +720,98 @@
           });
         });
 
-        it('should setup user data', function() {
-          inject(function($rootScope, $q, spfAuthData) {
-            var user = jasmine.createSpyObj('userSync', ['$save']);
-            var result;
+        it('should setup user data', inject(function($q, $rootScope, spfAuthData) {
+          var userObj = jasmine.createSpyObj('userObj', ['$loaded', '$save']);
+          var result;
 
-            user.$value = null;
-            user.$save.and.returnValue($q.when(user));
-            spfCrypto.md5.and.returnValue('foo');
+          expect(spfAuthData._factory).toEqual(jasmine.any(Function));
 
-            spfFirebase.loadedObj.and.returnValue($q.when(user));
-            spfAuthData.user().then(function(_result_) {
-              result = _result_;
-            });
-            $rootScope.$apply();
+          spfAuthData._factory.and.returnValue(userObj);
+          userObj.$loaded.and.returnValue($q.when(userObj));
+          userObj.$save.and.returnValue($q.when());
+          userObj.$value = null;
+          spfCrypto.md5.and.returnValue('foo');
 
-            expect(result).toBe(user);
-            expect(user.$value).toEqual({
-              id: 'custome:1',
-              fullName: 'Bob Smith',
-              displayName: 'Bob Smith',
-              email: 'bob@example.com',
-              gravatar: '//www.gravatar.com/avatar/foo',
-              createdAt: {
-                '.sv': 'timestamp'
-              }
-            });
-            expect(user.$save).toHaveBeenCalled();
+          spfAuthData.user().then(function(_result_) {
+            result = _result_;
           });
+          $rootScope.$apply();
+
+          expect(result).toBe(userObj);
+          expect(userObj.$value).toEqual({
+            id: 'google:1',
+            fullName: 'Bob Smith',
+            displayName: 'Bob Smith',
+            email: 'bob@example.com',
+            gravatar: '//www.gravatar.com/avatar/foo',
+            createdAt: {
+              '.sv': 'timestamp'
+            }
+          });
+          expect(userObj.$save).toHaveBeenCalled();
+        }));
+
+        it('should extend $firebaseObject for user auth data to add $completed method',
+          inject(function(spfAuthData) {
+            expect(spfAuthData._factory._mixin).toEqual(jasmine.any(Object));
+            expect(spfAuthData._factory._mixin.$completed).toEqual(jasmine.any(Function));
+          })
+        );
+
+        describe('$completed', function() {
+          var userData, $completed;
+
+          beforeEach(inject(function(spfAuthData) {
+            userData = {};
+            $completed = spfAuthData._factory._mixin.$completed.bind(userData);
+          }));
+
+          it('should return true if the user has his public id and country are set', function() {
+            userData.publicId = 'bob';
+            userData.country = {name: 'United Kindom', code: 'GB'};
+            expect($completed()).toBe(true);
+          });
+
+          it('should return true if the user has his public id, country and age are set', function() {
+            userData.publicId = 'bob';
+            userData.yearOfBirth = 1990;
+            userData.country = {name: 'United Kindom', code: 'GB'};
+            expect($completed()).toBe(true);
+          });
+
+          it('should return true if the user has his public id, country, age and School are set', function() {
+            userData.publicId = 'bob';
+            userData.yearOfBirth = 2003;
+            userData.country = {name: 'Singapore', code: 'SG'};
+            userData.school = {name: 'Other', type: 'Other'};
+            expect($completed()).toBe(true);
+          });
+
+          it('should return false if the user is from singapore, is 11y old and his school is not set', function() {
+            userData.publicId = 'bob';
+            userData.yearOfBirth = 2004;
+            userData.country = {name: 'Singapore', code: 'SG'};
+            expect($completed()).toBe(false);
+          });
+
+          it('should return false if the user is from singapore, is 16y old and his school is not set', function() {
+            userData.publicId = 'bob';
+            userData.yearOfBirth = 1999;
+            userData.country = {name: 'Singapore', code: 'SG'};
+            expect($completed()).toBe(false);
+          });
+
+          it('should return false if the user is from singapore and his/her age is missing', function() {
+            userData.publicId = 'bob';
+            userData.country = {name: 'Singapore', code: 'SG'};
+            expect($completed()).toBe(false);
+          });
+
+          it('should return false if the user country is missing', function() {
+            userData.publicId = 'bob';
+            expect($completed()).toBe(false);
+          });
+
         });
 
       });

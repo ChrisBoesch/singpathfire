@@ -65,14 +65,15 @@
     '$firebaseObject',
     '$firebaseArray',
     'spfAuth',
+    'spfAuthData',
     'spfFirebase',
     function spfDataStoreFactory(
-      $window, $q, $http, $log, $firebaseUtils, $firebaseObject, $firebaseArray, spfAuth, spfFirebase
+      $window, $q, $http, $log, $firebaseUtils, $firebaseObject, $firebaseArray, spfAuth, spfAuthData, spfFirebase
     ) {
       var spfDataStore;
 
       spfDataStore = {
-        _profileFactory: $firebaseObject.$extend({
+        _profileFactory: spfFirebase.objFactory({
           $hasSolved: function(problem) {
             var solution = this.$solution(problem);
             return solution && solution.solved;
@@ -100,31 +101,85 @@
 
         }),
 
-        profile: function(publicId) {
-          return $q.when(publicId).then(function(id) {
-            return new spfDataStore._profileFactory(
-              spfFirebase.ref(['singpath/userProfiles', id])
-            ).$loaded();
+        /**
+         * Return a promise resolving to $firebaseObj pointing to
+         * the current user profile for Singpath.
+         *
+         * If the user has a singpath profile and its user data are outdated.
+         * they will get updated.
+         *
+         * @return promise
+         */
+        currentUserProfile: function() {
+          if (!spfAuth.user || !spfAuth.user.uid) {
+            return $q.when();
+          }
+
+          var currentUserPromise = spfAuthData.user();
+          var profilePromise = spfAuthData.user().then(function(currentUser) {
+            if (!currentUser.publicId) {
+              return;
+            }
+            return spfDataStore.profile(currentUser.publicId);
+          });
+
+          return $q.all({
+            currentUser: currentUserPromise,
+            profile: profilePromise
+          }).then(function(resp) {
+            var userData = resp.profile && resp.profile.user;
+
+            if (!userData) {
+              return resp.profile;
+            }
+
+            if (
+              userData.displayName === resp.currentUser.displayName &&
+              userData.gravatar === resp.currentUser.gravatar &&
+              userData.country === resp.currentUser.country &&
+              userData.yearOfbirth === resp.currentUser.yearOfbirth &&
+              userData.school === resp.currentUser.school
+            ) {
+              return resp.profile;
+            }
+
+            return spfDataStore._initProfile(resp.currentUser);
           });
         },
 
-        initProfile: function(userSync) {
-          if (!userSync || !userSync.publicId) {
-            return $q.reject(new Error('The user has not set a user public id.'));
-          }
+        profile: function(publicId) {
+          return $q.when(publicId).then(function(id) {
+            return spfDataStore._profileFactory(['singpath/userProfiles', id]).$loaded();
+          });
+        },
 
+        _initProfile: function(userData) {
           return spfFirebase.set(
-            ['singpath/userProfiles', userSync.publicId, 'user'], {
-              displayName: userSync.displayName,
-              gravatar: userSync.gravatar
+            ['singpath/userProfiles', userData.publicId, 'user'], {
+              displayName: userData.displayName,
+              gravatar: userData.gravatar,
+              // cleanup optional values
+              country: spfFirebase.cleanObj(userData.country),
+              yearOfbirth: spfFirebase.cleanObj(userData.yearOfbirth),
+              school: spfFirebase.cleanObj(userData.school)
             }
           ).then(function() {
-            return spfDataStore.profile(userSync.publicId);
+            return spfDataStore.profile(userData.publicId);
+          });
+        },
+
+        initProfile: function() {
+          return spfAuthData.user().then(function(currentUser) {
+            if (!currentUser || !currentUser.publicId) {
+              return $q.reject(new Error('The user has not set a user public id.'));
+            }
+
+            return spfDataStore._initProfile(currentUser);
           });
         },
 
         paths: {
-          _Factory: $firebaseObject.$extend({
+          _Factory: spfFirebase.objFactory({
             $canBeEditedBy: function(user) {
               return user && this.owner.publicId === user.publicId;
             }
@@ -144,14 +199,12 @@
           },
 
           get: function(pathId) {
-            return new spfDataStore.paths._Factory(
-              spfFirebase.ref(['singpath/paths', pathId])
-            ).$loaded();
+            return spfDataStore.paths._Factory(['singpath/paths', pathId]).$loaded();
           }
         },
 
         levels: {
-          _Factory: $firebaseObject.$extend({
+          _Factory: spfFirebase.objFactory({
             $canBeEditedBy: function(user) {
               return user && this.owner.publicId === user.publicId;
             },
@@ -169,9 +222,7 @@
           },
 
           get: function(pathId, levelId) {
-            return new spfDataStore.levels._Factory(
-              spfFirebase.ref(['singpath/levels', pathId, levelId])
-            ).$loaded();
+            return spfDataStore.levels._Factory(['singpath/levels', pathId, levelId]).$loaded();
           },
 
           create: function(pathId, level) {
@@ -184,7 +235,7 @@
         problems: {
           errDeleteFailed: new Error('Failed to delete the problem and its solutions'),
 
-          _Factory: $firebaseObject.$extend({
+          _Factory: spfFirebase.objFactory({
             $canBeEditedBy: function(user) {
               return this.owner.publicId === user.publicId;
             },
@@ -209,7 +260,7 @@
             }
           }),
 
-          _itemFactory: $firebaseArray.$extend({
+          _itemFactory: spfFirebase.arrayFactory({
             $$added: function(snap) {
               var problem = $firebaseArray.prototype.$$added.apply(this, arguments);
               problem.$levelId = snap.ref().parent().key();
@@ -219,8 +270,9 @@
           }),
 
           list: function(pathId, levelId) {
-            return new spfDataStore.problems._itemFactory(
-              spfFirebase.ref(['singpath/problems', pathId, levelId])).$loaded();
+            return spfDataStore.problems._itemFactory(
+              ['singpath/problems', pathId, levelId]
+            ).$loaded();
           },
 
           create: function(pathId, levelId, problem) {
@@ -230,8 +282,8 @@
           },
 
           get: function(pathId, levelId, problemId) {
-            return new spfDataStore.problems._Factory(
-              spfFirebase.ref(['singpath/problems', pathId, levelId, problemId])
+            return spfDataStore.problems._Factory(
+              ['singpath/problems', pathId, levelId, problemId]
             ).$loaded(function(problem) {
               problem.$levelId = problem.$ref().parent().key();
               problem.$pathId = problem.$ref().parent().parent().key();
@@ -316,7 +368,7 @@
           ),
           errNotResolved: new Error('The solution is not resolved yet.'),
 
-          _Factory: $firebaseObject.$extend({
+          _Factory: spfFirebase.objFactory({
             $init: function() {
               var problem = this.$ref().parent();
               var level = problem.parent();
@@ -375,9 +427,9 @@
           }),
 
           get: function(pathId, levelId, problemId, publicId) {
-            return new spfDataStore.resolutions._Factory(spfFirebase.ref(
+            return spfDataStore.resolutions._Factory(
               ['singpath/resolutions', pathId, levelId, problemId, publicId]
-            )).$loaded();
+            ).$loaded();
           }
 
         }

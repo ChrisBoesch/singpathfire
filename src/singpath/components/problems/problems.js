@@ -70,34 +70,15 @@
         var pathId = $route.current.params.pathId;
         var levelId = $route.current.params.levelId;
         var userPromise = spfAuthData.user();
-        var data = {
+
+        return {
           auth: spfAuth,
           currentUser: userPromise,
-          profile: undefined,
+          profile: spfDataStore.currentUserProfile(),
           path: spfDataStore.paths.get(pathId),
           level: spfDataStore.levels.get(pathId, levelId),
           problems: spfDataStore.problems.list(pathId, levelId)
         };
-
-        if (!spfAuth.user || !spfAuth.user.uid) {
-          return data;
-        }
-
-        data.profile = userPromise.then(function(userData) {
-          if (!userData.publicId) {
-            return;
-          }
-
-          return spfDataStore.profile(userData.publicId).then(function(profile) {
-            if (profile && profile.$value === null) {
-              return spfDataStore.initProfile(userData);
-            }
-
-            return profile;
-          });
-        });
-
-        return data;
       };
     }
   ]).
@@ -164,10 +145,19 @@
   factory('editProblemsCtrlInitialData', [
     '$q',
     'baseProblemListResolver',
-    function editProblemsCtrlInitialDataFactory($q, baseProblemListResolver) {
+    'spfDataStore',
+    function editProblemsCtrlInitialDataFactory($q, baseProblemListResolver, spfDataStore) {
       return function editProblemsCtrlInitialData() {
         var errCannotEdit = new Error('You cannot edit this level');
         var data = baseProblemListResolver();
+
+        data.profile = data.profile.then(function(profile) {
+          if (profile && profile.$value === null) {
+            return spfDataStore.initProfile();
+          }
+
+          return profile;
+        });
 
         return $q.all({
           level: data.level,
@@ -193,11 +183,17 @@
    */
   controller('EditProblemsCtrl', [
     '$log',
+    '$q',
     'initialData',
     'urlFor',
+    'spfFirebase',
+    'spfDataStore',
+    'spfAuthData',
     'spfAlert',
     'spfNavBarService',
-    function EditProblemsCtrl($log, initialData, urlFor, spfAlert, spfNavBarService) {
+    function EditProblemsCtrl(
+      $log, $q, initialData, urlFor, spfFirebase, spfDataStore, spfAuthData, spfAlert, spfNavBarService
+    ) {
       var self = this;
       var pathId = initialData.path.$id;
       var levelId = initialData.level.$id;
@@ -209,6 +205,8 @@
       this.level = initialData.level;
       this.problems = initialData.problems;
       this.newProblem = {};
+
+      this.profileNeedsUpdate = !this.currentUser.$completed();
 
       spfNavBarService.update(
         'Edit',
@@ -225,7 +223,9 @@
       );
 
       this.saveProblem = function(problems, index) {
-        return problems.$save(index).then(function(data) {
+        return next(self.currentUser).then(function() {
+          return problems.$save(index);
+        }).then(function(data) {
           spfAlert.success('Problem saved');
           return data;
         }).catch(function(err) {
@@ -237,7 +237,10 @@
       this.createProblem = function(currentUser, problems, newProblem) {
         newProblem.language = self.level.language;
         newProblem.owner = self.level.owner;
-        problems.$add(newProblem).then(function(ref) {
+
+        return next(currentUser).then(function() {
+          return problems.$add(newProblem);
+        }).then(function(ref) {
           spfAlert.success('Problem created');
           self.newProblem = {};
           return ref;
@@ -246,6 +249,32 @@
           spfAlert.error('Failed to create the problem');
         });
       };
+
+      function next(currentUser) {
+        if (!self.profile) {
+          cleanProfile();
+          return spfAuthData.publicId(currentUser).then(function() {
+            spfAlert.success('Public id and display name saved');
+            return spfDataStore.initProfile();
+          }).then(function(profile) {
+            self.profile = profile;
+            self.profileNeedsUpdate = !self.currentUser.$completed();
+            return profile;
+          });
+        } else if (self.profileNeedsUpdate) {
+          cleanProfile();
+          return self.currentUser.$save().then(function() {
+            self.profileNeedsUpdate = !self.currentUser.$completed();
+          });
+        } else {
+          return $q.when();
+        }
+      }
+
+      function cleanProfile() {
+        self.currentUser.country = spfFirebase.cleanObj(self.currentUser.country);
+        self.currentUser.school = spfFirebase.cleanObj(self.currentUser.school);
+      }
     }
   ]).
 
@@ -278,7 +307,8 @@
           problem: problemPromise
         }).then(function(result) {
           if (!result.user || !result.user.publicId) {
-            return;
+            // TODO: redirect to a profile page to register
+            return $q.reject(new Error('You have no public id set yet.'));
           }
 
           return spfDataStore.resolutions.get(
@@ -293,18 +323,12 @@
           level: spfDataStore.levels.get(pathId, levelId),
           problem: problemPromise,
           resolution: resolutionPromise,
-          profile: userPromise.then(function(userData) {
-            if (!userData.publicId) {
-              return;
+          profile: spfDataStore.currentUserProfile().then(function(profile) {
+            if (profile && profile.$value === null) {
+              return spfDataStore.initProfile();
             }
 
-            return spfDataStore.profile(userData.publicId).then(function(profile) {
-              if (profile && profile.$value === null) {
-                return spfDataStore.initProfile(userData);
-              }
-
-              return profile;
-            });
+            return profile;
           }),
           solution: $q.all({
             user: userPromise,
@@ -341,12 +365,13 @@
     '$location',
     'initialData',
     'urlFor',
+    'spfFirebase',
     'spfNavBarService',
     'spfAlert',
     'spfAuthData',
     'spfDataStore',
     function PlayProblemCtrl(
-      $q, $location, initialData, urlFor, spfNavBarService, spfAlert, spfAuthData, spfDataStore
+      $q, $location, initialData, urlFor, spfFirebase, spfNavBarService, spfAlert, spfAuthData, spfDataStore
     ) {
       var self = this;
       var original = {};
@@ -363,6 +388,7 @@
       this.savingSolution = false;
       this.solutionSaved = false;
       original.solution = this.solution.solution;
+      this.profileNeedsUpdate = !self.currentUser.$completed();
 
       spfNavBarService.update(
         this.problem.title,
@@ -384,18 +410,24 @@
         self.savingSolution = true;
 
         if (!self.profile) {
+          cleanProfile();
           next = spfAuthData.publicId(currentUser).then(function() {
             spfAlert.success('Public id and display name saved');
-            return spfDataStore.initProfile(currentUser);
+            return spfDataStore.initProfile();
           }).then(function(profile) {
             self.profile = profile;
             return profile;
           });
+        } else if (self.profileNeedsUpdate) {
+          cleanProfile();
+          next = self.currentUser.$save();
         } else {
           next = $q.when();
         }
 
         next.then(function() {
+          self.profileNeedsUpdate = !self.currentUser.$completed();
+        }).then(function() {
           return spfDataStore.solutions.create(problem, currentUser.publicId, solution);
         }).then(function() {
           spfAlert.success('Solution saved');
@@ -415,6 +447,11 @@
       this.solutionChanged = function(solution) {
         this.solutionSaved = this.solutionSaved && original.solution === solution.solution;
       };
+
+      function cleanProfile() {
+        self.currentUser.country = spfFirebase.cleanObj(self.currentUser.country);
+        self.currentUser.school = spfFirebase.cleanObj(self.currentUser.school);
+      }
     }
   ])
 
