@@ -17,6 +17,11 @@
           'language:angularjs',
           'singpath/components/icons/icons-angularjs.svg',
           120
+        )
+        .icon(
+          'language:javascript',
+          'singpath/components/icons/icons-javascript.svg',
+          630
         );
     }
   ])

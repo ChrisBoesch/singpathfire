@@ -34,7 +34,7 @@
             </md-input-container>
             <spf-select-container flex layout="column">
                 <md-select flex name="pathLanguage" ng-model="ctrl.path.language" spf-required placeholder="Select a Language">
-                    <md-option ng-value="opt" ng-repeat="opt in ['angularjs', 'python']">{{opt}}</md-option>
+                    <md-option ng-value="opt" ng-repeat="opt in ['angularjs', 'python', 'javascript']">{{opt}}</md-option>
                 </md-select>
                 <div ng-messages="newPath.pathLanguage.$error">
                     <div ng-message="required">This is required.</div>

@@ -15,7 +15,8 @@
 
       var languageToMode = {
         'angularjs': 'html',
-        'python': 'python'
+        'python': 'python',
+        'javascript': 'javascript'
       };
 
       return {

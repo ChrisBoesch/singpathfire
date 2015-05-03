@@ -54,7 +54,7 @@ var config = {
       'src/vendor/ace-builds/worker-javascript.js',
       'src/vendor/ace-builds/worker-html.js'
     ],
-    base: 'src/vendor/ace-builds/src-noconflict'
+    base: 'src/vendor/ace-builds'
   },
   // only used for build:concat and dist
   dest: argv.dest ? path.resolve(argv.dest) : null,
