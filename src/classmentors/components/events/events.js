@@ -650,7 +650,9 @@
     'urlFor',
     'spfNavBarService',
     'clmDataStore',
-    function AddEventTaskCtrl(initialData, $location, spfFirebase, $log, spfAlert, urlFor, spfNavBarService, clmDataStore) {
+    function AddEventTaskCtrl(
+      initialData, $location, spfFirebase, $log, spfAlert, urlFor, spfNavBarService, clmDataStore
+    ) {
       var self = this;
 
       this.event = initialData.event;
