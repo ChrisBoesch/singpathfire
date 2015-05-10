@@ -284,11 +284,13 @@
    */
   factory('playProblemCtrlInitialData', [
     '$q',
+    '$location',
     '$route',
+    'urlFor',
     'spfAuth',
     'spfAuthData',
     'spfDataStore',
-    function playProblemCtrlInitialDataFactory($q, $route, spfAuth, spfAuthData, spfDataStore) {
+    function playProblemCtrlInitialDataFactory($q, $location, $route, urlFor, spfAuth, spfAuthData, spfDataStore) {
       return function playProblemCtrlInitialData() {
         var userPromise, problemPromise, resolutionPromise;
         var pathId = $route.current.params.pathId;
@@ -307,7 +309,7 @@
           problem: problemPromise
         }).then(function(result) {
           if (!result.user || !result.user.publicId) {
-            // TODO: redirect to a profile page to register
+            $location.path(urlFor('profile'));
             return $q.reject(new Error('You have no public id set yet.'));
           }
 
