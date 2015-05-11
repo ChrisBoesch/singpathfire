@@ -80,10 +80,10 @@
         </th>
         <th>Code Combat Reg</th>
         <th>Finished Code Combat Level</th>
-        <th>Solved SingPath Problem</th>
-        <th>Joined a Class</th>
+        <th>Completed Class Task</th>
         <th>Skill Used in Class</th>
         <th>Certified Skill Usage</th>
+        <th>Solved SingPath Problem</th>
       </tr>
 
 
@@ -91,32 +91,27 @@
         <td><img height="24" width="24" title="{{school.name}}" ng-src="{{school.crest}}"></td>
         <td>{{school.name}}</td>
         <td>{{school.group}}</td>
-        <td><span ng-show="school.integrated || school.group=='Secondary'">{{0}}</span>
-          <span ng-hide="school.integrated || school.group=='Secondary'">-</span></td>
-        <td><span ng-show="school.integrated || school.group=='Secondary'">{{0}}</span>
-          <span ng-hide="school.integrated || school.group=='Secondary'">-</span></td>
-        <td><span ng-show="school.integrated || school.group=='Secondary'">{{0}}</span>
-          <span ng-hide="school.integrated || school.group=='Secondary'">-</span></td>
-        <td><span ng-show="school.integrated || school.group=='Secondary'">{{0}}</span>
-          <span ng-hide="school.integrated || school.group=='Secondary'">-</span></td>
-        <td ng-show="school.group=='Junior College' || school.group=='Polytechnic'  ">{{0}}</td>
-        <td ng-hide="school.group=='Junior College' || school.group=='Polytechnic'  ">-</td>
-        
-        <td ng-show="school.group=='Junior College' || school.group=='Polytechnic'">{{0}}</td>
-        <td ng-hide="school.group=='Junior College' || school.group=='Polytechnic'">-</td>
+        <td>{{registeredBySchoolAndYear[school.name]["2002"]}}</td>
+        <td>{{registeredBySchoolAndYear[school.name]["2001"]}}</td>
+        <td>{{registeredBySchoolAndYear[school.name]["2000"]}}</td>
+        <td>{{registeredBySchoolAndYear[school.name]["1999"]}}</td>
+        <td>{{registeredBySchoolAndYear[school.name]["1998"]}}</td>
+        <td>{{registeredBySchoolAndYear[school.name]["1997"]}}</td>
         <td>{{school.registered}}</td>
         <td>{{school.codeCombatRegistered}}</td>
         <td>{{school.codeCombatBadgeEarners}}</td>
-        <td>0</td>
+        <td>{{school.joinedClass}}</td>
         <td>0</td>
         <td>0</td> 
         <td>0</td>        
       </tr>
     </table>
     <br>
-    Registerd by school {{registeredBySchool}}<br>
-    Code Combat Registrations {{ codeCombatRegisteredBySchool}}<br>
-    Code Combat Badge Earners {{ codeCombatBadgeBySchool}}
+    Registerd by school {{ registeredBySchool }}<br>
+    Code Combat Registrations {{ codeCombatRegisteredBySchool }}<br>
+    Code Combat Badge Earners {{ codeCombatBadgeBySchool }}<br>
+    Joined a Class {{ joinedAClassBySchool }}<br>
+    Registered by school and year {{registeredBySchoolAndYear}} <br>
 
 <script id="jsbin-javascript">
 
@@ -130,12 +125,13 @@ var app = angular.module("schools", ['angulartics', 'angulartics.google.analytic
 app.controller("TableCtrl", ['$scope','$http', function ($scope, $http) {
   
   $scope.registeredBySchool = {};
+  $scope.registeredBySchoolAndYear = {};
   $scope.codeCombatRegisteredBySchool = {};
   $scope.codeCombatBadgeBySchool = {};
-  $scope.solvedSingPathProblemBySchool = {};
   $scope.joinedAClassBySchool = {};
   $scope.skillUsedInClassBySchool = {};
   $scope.certifiedSkillUsageBySchool = {};
+  $scope.solvedSingPathProblemBySchool = {};
 
   $scope.numCoders = 0;
    
@@ -168,10 +164,27 @@ app.controller("TableCtrl", ['$scope','$http', function ($scope, $http) {
                 }
                 else{
                   $scope.registeredBySchool[schoolName] = 1;
+                  $scope.registeredBySchoolAndYear[schoolName] = {}; 
                 }
 
+                //Increment the count for school year if user has year of birth. 
+                if ("yearOfBirth" in $scope.example_user_data[prop].user){
+                    var yob = $scope.example_user_data[prop].user.yearOfBirth;
+                    //console.log(yob);
+                    
+                    if (yob in $scope.registeredBySchoolAndYear[schoolName]){
+                      $scope.registeredBySchoolAndYear[schoolName][yob] += 1;
+                    }
+                    else{
+                      $scope.registeredBySchoolAndYear[schoolName][yob] = 1;
+                    }
+                    
+                }
+
+
                 //Check for Code Combat Registration
-                if ("codeCombat" in $scope.example_user_data[prop].services){
+
+                if ("services" in $scope.example_user_data[prop] && "codeCombat" in $scope.example_user_data[prop].services){
 
                   if(schoolName in $scope.codeCombatRegisteredBySchool){
                     $scope.codeCombatRegisteredBySchool[schoolName] += 1;
@@ -195,6 +208,24 @@ app.controller("TableCtrl", ['$scope','$http', function ($scope, $http) {
 
                 }
 
+                //Check to see if school members have joined an event/class. 
+                if ("events" in $scope.example_user_data[prop]){
+
+                  if(schoolName in $scope.joinedAClassBySchool){
+                    $scope.joinedAClassBySchool[schoolName] += 1;
+                    //console.log(prop+"*");
+                  }
+                  else{
+                    $scope.joinedAClassBySchool[schoolName] = 1;
+                    //console.log(prop+"***");
+                  }                  
+
+                }
+                else{
+                  //console.log("******"+prop);
+                }
+
+
               }
           }
        }
@@ -203,7 +234,7 @@ app.controller("TableCtrl", ['$scope','$http', function ($scope, $http) {
        for(var i=0; i<$scope.schools.length; i++){
           //console.log($scope.schools[i].name);
           if ($scope.schools[i].name in $scope.registeredBySchool){
-              console.log("****** "+$scope.schools[i].name);
+              //console.log("****** "+$scope.schools[i].name);
               $scope.schools[i].registered = $scope.registeredBySchool[$scope.schools[i].name];
           }
           else{
@@ -226,6 +257,16 @@ app.controller("TableCtrl", ['$scope','$http', function ($scope, $http) {
             $scope.schools[i].codeCombatBadgeEarners = 0;
           }
 
+          //Update the school list with the number of users that have joined a class. 
+          if ($scope.schools[i].name in $scope.joinedAClassBySchool){
+              $scope.schools[i].joinedClass = $scope.joinedAClassBySchool[$scope.schools[i].name];
+          }
+          else{
+            $scope.schools[i].joinedClass = 0;
+          }
+
+          //Update the school yearOfBirth counts. 
+          //loop through the year keys in the $scope.registeredBySchoolAndYear[schoolName][yob] 
 
           
        }
