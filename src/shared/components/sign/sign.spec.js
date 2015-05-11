@@ -49,7 +49,7 @@
           return school.name === 'NUS High School';
         });
         expect(nus.type).toBe('Junior College');
-        expect(nus.iconUrl).toBe('/assets/icons/schools/NUS_HS.jpeg');
+        expect(nus.iconUrl).toBe('/assets/schools/NUS_HS.jpeg');
       });
 
       it('should have an ageGroups property', function() {
