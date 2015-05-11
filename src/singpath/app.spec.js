@@ -189,7 +189,7 @@
                 displayName: 'bob',
                 gravatar: 'http://example.com/',
                 country: {name: 'Singapore', code: 'SG'},
-                yearOfbirth: 1990,
+                yearOfBirth: 1990,
                 school: {name: 'Other', type: 'Other'}
               };
               var profile = {
@@ -222,7 +222,7 @@
                 displayName: 'bob',
                 gravatar: 'http://example.com/',
                 country: {name: 'Singapore', code: 'SG'},
-                yearOfbirth: 1990,
+                yearOfBirth: 1990,
                 school: {name: 'Other', type: 'Other'}
               });
             }

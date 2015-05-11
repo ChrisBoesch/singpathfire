@@ -341,7 +341,7 @@
               userData.displayName === resp.currentUser.displayName &&
               userData.gravatar === resp.currentUser.gravatar &&
               userData.country === resp.currentUser.country &&
-              userData.yearOfbirth === resp.currentUser.yearOfbirth &&
+              userData.yearOfBirth === resp.currentUser.yearOfBirth &&
               userData.school === resp.currentUser.school
             ) {
               return resp.profile;
@@ -364,7 +364,7 @@
               gravatar: userData.gravatar,
               // cleanup optional values
               country: spfFirebase.cleanObj(userData.country),
-              yearOfbirth: spfFirebase.cleanObj(userData.yearOfbirth),
+              yearOfBirth: spfFirebase.cleanObj(userData.yearOfBirth),
               school: spfFirebase.cleanObj(userData.school)
             }
           ).then(function() {
