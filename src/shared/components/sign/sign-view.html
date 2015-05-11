@@ -50,7 +50,15 @@
     	
 		<spf-select-container flex layout="column" ng-if="currentUser.yearOfBirth >= 1999 &amp;&amp; currentUser.yearOfBirth <= 2004">
             <md-select flex name="userSchool" ng-model="currentUser.school" spf-required placeholder="Select a School">
-                <md-option ng-value="opt" ng-repeat="opt in ctrl.schools">{{opt.name}}</md-option>
+                <md-optgroup label="Junior College">
+                    <md-option ng-value="opt" ng-repeat="opt in ctrl.schools | filter: {type: 'Junior College' }">{{opt.name}}</md-option>
+                </md-optgroup>
+                <md-optgroup label="Polytechnic">
+                    <md-option ng-value="opt" ng-repeat="opt in ctrl.schools | filter: {type: 'Polytechnic' }">{{opt.name}}</md-option>
+                </md-optgroup>
+                <md-optgroup label="Secondary">
+                    <md-option ng-value="opt" ng-repeat="opt in ctrl.schools | filter: {type: 'Secondary' }">{{opt.name}}</md-option>
+                </md-optgroup>
             </md-select>
             <div ng-messages="signForm.userSchool.$error">
                 <div ng-message="required">This is required.</div>

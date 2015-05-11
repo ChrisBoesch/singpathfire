@@ -5,60 +5,6 @@
 
   constant('SPF_SINGAPORE_SCHOOLS', [
     {
-      'iconUrl': '/assets/schools/Republic_Poly.jpg',
-      'type': 'Polytechnic',
-      'id': '2',
-      'name': 'Republic Polytechnic'
-    },
-    {
-      'iconUrl': '/assets/schools/Temasek_Poly.png',
-      'type': 'Polytechnic',
-      'id': '3',
-      'name': 'Temasek Polytechnic'
-    },
-    {
-      'iconUrl': '/assets/schools/DunmanHighSchoolCrest.png',
-      'type': 'Junior College',
-      'id': '5',
-      'name': 'Dunman High School'
-    },
-    {
-      'iconUrl': '/assets/schools/Pionerr_JC.jpg',
-      'type': 'Junior College',
-      'id': '6',
-      'name': 'Pioneer Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/NUS_HS.jpeg',
-      'type': 'Junior College',
-      'id': '7',
-      'name': 'NUS High School'
-    },
-    {
-      'iconUrl': '/assets/schools/Nanyang_Poly.jpg',
-      'type': 'Polytechnic',
-      'id': '8',
-      'name': 'Nanyang Polytechnic'
-    },
-    {
-      'iconUrl': '/assets/schools/Singapore_Poly.png',
-      'type': 'Polytechnic',
-      'id': '9',
-      'name': 'Singapore Polytechnic'
-    },
-    {
-      'iconUrl': '/assets/schools/Ngee-Ann-Poly.jpeg',
-      'type': 'Polytechnic',
-      'id': '10',
-      'name': 'Ngee Ann Polytechnic'
-    },
-    {
-      'iconUrl': '/assets/schools/HWA_Chong.png',
-      'type': 'Junior College',
-      'id': '13',
-      'name': 'Hwa Chong Institution'
-    },
-    {
       'iconUrl': '/assets/schools/Anderson_Junior_College_iconUrl.jpg',
       'type': 'Junior College',
       'id': '14',
@@ -71,36 +17,6 @@
       'name': 'Anglo Chinese School (Independent)'
     },
     {
-      'iconUrl': '/assets/schools/National_JC.png',
-      'type': 'Junior College',
-      'id': '16',
-      'name': 'National Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/Temasek_Junior_College.jpg',
-      'type': 'Junior College',
-      'id': '17',
-      'name': 'Temasek Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/Raffles_Institute.png',
-      'type': 'Junior College',
-      'id': '18',
-      'name': 'Raffles Institution'
-    },
-    {
-      'iconUrl': '/assets/schools/Victoria_JC.png',
-      'type': 'Junior College',
-      'id': '19',
-      'name': 'Victoria Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/Yishun_JC.jpg',
-      'type': 'Junior College',
-      'id': '20',
-      'name': 'Yishun Junior College'
-    },
-    {
       'iconUrl': '/assets/schools/Anglo-Chinese_School_JC.png',
       'type': 'Junior College',
       'id': '24',
@@ -111,6 +27,18 @@
       'type': 'Junior College',
       'id': '25',
       'name': 'Catholic Junior College'
+    },
+    {
+      'iconUrl': '/assets/schools/DunmanHighSchoolCrest.png',
+      'type': 'Junior College',
+      'id': '5',
+      'name': 'Dunman High School'
+    },
+    {
+      'iconUrl': '/assets/schools/HWA_Chong.png',
+      'type': 'Junior College',
+      'id': '13',
+      'name': 'Hwa Chong Institution'
     },
     {
       'iconUrl': '/assets/schools/Innova_Junior_College.png',
@@ -137,10 +65,34 @@
       'name': 'Millennia Institute'
     },
     {
+      'iconUrl': '/assets/schools/NUS_HS.jpeg',
+      'type': 'Junior College',
+      'id': '7',
+      'name': 'NUS High School'
+    },
+    {
       'iconUrl': '/assets/schools/Nanyang_JC.png',
       'type': 'Junior College',
       'id': '30',
       'name': 'Nanyang Junior College'
+    },
+    {
+      'iconUrl': '/assets/schools/National_JC.png',
+      'type': 'Junior College',
+      'id': '16',
+      'name': 'National Junior College'
+    },
+    {
+      'iconUrl': '/assets/schools/Pionerr_JC.jpg',
+      'type': 'Junior College',
+      'id': '6',
+      'name': 'Pioneer Junior College'
+    },
+    {
+      'iconUrl': '/assets/schools/Raffles_Institute.png',
+      'type': 'Junior College',
+      'id': '18',
+      'name': 'Raffles Institution'
     },
     {
       'iconUrl': '/assets/schools/River_Valley_HS.png',
@@ -149,22 +101,10 @@
       'name': 'River Valley High School'
     },
     {
-      'iconUrl': '/assets/schools/Serangoon_JC.jpg',
-      'type': 'Junior College',
-      'id': '32',
-      'name': 'Serangoon Junior College'
-    },
-    {
       'iconUrl': '/assets/schools/Saint_Andrews.jpg',
       'type': 'Junior College',
       'id': '33',
       'name': 'Saint Andrew\'s Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/Tampines_JC.jpg',
-      'type': 'Junior College',
-      'id': '34',
-      'name': 'Tampines Junior College'
     },
     {
       'iconUrl': '/assets/schools/Sota.jpg',
@@ -173,10 +113,70 @@
       'name': 'School of the Arts'
     },
     {
+      'iconUrl': '/assets/schools/Serangoon_JC.jpg',
+      'type': 'Junior College',
+      'id': '32',
+      'name': 'Serangoon Junior College'
+    },
+    {
       'iconUrl': '/assets/schools/St_Josephs.png',
       'type': 'Junior College',
       'id': '36',
       'name': 'St Joseph\'s Institution'
+    },
+    {
+      'iconUrl': '/assets/schools/Tampines_JC.jpg',
+      'type': 'Junior College',
+      'id': '34',
+      'name': 'Tampines Junior College'
+    },
+    {
+      'iconUrl': '/assets/schools/Temasek_Junior_College.jpg',
+      'type': 'Junior College',
+      'id': '17',
+      'name': 'Temasek Junior College'
+    },
+    {
+      'iconUrl': '/assets/schools/Victoria_JC.png',
+      'type': 'Junior College',
+      'id': '19',
+      'name': 'Victoria Junior College'
+    },
+    {
+      'iconUrl': '/assets/schools/Yishun_JC.jpg',
+      'type': 'Junior College',
+      'id': '20',
+      'name': 'Yishun Junior College'
+    },
+    {
+      'iconUrl': '/assets/schools/Nanyang_Poly.jpg',
+      'type': 'Polytechnic',
+      'id': '8',
+      'name': 'Nanyang Polytechnic'
+    },
+    {
+      'iconUrl': '/assets/schools/Ngee-Ann-Poly.jpeg',
+      'type': 'Polytechnic',
+      'id': '10',
+      'name': 'Ngee Ann Polytechnic'
+    },
+    {
+      'iconUrl': '/assets/schools/Republic_Poly.jpg',
+      'type': 'Polytechnic',
+      'id': '2',
+      'name': 'Republic Polytechnic'
+    },
+    {
+      'iconUrl': '/assets/schools/Singapore_Poly.png',
+      'type': 'Polytechnic',
+      'id': '9',
+      'name': 'Singapore Polytechnic'
+    },
+    {
+      'iconUrl': '/assets/schools/Temasek_Poly.png',
+      'type': 'Polytechnic',
+      'id': '3',
+      'name': 'Temasek Polytechnic'
     },
     {
       'iconUrl': '/assets/schools/tempbadge.png',
@@ -331,36 +331,6 @@
     {
       'iconUrl': '/assets/schools/tempbadge.png',
       'type': 'Secondary',
-      'id': '126',
-      'name': 'Canberra Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '127',
-      'name': 'Catholic High School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '128',
-      'name': 'Cedar Girls\' Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '129',
-      'name': 'Changkat Changi Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '130',
-      'name': 'Chestnut Drive Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
       'id': '131',
       'name': 'CHIJ Katong Convent'
     },
@@ -387,6 +357,36 @@
       'type': 'Secondary',
       'id': '135',
       'name': 'CHIJ St. Theresa\'s Convent'
+    },
+    {
+      'iconUrl': '/assets/schools/tempbadge.png',
+      'type': 'Secondary',
+      'id': '126',
+      'name': 'Canberra Secondary School'
+    },
+    {
+      'iconUrl': '/assets/schools/tempbadge.png',
+      'type': 'Secondary',
+      'id': '127',
+      'name': 'Catholic High School'
+    },
+    {
+      'iconUrl': '/assets/schools/tempbadge.png',
+      'type': 'Secondary',
+      'id': '128',
+      'name': 'Cedar Girls\' Secondary School'
+    },
+    {
+      'iconUrl': '/assets/schools/tempbadge.png',
+      'type': 'Secondary',
+      'id': '129',
+      'name': 'Changkat Changi Secondary School'
+    },
+    {
+      'iconUrl': '/assets/schools/tempbadge.png',
+      'type': 'Secondary',
+      'id': '130',
+      'name': 'Chestnut Drive Secondary School'
     },
     {
       'iconUrl': '/assets/schools/tempbadge.png',
