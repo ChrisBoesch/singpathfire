@@ -88,11 +88,13 @@
       </tr>
     </table>
     <br>
+    <!-- For debugging
     Registerd by school {{ registeredBySchool }}<br>
     Code Combat Registrations {{ codeCombatRegisteredBySchool }}<br>
     Code Combat Badge Earners {{ codeCombatBadgeBySchool }}<br>
     Joined a Class {{ joinedAClassBySchool }}<br>
     Registered by school and year {{registeredBySchoolAndYear}} <br>
+  -->
 
 <script id="jsbin-javascript">
 
@@ -117,12 +119,6 @@ app.controller("TableCtrl", ['$scope','$http', function ($scope, $http) {
   $scope.get_totals = function(){
        $scope.numCoders = 0;
 
-       for(var i=0; i<$scope.schools.length; i++){
-         if($scope.schools[i].badgeEarners){
-           $scope.numCoders += $scope.schools[i].badgeEarners;
-         }
-       }
-
        for (prop in $scope.example_user_data) {
           if (!$scope.example_user_data.hasOwnProperty(prop)) {
             //The current property is not a direct property of p
@@ -135,7 +131,7 @@ app.controller("TableCtrl", ['$scope','$http', function ($scope, $http) {
                 //console.log($scope.example_user_data[prop].user.school.name);
                 var schoolName = $scope.example_user_data[prop].user.school.name;
                 //Increment the value for the school cohort.
-                
+                $scope.numCoders += 1;
                 //Increment the value for the school. 
                 if (schoolName in $scope.registeredBySchool){
                   $scope.registeredBySchool[schoolName] += 1;
