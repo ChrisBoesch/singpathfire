@@ -1,0 +1,9 @@
+<md-content class="md-padding">
+    <form name="updateProfile" ng-submit="ctrl.saveProfile(ctrl.currentUser)">
+        <spf-sign-form current-user="ctrl.currentUser"></spf-sign-form>
+
+        <div layout="row" layout-align="center center">
+            <md-button flex="25" flex-sm="50" type="submit" class="md-raised md-primary" ng-disabled="!updateProfile.$valid || ctrl.savingProfile">Save profile</md-button>
+        </div>
+    </form>
+</md-content>

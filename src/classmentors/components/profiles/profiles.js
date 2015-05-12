@@ -53,34 +53,24 @@
     'clmDataStore',
     function clmEditProfileInitialDataResolverFactory($q, spfAuth, spfAuthData, clmDataStore) {
       return function clmEditProfileInitialDataResolver() {
-        var userPromise = spfAuthData.user();
         var profilePromise;
-        var errLoggedOff = new Error('The user should be logged in to edit her/his profile.');
+        var errLoggedOff = new Error('You need to be logged to edit her/his profile.');
 
         if (!spfAuth.user || !spfAuth.user.uid) {
           return $q.reject(errLoggedOff);
         }
 
-        // ... And the profile might not exist yet. We need to let the view
-        // load in that case and let the user pick a public id and initiate
-        // the profile.
-        profilePromise = userPromise.then(function(userData) {
-          if (!userData.publicId) {
-            return;
+        profilePromise = clmDataStore.currentUserProfile().then(function(profile) {
+          if (profile && profile.$value === null) {
+            return clmDataStore.initProfile();
           }
 
-          return clmDataStore.profile(userData.publicId).then(function(profile) {
-            if (profile && profile.$value === null) {
-              return clmDataStore.initProfile(userData);
-            }
-
-            return profile;
-          });
+          return profile;
         });
 
         return $q.all({
           auth: spfAuth,
-          currentUser: userPromise,
+          currentUser: spfAuthData.user(),
           profile: profilePromise,
           currentUserProfile: profilePromise
         });
@@ -101,7 +91,6 @@
     function clmShowProfileInitialDataResolverFactory($q, $route, spfAuth, spfAuthData, clmDataStore) {
       return function clmShowProfileInitialDataResolver() {
         var publicId = $route.current.params.publicId;
-        var userPromise = spfAuthData.user();
         var profilePromise;
         var errNoPublicId = new Error('Unexpected error: the public id is missing');
         var errNoProfile = new Error('Could not found the profile for ' + publicId);
@@ -119,10 +108,8 @@
 
         return $q.all({
           auth: spfAuth,
-          currentUser: userPromise,
-          currentUserProfile: userPromise.then(function(user) {
-            return clmDataStore.profile(user.publicId);
-          }),
+          currentUser: spfAuthData.user(),
+          currentUserProfile: clmDataStore.currentUserProfile(),
           profile: profilePromise
         });
       };
@@ -134,12 +121,16 @@
    *
    */
   controller('ClmProfileCtrl', [
+    '$q',
+    'spfFirebase',
     'spfAuthData',
     'spfNavBarService',
     'initialData',
     'clmDataStore',
     'spfAlert',
-    function ClmProfileCtrl(spfAuthData, spfNavBarService, initialData, clmDataStore, spfAlert) {
+    function ClmProfileCtrl(
+      $q, spfFirebase, spfAuthData, spfNavBarService, initialData, clmDataStore, spfAlert
+    ) {
       var self = this;
 
       this.auth = initialData.auth;
@@ -150,16 +141,37 @@
       spfNavBarService.update('Profile');
 
       this.settingPublicId = false;
+      this.profileNeedsUpdate = !this.currentUser.$completed();
+
+      function cleanProfile() {
+        self.currentUser.country = spfFirebase.cleanObj(self.currentUser.country);
+        self.currentUser.school = spfFirebase.cleanObj(self.currentUser.school);
+      }
 
       this.setPublicId = function(currentUser) {
+        var saved;
         this.settingPublicId = true;
-        spfAuthData.publicId(currentUser).then(function() {
-          spfAlert.success('Public id set.');
-          return clmDataStore.profileInit(currentUser);
-        }).then(function(profile) {
+
+        if (!self.profile) {
+          cleanProfile();
+          saved = spfAuthData.publicId(currentUser).then(function() {
+            spfAlert.success('Public id and display name saved');
+            return clmDataStore.initProfile();
+          });
+        } else if (self.profileNeedsUpdate) {
+          cleanProfile();
+          saved = self.currentUser.$save().then(function() {
+            return clmDataStore.currentUserProfile();
+          });
+        } else {
+          spfAlert.error('The profile does not need to be saved.');
+          return $q.when(self.profile);
+        }
+
+        return saved.then(function(profile) {
           spfAlert.success('Profile setup.');
           self.profile = profile;
-          return profile;
+          self.profileNeedsUpdate = !self.currentUser.$completed();
         }).catch(function(e) {
           spfAlert.error(e.toString());
         }).finally(function() {

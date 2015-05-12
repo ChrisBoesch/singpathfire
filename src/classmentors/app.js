@@ -143,7 +143,7 @@
            */
           saveDetails: function(profile, details) {
             if (!profile || !profile.$id) {
-              return $q.reject(new Error('The classmentor profile should have an id.'));
+              return $q.reject(new Error('The Classmentors profile should have an id.'));
             }
 
             if (!details || !details.id) {
@@ -305,24 +305,80 @@
       clmDataStore = {
         _profileFactory: spfFirebase.objFactory({}),
 
+        /**
+         * Return a promise resolving to $firebaseObj pointing to
+         * the current user profile for Classmemtors.
+         *
+         * If the user has a classmemtor profile and its user data are outdated.
+         * they will get updated.
+         *
+         * @return promise
+         */
+        currentUserProfile: function() {
+          if (!spfAuth.user || !spfAuth.user.uid) {
+            return $q.when();
+          }
+
+          var currentUserPromise = spfAuthData.user();
+          var profilePromise = spfAuthData.user().then(function(currentUser) {
+            if (!currentUser.publicId) {
+              return;
+            }
+            return clmDataStore.profile(currentUser.publicId);
+          });
+
+          return $q.all({
+            currentUser: currentUserPromise,
+            profile: profilePromise
+          }).then(function(resp) {
+            var userData = resp.profile && resp.profile.user;
+
+            if (!userData) {
+              return resp.profile;
+            }
+
+            if (
+              userData.displayName === resp.currentUser.displayName &&
+              userData.gravatar === resp.currentUser.gravatar &&
+              userData.country === resp.currentUser.country &&
+              userData.yearOfBirth === resp.currentUser.yearOfBirth &&
+              userData.school === resp.currentUser.school
+            ) {
+              return resp.profile;
+            }
+
+            return clmDataStore._initProfile(resp.currentUser);
+          });
+        },
+
         profile: function(publicId) {
           return $q.when(publicId).then(function(id) {
             return clmDataStore._profileFactory(['classMentors/userProfiles', id]).$loaded();
           });
         },
 
-        initProfile: function(userSync) {
-          if (!userSync || !userSync.publicId) {
-            return $q.reject(new Error('The user has not set a user public id.'));
-          }
-
-          return spfFirebase.set(
-            ['classMentors/userProfiles', userSync.publicId, 'user'], {
-              displayName: userSync.displayName,
-              gravatar: userSync.gravatar
+        _initProfile: function(userData) {
+          return spfFirebase.patch(
+            ['classMentors/userProfiles', userData.publicId, 'user'], {
+              displayName: userData.displayName,
+              gravatar: userData.gravatar,
+              // cleanup optional values
+              country: spfFirebase.cleanObj(userData.country),
+              yearOfBirth: spfFirebase.cleanObj(userData.yearOfBirth),
+              school: spfFirebase.cleanObj(userData.school)
             }
           ).then(function() {
-            return clmDataStore.profile(userSync.publicId);
+            return clmDataStore.profile(userData.publicId);
+          });
+        },
+
+        initProfile: function() {
+          return spfAuthData.user().then(function(currentUser) {
+            if (!currentUser || !currentUser.publicId) {
+              return $q.reject(new Error('The user has not set a user public id.'));
+            }
+
+            return clmDataStore._initProfile(currentUser);
           });
         },
 

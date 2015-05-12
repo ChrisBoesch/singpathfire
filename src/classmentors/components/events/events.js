@@ -147,7 +147,6 @@
     'clmDataStore',
     function newEventCtrlInitialDataFactory($q, spfAuth, spfAuthData, clmDataStore) {
       return function newEventCtrlInitialData() {
-        var userPromise = spfAuthData.user();
         var profilePromise;
         var errLoggedOff = new Error('The user should be logged in to create an event.');
 
@@ -155,23 +154,17 @@
           return $q.reject(errLoggedOff);
         }
 
-        profilePromise = userPromise.then(function(userData) {
-          if (!userData.publicId) {
-            return;
+        profilePromise = clmDataStore.currentUserProfile().then(function(profile) {
+          if (profile && profile.$value === null) {
+            return clmDataStore.initProfile();
           }
 
-          return clmDataStore.profile(userData.publicId).then(function(profile) {
-            if (profile && profile.$value === null) {
-              return clmDataStore.initProfile(userData);
-            }
-
-            return profile;
-          });
+          return profile;
         });
 
         return $q.all({
           auth: spfAuth,
-          currentUser: userPromise,
+          currentUser: spfAuthData.user(),
           profile: profilePromise
         });
       };
@@ -187,12 +180,13 @@
     '$location',
     'initialData',
     'urlFor',
+    'spfFirebase',
     'spfAuthData',
     'spfAlert',
     'spfNavBarService',
     'clmDataStore',
     function NewEventCtrl(
-      $q, $location, initialData, urlFor, spfAuthData, spfAlert, spfNavBarService, clmDataStore
+      $q, $location, initialData, urlFor, spfFirebase, spfAuthData, spfAlert, spfNavBarService, clmDataStore
     ) {
       var self = this;
 
@@ -201,6 +195,7 @@
       this.profile = initialData.profile;
 
       this.creatingEvent = false;
+      this.profileNeedsUpdate = !this.currentUser.$completed();
 
       spfNavBarService.update(
         'New Events',
@@ -210,19 +205,32 @@
         }, []
       );
 
+      function cleanProfile() {
+        self.currentUser.country = spfFirebase.cleanObj(self.currentUser.country);
+        self.currentUser.school = spfFirebase.cleanObj(self.currentUser.school);
+      }
+
+      function updateProfile(profile) {
+        spfAlert.success('Profile setup.');
+        self.profile = profile;
+        self.profileNeedsUpdate = !self.currentUser.$completed();
+      }
       this.save = function(currentUser, newEvent, password) {
         var next;
 
         self.creatingEvent = true;
 
         if (!self.profile) {
+          cleanProfile();
           next = spfAuthData.publicId(currentUser).then(function() {
             spfAlert.success('Public id and display name saved');
-            return clmDataStore.initProfile(currentUser);
-          }).then(function(profile) {
-            self.profile = profile;
-            return profile;
-          });
+            return clmDataStore.initProfile();
+          }).then(updateProfile);
+        } else if (self.profileNeedsUpdate) {
+          cleanProfile();
+          next = self.currentUser.$save().then(function() {
+            return clmDataStore.currentUserProfile();
+          }).then(updateProfile);
         } else {
           next = $q.when();
         }
@@ -637,11 +645,14 @@
     'initialData',
     '$location',
     '$log',
+    'spfFirebase',
     'spfAlert',
     'urlFor',
     'spfNavBarService',
     'clmDataStore',
-    function AddEventTaskCtrl(initialData, $location, $log, spfAlert, urlFor, spfNavBarService, clmDataStore) {
+    function AddEventTaskCtrl(
+      initialData, $location, $log, spfFirebase, spfAlert, urlFor, spfNavBarService, clmDataStore
+    ) {
       var self = this;
 
       this.event = initialData.event;
@@ -676,18 +687,18 @@
       };
 
       this.saveTask = function(event, _, task) {
-        var copy = cleanObject(task);
+        var copy = spfFirebase.cleanObj(task);
 
         if (copy.serviceId === 'singPath') {
           delete copy.badge;
           if (copy.singPathProblem) {
-            copy.singPathProblem.path = cleanObject(task.singPathProblem.path);
-            copy.singPathProblem.level = cleanObject(task.singPathProblem.level);
-            copy.singPathProblem.problem = cleanObject(task.singPathProblem.problem);
+            copy.singPathProblem.path = spfFirebase.cleanObj(task.singPathProblem.path);
+            copy.singPathProblem.level = spfFirebase.cleanObj(task.singPathProblem.level);
+            copy.singPathProblem.problem = spfFirebase.cleanObj(task.singPathProblem.problem);
           }
         } else {
           delete copy.singPathProblem;
-          copy.badge = cleanObject(task.badge);
+          copy.badge = spfFirebase.cleanObj(task.badge);
         }
 
         self.creatingTask = true;
@@ -766,9 +777,10 @@
     'initialData',
     'spfAlert',
     'urlFor',
+    'spfFirebase',
     'spfNavBarService',
     'clmDataStore',
-    function EditEventTaskCtrl(initialData, spfAlert, urlFor, spfNavBarService, clmDataStore) {
+    function EditEventTaskCtrl(initialData, spfAlert, urlFor, spfFirebase, spfNavBarService, clmDataStore) {
       var self = this;
 
       this.event = initialData.event;
@@ -802,18 +814,18 @@
       );
 
       this.saveTask = function(event, taskId, task) {
-        var copy = cleanObject(task);
+        var copy = spfFirebase.cleanObj(task);
 
         if (copy.serviceId === 'singPath') {
           delete copy.badge;
           if (copy.singPathProblem) {
-            copy.singPathProblem.path = cleanObject(task.singPathProblem.path);
-            copy.singPathProblem.level = cleanObject(task.singPathProblem.level);
-            copy.singPathProblem.problem = cleanObject(task.singPathProblem.problem);
+            copy.singPathProblem.path = spfFirebase.cleanObj(task.singPathProblem.path);
+            copy.singPathProblem.level = spfFirebase.cleanObj(task.singPathProblem.level);
+            copy.singPathProblem.problem = spfFirebase.cleanObj(task.singPathProblem.problem);
           }
         } else {
           delete copy.singPathProblem;
-          copy.badge = cleanObject(task.badge);
+          copy.badge = spfFirebase.cleanObj(task.badge);
         }
 
         self.savingTask = true;
@@ -829,38 +841,5 @@
   ])
 
   ;
-
-  var invalidChar = ['.', '#', '$', '/', '[', ']'];
-
-  function cleanObject(obj) {
-    if (
-      obj == null ||
-      !angular.isObject(obj) ||
-      angular.isArray(obj) ||
-      angular.isNumber(obj) ||
-      angular.isString(obj) ||
-      angular.isDate(obj)
-    ) {
-      return obj;
-    }
-
-    return Object.keys(obj).reduce(function(copy, key) {
-      if (!key) {
-        return copy;
-      }
-
-      for (var i = 0; i < invalidChar.length; i++) {
-        if (key.indexOf(invalidChar[i]) !== -1) {
-          return copy;
-        }
-      }
-
-      if (!key || key[0] === '$') {
-        return copy;
-      }
-      copy[key] = obj[key];
-      return copy;
-    }, {});
-  }
 
 })();

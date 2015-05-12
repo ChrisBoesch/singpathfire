@@ -169,6 +169,7 @@
     '$firebaseArray',
     'spfFirebaseRef',
     function spfFirebaseFactory($q, $log, $firebaseObject, $firebaseArray, spfFirebaseRef) {
+      var invalidChar = ['.', '#', '$', '/', '[', ']'];
       var spfFirebase;
 
       spfFirebase = {
@@ -295,7 +296,7 @@
          * Return a factory extending `$firebaseObject`.
          *
          * Unlike `$firebaseObject.$extend`, it return a plain function and not
-         * a contructor. It also takes as argument path and options like
+         * a constructor. It also takes as argument path and options like
          * `spfFirebase.ref`.
          *
          */
@@ -304,6 +305,63 @@
           return function factory() {
             return new Obj(spfFirebase.ref.apply(spfFirebase, arguments));
           };
+        },
+
+        /**
+         * Return a factory extending `$firebaseArray`.
+         *
+         * Unlike `$firebaseArray.$extend`, it return a plain function and not
+         * a constructor. It also takes as argument path and options like
+         * `spfFirebase.ref`.
+         *
+         */
+        arrayFactory: function(mixin) {
+          var Arr = $firebaseArray.$extend(mixin);
+          return function factory() {
+            return new Arr(spfFirebase.ref.apply(spfFirebase, arguments));
+          };
+        },
+
+        /**
+         * Remove invalid items from an object.
+         *
+         * Invalid items have a key with an invalid char:
+         * '.', '#', '$', '/', '[' or ']'.
+         */
+        cleanObj: function(obj) {
+          if (obj === undefined) {
+            return null;
+          }
+
+          if (
+            obj == null ||
+            !angular.isObject(obj) ||
+            angular.isArray(obj) ||
+            angular.isNumber(obj) ||
+            angular.isString(obj) ||
+            angular.isDate(obj)
+          ) {
+            return obj;
+          }
+
+          return Object.keys(obj).reduce(function(copy, key) {
+            if (!key) {
+              return copy;
+            }
+
+            for (var i = 0; i < invalidChar.length; i++) {
+              if (key.indexOf(invalidChar[i]) !== -1) {
+                return copy;
+              }
+            }
+
+            copy[key] = obj[key];
+
+            if (copy[key] === undefined) {
+              copy[key] = null;
+            }
+            return copy;
+          }, {});
         }
       };
 
@@ -400,9 +458,25 @@
       });
 
       spfAuthData = {
+        _factory: spfFirebase.objFactory({
+          $completed: function() {
+            return Boolean(
+              this.publicId &&
+              this.country && (
+                this.yearOfBirth ||
+                this.country.code !== 'SG'
+              ) && (
+                this.school || (
+                  !this.yearOfBirth ||
+                  this.yearOfBirth < 1999 ||
+                  this.yearOfBirth > 2004
+              ))
+            );
+          }
+        }),
 
         _user: function() {
-          return spfFirebase.loadedObj(['auth/users', spfAuth.user.uid]);
+          return spfAuthData._factory(['auth/users', spfAuth.user.uid]).$loaded();
         },
 
         /**
@@ -414,7 +488,7 @@
          */
         user: function() {
           if (!spfAuth.user || !spfAuth.user.uid) {
-            return $q.reject(new Error('the user is not authenticated.'));
+            return $q.reject(new Error('Your did not login or your session expired.'));
           }
 
           if (userData) {
@@ -481,7 +555,7 @@
             return spfFirebase.set(['auth/usedPublicIds', userSync.publicId], true);
           }, function(err) {
             $log.info(err);
-            return $q(new Error('Failed to save public id. It might have already being used by an other user.'));
+            return $q.reject(new Error('Failed to save public id. It might have already being used by an other user.'));
           }).then(function() {
             return userSync.$save();
           });

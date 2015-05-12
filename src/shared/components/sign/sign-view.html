@@ -1,0 +1,68 @@
+<ng-form name="signForm">
+	<div layout layout-sm="column">
+        <md-input-container flex ng-if="!ctrl.publicIdIsReadOnly">
+            <label for="sign-public-id">Your Public Id</label>
+            <input ng-minlength="3" md-maxlength="64" ng-pattern="/^[-a-z0-9]+$/" required id="sign-public-id" name="userPublicId" ng-model="currentUser.publicId" spf-uniq-public-id>
+            <div ng-messages="signForm.userPublicId.$error">
+                <div ng-message="required">This is required.</div>
+                <div ng-message="minlength">The public id has to be more than 2 characters long.</div>
+                <div ng-message="md-maxlength">The public id has to be less than 64 characters long.</div>
+                <div ng-message="pattern">The public id should include letters, numbers and "-".</div>
+                <div ng-message="spfUniqPublicId">This public ID is already taken.</div>
+            </div>
+        </md-input-container>
+        <md-input-container flex ng-if="ctrl.publicIdIsReadOnly">
+            <label for="sign-public-id">Your Public Id</label>
+            <input ng-model="currentUser.publicId" disabled="disabled" />
+        </md-input-container>
+        <md-input-container flex>
+            <label for="sign-display-name">Your screen name</label>
+            <input ng-minlength="3" md-maxlength="64" required id="sign-display-name" name="userDisplayName" ng-model="currentUser.displayName">
+            <div ng-messages="signForm.userDisplayName.$error">
+                <div ng-message="required">This is required.</div>
+                <div ng-message="minlength">The screen name has to be more than 2 characters long.</div>
+                <div ng-message="md-maxlength">The screen name has to be less than 64 characters long.</div>
+            </div>
+        </md-input-container>
+    </div>
+
+    <div layout layout-sm="column">
+        <spf-select-container flex layout="column">
+            <md-select flex name="userCountry" ng-model="currentUser.country" spf-required placeholder="Where are you from?">
+                <md-option ng-value="opt" ng-repeat="opt in ctrl.countries track by opt.code">{{opt.name}}</md-option>
+            </md-select>
+            <div ng-messages="signForm.userCountry.$error">
+                <div ng-message="required">This is required.</div>
+            </div>
+        </spf-select-container>
+
+        <spf-select-container flex layout="column" ng-if="currentUser.country.code == 'SG'">
+            <md-select flex name="userYearOfBirth" ng-model="currentUser.yearOfBirth" spf-required placeholder="When were you born?">
+                <md-option ng-value="opt" ng-repeat="opt in ctrl.ageGroups">
+                    <span ng-if="opt == 1990">born before</span>
+                    {{opt}}
+                </md-option>
+            </md-select>
+            <div ng-messages="signForm.userYearOfBirth.$error">
+                <div ng-message="required">This is required.</div>
+            </div>
+        </spf-select-container>
+    	
+		<spf-select-container flex layout="column" ng-if="currentUser.yearOfBirth >= 1999 &amp;&amp; currentUser.yearOfBirth <= 2004">
+            <md-select flex name="userSchool" ng-model="currentUser.school" spf-required placeholder="Select a School">
+                <md-optgroup label="Junior College">
+                    <md-option ng-value="opt" ng-repeat="opt in ctrl.schools | filter: {type: 'Junior College' }">{{opt.name}}</md-option>
+                </md-optgroup>
+                <md-optgroup label="Polytechnic">
+                    <md-option ng-value="opt" ng-repeat="opt in ctrl.schools | filter: {type: 'Polytechnic' }">{{opt.name}}</md-option>
+                </md-optgroup>
+                <md-optgroup label="Secondary">
+                    <md-option ng-value="opt" ng-repeat="opt in ctrl.schools | filter: {type: 'Secondary' }">{{opt.name}}</md-option>
+                </md-optgroup>
+            </md-select>
+            <div ng-messages="signForm.userSchool.$error">
+                <div ng-message="required">This is required.</div>
+            </div>
+        </spf-select-container>
+    </div>
+</ng-form>

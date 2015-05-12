@@ -48,32 +48,12 @@
    */
   factory('pathListCtrlInitialData', [
     '$q',
-    'spfAuth',
-    'spfAuthData',
     'spfDataStore',
-    function pathListCtrlInitialDataFactory($q, spfAuth, spfAuthData, spfDataStore) {
+    function pathListCtrlInitialDataFactory($q, spfDataStore) {
       return function pathListCtrlInitialData() {
-        if (!spfAuth.user || !spfAuth.user.uid) {
-          return $q.all({
-            paths: spfDataStore.paths.list(),
-            profile: undefined
-          });
-        }
-
         return $q.all({
           paths: spfDataStore.paths.list(),
-          profile: spfAuthData.user().then(function(userData) {
-            if (!userData.publicId) {
-              return;
-            }
-
-            return spfDataStore.profile(userData.publicId).then(function(profile) {
-              if (profile && profile.$value === null) {
-                return spfDataStore.initProfile(userData);
-              }
-              return profile;
-            });
-          })
+          profile: spfDataStore.currentUserProfile()
         });
       };
     }
@@ -111,7 +91,6 @@
     'spfDataStore',
     function newPathCtrlInitialDataFactory($q, spfAuth, spfAuthData, spfDataStore) {
       return function newPathCtrlInitialData() {
-        var userPromise = spfAuthData.user();
         var profilePromise;
         var errLoggedOff = new Error('The user should be logged in to create a path.');
 
@@ -119,23 +98,17 @@
           return $q.reject(errLoggedOff);
         }
 
-        profilePromise = userPromise.then(function(userData) {
-          if (!userData.publicId) {
-            return;
+        profilePromise = spfDataStore.currentUserProfile().then(function(profile) {
+          if (profile && profile.$value === null) {
+            return spfDataStore.initProfile();
           }
 
-          return spfDataStore.profile(userData.publicId).then(function(profile) {
-            if (profile && profile.$value === null) {
-              return spfDataStore.initProfile(userData);
-            }
-
-            return profile;
-          });
+          return profile;
         });
 
         return $q.all({
           auth: spfAuth,
-          currentUser: userPromise,
+          currentUser: spfAuthData.user(),
           profile: profilePromise
         });
       };
@@ -151,11 +124,14 @@
     '$location',
     'initialData',
     'urlFor',
+    'spfFirebase',
     'spfNavBarService',
     'spfAuthData',
     'spfAlert',
     'spfDataStore',
-    function NewPathCtrl($q, $location, initialData, urlFor, spfNavBarService, spfAuthData, spfAlert, spfDataStore) {
+    function NewPathCtrl(
+      $q, $location, initialData, urlFor, spfFirebase, spfNavBarService, spfAuthData, spfAlert, spfDataStore
+    ) {
       var self = this;
 
       spfNavBarService.update(
@@ -170,6 +146,7 @@
       this.profile = initialData.profile;
       this.path = {};
       this.savingPath = false;
+      this.profileNeedsUpdate = !this.currentUser.$completed();
 
       this.createPath = function(currentUser, path) {
         var next;
@@ -177,12 +154,19 @@
         self.savingPath = true;
 
         if (!self.profile) {
+          cleanProfile();
           next = spfAuthData.publicId(currentUser).then(function() {
             spfAlert.success('Public id and display name saved');
-            return spfDataStore.initProfile(currentUser);
+            return spfDataStore.initProfile();
           }).then(function(profile) {
             self.profile = profile;
+            self.profileNeedsUpdate = !self.currentUser.$completed();
             return profile;
+          });
+        } else if (self.profileNeedsUpdate) {
+          cleanProfile();
+          next = self.currentUser.$save().then(function() {
+            self.profileNeedsUpdate = !self.currentUser.$completed();
           });
         } else {
           next = $q.when();
@@ -204,9 +188,14 @@
           spfAlert.error(err.message || err.toString());
           return err;
         }).finally(function() {
-          this.savingPath = false;
+          self.savingPath = false;
         });
       };
+
+      function cleanProfile() {
+        self.currentUser.country = spfFirebase.cleanObj(self.currentUser.country);
+        self.currentUser.school = spfFirebase.cleanObj(self.currentUser.school);
+      }
     }
   ])
 
