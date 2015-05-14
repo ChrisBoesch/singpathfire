@@ -589,6 +589,8 @@
                 ['classMentors/eventParticipants', event.$id, profiles.classMentors.$id, 'tasks'],
                 progress
               );
+            }).catch(function(err) {
+              $log.error('Failed to update progress of ' + publicId + ': ' + err.toString());
             });
           }
         },
