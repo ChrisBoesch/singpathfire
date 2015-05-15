@@ -9,7 +9,7 @@
     </p>
 
     <div ng-if="!(profile.services[serviceId].badges|spfEmpty)" class="badges">
-        <md-grid-list md-cols="6" md-row-height="4:3" md-gutter="8px">
+        <md-grid-list md-cols="6" md-row-height="60px" md-gutter="40px">
             <md-grid-tile ng-repeat="badge in profile.services[serviceId].badges" md-rowspan="1" md-colspan="1">
                 <div class="badge">
                     <img ng-class="serviceId" ng-src="{{badge.iconUrl}}" alt="{{badge.name}}" title="earned the {{badge.name}} badge." />

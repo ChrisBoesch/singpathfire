@@ -1,6 +1,10 @@
 /* Problem list */
+.language-icon {
+  padding: 16px 0;
+}
+
 .language-icon md-icon {
-  height: 60px;
+  height: 55px;
   width: 100px;
 }
 .problem-list .md-title-right .md-button {

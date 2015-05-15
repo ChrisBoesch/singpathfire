@@ -699,23 +699,4 @@
     }
   ]);
 
-  module.directive('spfRequired', [
-
-    function spfRequiredFactory() {
-      return {
-        restrict: 'A',
-        scope: false,
-        require: 'ngModel',
-        controllerAs: 'ctrl',
-        // arguments: scope, iElement, iAttrs, controller
-        link: function spfRequiredPostLink(scope, iElement, iAttrs, ngModel) {
-          ngModel.$validators.required = function(modelValue, viewValue) {
-            var value = modelValue || viewValue;
-            return !!value;
-          };
-        }
-      };
-    }
-  ]);
-
 })();

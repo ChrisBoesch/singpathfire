@@ -1,6 +1,7 @@
 <md-content class="md-padding">
-    <md-tabs>
+    <md-tabs md-border-bottom md-dynamic-height="true">
         <md-tab ng-repeat="problem in ctrl.problems" label="{{problem.title}}">
+            
             <form name="editProblem" ng-submit="ctrl.saveProblem(ctrl.problems, $index)">
                 <spf-sign-form current-user="ctrl.currentUser" ng-if="ctrl.profileNeedsUpdate"></spf-sign-form>
 
@@ -45,9 +46,9 @@
                     <md-button flex="25" flex-sm="50" type="submit" class="md-raised md-primary">Save Problem</md-button>
                 </div>
             </form>
+
         </md-tab>
     </md-tabs>
-
 
     <hr/>
 
