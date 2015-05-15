@@ -1197,57 +1197,78 @@
               };
             });
 
-            it('should fetch code school profile', inject(function($httpBackend, clmDataStore) {
-              var actual;
+            describe('fetchProfile', function() {
 
-              $httpBackend.expectGET('/proxy/www.codeschool.com/users/bob.json').respond(csProfile);
+              it('should fetch code school profile', inject(function($httpBackend, clmDataStore) {
+                var actual;
 
-              clmDataStore.services.codeSchool.fetchProfile('bob').then(function(result) {
-                actual = result;
-              });
+                $httpBackend.expectGET('/proxy/www.codeschool.com/users/bob.json').respond(csProfile);
 
-              $httpBackend.flush();
-              expect(actual).toEqual(csProfile);
-            }));
+                clmDataStore.services.codeSchool.fetchProfile('bob').then(function(result) {
+                  actual = result;
+                });
 
-            it('should normalise fetched badges', inject(function($q, $rootScope, clmDataStore) {
-              var badges;
+                $httpBackend.flush();
+                expect(actual).toEqual(csProfile);
+              }));
 
-              clmDataStore.services.codeSchool.fetchProfile = jasmine.createSpy('fetchProfile');
-              clmDataStore.services.codeSchool.fetchProfile.and.returnValue($q.when(csProfile));
+            });
 
-              clmDataStore.services.codeSchool.fetchBadges({
-                services: {
-                  codeSchool: {
-                    details: {
-                      id: 12345
+            describe('fetchBadges', function() {
+
+              it('should return a promise resolving to an empty array it there are not details', inject(
+                function($rootScope, clmDataStore) {
+                  var result;
+
+                  clmDataStore.services.codeSchool.fetchBadges({}).then(function(resp) {
+                    result = resp;
+                  });
+
+                  $rootScope.$apply();
+                  expect(result).toEqual([]);
+                }
+              ));
+
+              it('should normalise fetched badges', inject(function($q, $rootScope, clmDataStore) {
+                var badges;
+
+                clmDataStore.services.codeSchool.fetchProfile = jasmine.createSpy('fetchProfile');
+                clmDataStore.services.codeSchool.fetchProfile.and.returnValue($q.when(csProfile));
+
+                clmDataStore.services.codeSchool.fetchBadges({
+                  services: {
+                    codeSchool: {
+                      details: {
+                        id: 12345
+                      }
                     }
                   }
-                }
-              }).then(function(results) {
-                badges = results;
-              });
+                }).then(function(results) {
+                  badges = results;
+                });
 
-              $rootScope.$apply();
+                $rootScope.$apply();
 
-              expect(badges).toEqual([{
-                id: 'front-end-foundations-level-1-complete',
-                name: 'Level 1 Complete',
-                iconUrl: (
-                  'https://d1ffx7ull4987f.cloudfront.net/images/achievements' +
-                  '/large_badge/444/level-1-complete-a14a15c153bbe32611fca5be835923bf.png'
-                ),
-                url: 'http://www.codeschool.com/courses/front-end-foundations'
-              }, {
-                id: 'ios-operation-models-level-1-on-ios-operation-models',
-                name: 'Level 1 on iOS: Operation Models',
-                iconUrl: (
-                  'https://d1ffx7ull4987f.cloudfront.net/images/achievements' +
-                  '/large_badge/240/level-1-on-ios-operation-models-8c44953b6d47160162b8fb5a541aeb79.png'
-                ),
-                url: 'https://www.codeschool.com/courses/ios-operation-models'
-              }]);
-            }));
+                expect(badges).toEqual([{
+                  id: 'front-end-foundations-level-1-complete',
+                  name: 'Level 1 Complete',
+                  iconUrl: (
+                    'https://d1ffx7ull4987f.cloudfront.net/images/achievements' +
+                    '/large_badge/444/level-1-complete-a14a15c153bbe32611fca5be835923bf.png'
+                  ),
+                  url: 'http://www.codeschool.com/courses/front-end-foundations'
+                }, {
+                  id: 'ios-operation-models-level-1-on-ios-operation-models',
+                  name: 'Level 1 on iOS: Operation Models',
+                  iconUrl: (
+                    'https://d1ffx7ull4987f.cloudfront.net/images/achievements' +
+                    '/large_badge/240/level-1-on-ios-operation-models-8c44953b6d47160162b8fb5a541aeb79.png'
+                  ),
+                  url: 'https://www.codeschool.com/courses/ios-operation-models'
+                }]);
+              }));
+
+            });
 
           });
 
@@ -1275,94 +1296,119 @@
               ];
             });
 
-            it('should get codeCombat details of the current user', inject(function($httpBackend, clmDataStore) {
-              var details;
+            describe('fetchBadges', function() {
 
-              $httpBackend.expectJSONP(
-                '//codecombat.com/auth/whoami?callback=JSON_CALLBACK'
-              ).respond({
-                _id: '12345',
-                anonymous: false,
-                earned: {
-                  gems: 1000,
-                  items: [
-                    '5437002a7beba4a82024a97d'
-                  ],
-                  levels: [
-                    '54174347844506ae0195a0b8',
-                    '54173c90844506ae0195a0b4'
-                  ],
-                  heroes: []
-                },
-                points: 1000,
-                name: 'bob',
-                slug: 'bob',
-                dateCreated: '2015-01-01T12:00:00.000Z'
-              });
+              it('should return a promise resolving to an empty array it there are not details', inject(
+                function($rootScope, clmDataStore) {
+                  var result;
 
-              clmDataStore.services.codeCombat.auth().then(function(results) {
-                details = results;
-              });
+                  clmDataStore.services.codeCombat.fetchBadges({}).then(function(resp) {
+                    result = resp;
+                  });
 
-              $httpBackend.flush();
-
-              expect(details).toEqual({
-                id: '12345',
-                name: 'bob'
-              });
-            }));
-
-            it('should fetch code combat profile', inject(function($httpBackend, clmDataStore) {
-              var actual;
-
-              $httpBackend.expectGET(
-                '/proxy/codecombat.com/db/user/12345/level.sessions?project=state.complete,levelID,levelName'
-              ).respond(ccProfile);
-
-              clmDataStore.services.codeCombat.fetchProfile('12345').then(function(result) {
-                actual = result;
-              });
-
-              $httpBackend.flush();
-              expect(actual).toEqual(ccProfile);
-            }));
-
-            it('should normalise levels to badges', inject(function($rootScope, $q, clmDataStore) {
-              var badges;
-              var availableBadges = {
-                'dungeons-of-kithgard': {
-                  id: 'dungeons-of-kithgard'
-                },
-                'gems-in-the-deep': {
-                  id: 'gems-in-the-deep'
+                  $rootScope.$apply();
+                  expect(result).toEqual([]);
                 }
-              };
+              ));
 
-              clmDataStore.services.codeCombat.fetchProfile = jasmine.createSpy('fetchProfile');
-              clmDataStore.services.codeCombat.fetchProfile.and.returnValue($q.when(ccProfile));
+              it('should normalise levels to badges', inject(function($rootScope, $q, clmDataStore) {
+                var badges;
+                var availableBadges = {
+                  'dungeons-of-kithgard': {
+                    id: 'dungeons-of-kithgard'
+                  },
+                  'gems-in-the-deep': {
+                    id: 'gems-in-the-deep'
+                  }
+                };
 
-              clmDataStore.services.codeCombat.availableBadges = jasmine.createSpy('availableBadges');
-              clmDataStore.services.codeCombat.availableBadges.and.returnValue(availableBadges);
+                clmDataStore.services.codeCombat.fetchProfile = jasmine.createSpy('fetchProfile');
+                clmDataStore.services.codeCombat.fetchProfile.and.returnValue($q.when(ccProfile));
 
-              clmDataStore.services.codeCombat.fetchBadges({
-                services: {
-                  codeCombat: {
-                    details: {
-                      id: 12345
+                clmDataStore.services.codeCombat.availableBadges = jasmine.createSpy('availableBadges');
+                clmDataStore.services.codeCombat.availableBadges.and.returnValue(availableBadges);
+
+                clmDataStore.services.codeCombat.fetchBadges({
+                  services: {
+                    codeCombat: {
+                      details: {
+                        id: 12345
+                      }
                     }
                   }
-                }
-              }).then(function(results) {
-                badges = results;
-              });
+                }).then(function(results) {
+                  badges = results;
+                });
 
-              $rootScope.$apply();
-              expect(badges).toEqual([
-                availableBadges['dungeons-of-kithgard'],
-                availableBadges['gems-in-the-deep']
-              ]);
+                $rootScope.$apply();
+                expect(badges).toEqual([
+                  availableBadges['dungeons-of-kithgard'],
+                  availableBadges['gems-in-the-deep']
+                ]);
 
-            }));
+              }));
+
+            });
+
+            describe('fetchProfile', function() {
+
+              it('should fetch code combat profile', inject(function($httpBackend, clmDataStore) {
+                var actual;
+
+                $httpBackend.expectGET(
+                  '/proxy/codecombat.com/db/user/12345/level.sessions?project=state.complete,levelID,levelName'
+                ).respond(ccProfile);
+
+                clmDataStore.services.codeCombat.fetchProfile('12345').then(function(result) {
+                  actual = result;
+                });
+
+                $httpBackend.flush();
+                expect(actual).toEqual(ccProfile);
+              }));
+
+            });
+
+            describe('auth', function() {
+
+              it('should get codeCombat details of the current user', inject(function($httpBackend, clmDataStore) {
+                var details;
+
+                $httpBackend.expectJSONP(
+                  '//codecombat.com/auth/whoami?callback=JSON_CALLBACK'
+                ).respond({
+                  _id: '12345',
+                  anonymous: false,
+                  earned: {
+                    gems: 1000,
+                    items: [
+                      '5437002a7beba4a82024a97d'
+                    ],
+                    levels: [
+                      '54174347844506ae0195a0b8',
+                      '54173c90844506ae0195a0b4'
+                    ],
+                    heroes: []
+                  },
+                  points: 1000,
+                  name: 'bob',
+                  slug: 'bob',
+                  dateCreated: '2015-01-01T12:00:00.000Z'
+                });
+
+                clmDataStore.services.codeCombat.auth().then(function(results) {
+                  details = results;
+                });
+
+                $httpBackend.flush();
+
+                expect(details).toEqual({
+                  id: '12345',
+                  name: 'bob'
+                });
+              }));
+
+            });
 
           });
 

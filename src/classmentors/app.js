@@ -589,6 +589,8 @@
                 ['classMentors/eventParticipants', event.$id, profiles.classMentors.$id, 'tasks'],
                 progress
               );
+            }).catch(function(err) {
+              $log.error('Failed to update progress of ' + publicId + ': ' + err.toString());
             });
           }
         },
@@ -627,7 +629,7 @@
               var details = clmDataStore.services.codeCombat.details(profile);
 
               if (!details) {
-                return [];
+                return $q.when([]);
               }
 
               return $q.all({
@@ -710,7 +712,7 @@
               var details = clmDataStore.services.codeSchool.details(profile);
 
               if (!details) {
-                return [];
+                return $q.when([]);
               }
 
               return clmDataStore.services.codeSchool.fetchProfile(details.id).then(function(csProfile) {
