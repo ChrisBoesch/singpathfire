@@ -1,0 +1,116 @@
+<meta name="robots" content="noindex">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Singapore School Rankings</title>
+  <link rel="stylesheet" href="../vendor/bootstrap.min.css" type="text/css" /> 
+  <script src="../vendor/angular/angular.js" type="text/javascript"></script>
+ 
+</head>
+
+<body ng-app="schools">
+  <div class="panel panel-default" ng-controller="TableCtrl" 
+       ng-init="predicate='-totalBadges'">
+
+  Select School 
+  <select ng-model="schoolKey" 
+          ng-options="k as k for (k, v) in theSchools"
+          ng-change="get_students(schoolKey)">
+  </select><br>
+Selected School: 
+<img height="24" width="24" title="{{theSchools[schoolKey].name}}" ng-src="{{theSchools[schoolKey].crest}}">
+{{schoolKey}}<br>
+
+    <table class="table table-striped"> 
+      <tr>
+        <th></th>
+        <th>Crest</th>
+        <th><a href="" ng-click="predicate = 'name'">Name</a></th>
+        <th><a href="" ng-click="predicate = '-totalBadges'">Total Badges</a></th>
+        <th><a href="" ng-click="predicate = '-numCodeCombatBadges'">Code Combat</a></th>
+        <th><a href="" ng-click="predicate = '-numCodeSchoolBadges'">Code School</a></th>
+        <th><a href="" ng-click="predicate = '-numSingPathBadges'">SingPath</a></th>
+
+      </tr>
+
+      <tr ng-repeat="student in students | orderBy : predicate"> 
+        <td>{{$index+1}}</td>
+        <td><img height="24" width="24" ng-src="{{theSchools[schoolKey].crest}}"></td>
+        <td>{{student.details.user.displayName}}</td>
+        <td>{{student.totalBadges}}</td>
+        <td>{{student.numCodeCombatBadges}}</td>
+        <td>{{student.numCodeSchoolBadges}}</td>
+        <td></td>
+      </tr>
+    </table>
+    <br>
+
+<script>
+
+var app = angular.module("schools", []);
+
+/*var app = angular.module("schools", ["firebase","chart.js"])*/
+
+app.controller("TableCtrl", ['$scope','$http', "$q", function ($scope, $http, $q) {
+  
+  $scope.schoolKey='NUS High School';
+
+  $scope.get_students = function(schoolKey){
+      $scope.students = [];
+      for (prop in $scope.example_user_data) {
+          if (!$scope.example_user_data.hasOwnProperty(prop)) {
+            //The current property is not a direct property of p
+            continue;
+          }
+          //Do your logic with the property here
+          if('user' in $scope.example_user_data[prop]){
+             //console.log($scope.example_user_data[prop].user.displayName);
+             if('school' in $scope.example_user_data[prop].user){
+                //console.log($scope.example_user_data[prop].user.school.name);
+                var schoolName = $scope.example_user_data[prop].user.school.name;
+                if(schoolName == $scope.theSchools[schoolKey].name){
+                  var theStudent = {"details": $scope.example_user_data[prop],
+                                    "numCodeCombatBadges":0,
+                                    "numCodeSchoolBadges":0}
+                  //Count Code Combat Badges
+                  if ("services" in $scope.example_user_data[prop] && "codeCombat" in $scope.example_user_data[prop].services && "badges" in $scope.example_user_data[prop].services.codeCombat){
+                    theStudent.numCodeCombatBadges = Object.keys($scope.example_user_data[prop].services.codeCombat.badges).length;
+                    
+                  }
+                  //Count Code School Badges
+                  if ("services" in $scope.example_user_data[prop] && "codeSchool" in $scope.example_user_data[prop].services && "badges" in $scope.example_user_data[prop].services.codeSchool){
+                    theStudent.numCodeSchoolBadges = Object.keys($scope.example_user_data[prop].services.codeSchool.badges).length;
+                  }
+                  
+                  theStudent.totalBadges = theStudent.numCodeCombatBadges + theStudent.numCodeSchoolBadges;
+                  //Push the entire object for now. 
+                  $scope.students.push(theStudent);
+                }
+            }
+          }
+
+      }
+
+  }
+
+  //Fetch school list and all user profiles. 
+  //Todo: fetch only user profiles for the selected school. 
+  $scope.promise1 = $http.get('https://singpath.firebaseio.com/classMentors/schools.json', {cache: false});
+  $scope.promise2 = $http.get('https://singpath.firebaseio.com/classMentors/userProfiles.json', {'cache': false});
+  
+  $q.all([$scope.promise1, $scope.promise2]).then(function(values) {
+    $scope.theSchools = values[0].data;
+    $scope.example_user_data = values[1].data;
+    numUsers = Object.keys($scope.example_user_data).length;
+    console.log("Fetched "+numUsers+" user records for analyis.");
+    $scope.get_students('NUS High School'); 
+
+  });
+
+
+}]); 
+
+
+</script>
+</body>
+</html>
+
