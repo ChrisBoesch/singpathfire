@@ -94,9 +94,10 @@
 
         beforeEach(function() {
           firebaseSpy = jasmine.createSpy('Firebase');
-          ref = jasmine.createSpyObj('ref', ['child', 'orderBy', 'limitToLast']);
+          ref = jasmine.createSpyObj('ref', ['child', 'orderByPriority', 'startAt', 'limitToLast']);
           ref.child.and.returnValue(ref);
-          ref.orderBy.and.returnValue(ref);
+          ref.orderByPriority.and.returnValue(ref);
+          ref.startAt.and.returnValue(ref);
           ref.limitToLast.and.returnValue(ref);
           ref.path = {};
           Firebase = function(url) {
@@ -136,12 +137,15 @@
           expect(ref.child.calls.count()).toBe(0);
           spfFirebaseRef = factory();
           spfFirebaseRef(['events'], {
-            orderBy: 'timestamps',
-            limitToLast: 50
+            orderByPriority: null,
+            limitToLast: 50,
+            startAt: [null, 'someKey']
           });
 
-          expect(ref.orderBy).toHaveBeenCalledWith('timestamps');
+          expect(ref.orderByPriority).toHaveBeenCalledWith();
           expect(ref.limitToLast).toHaveBeenCalledWith(50);
+          expect(ref.startAt).toHaveBeenCalledWith(null, 'someKey');
+          // TODO test order
         });
 
       });

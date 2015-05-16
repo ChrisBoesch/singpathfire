@@ -125,8 +125,8 @@
     this.$get = ['$window', '$log', function spfFirebaseRefFactory($window, $log) {
       return function spfFirebaseRef(paths, queryOptions) {
         var ref = new $window.Firebase(baseUrl);
-
-        $log.debug('singpath base URL: "' + baseUrl + '".');
+        var filters = ['equalTo', 'startAt', 'endAt'];
+        var filter, i;
 
         paths = paths || [];
         paths = angular.isArray(paths) ? paths : [paths];
@@ -135,14 +135,41 @@
         }, ref);
 
         queryOptions = queryOptions || {};
-        Object.keys(queryOptions).reduce(function(prevRef, k) {
-          if (queryOptions[k] == null) {
-            return prevRef[k]();
-          } else {
-            return prevRef[k](queryOptions[k]);
-          }
-        }, ref);
+        if (queryOptions.hasOwnProperty('orderByPriority')) {
+          ref = ref.orderByPriority();
+        } else if (queryOptions.hasOwnProperty('orderByKey')) {
+          ref = ref.orderByKey();
+        } else if (queryOptions.orderByChild) {
+          ref = ref.orderByChild(queryOptions.orderByChild);
+        } else if (queryOptions.orderByValue) {
+          ref = ref.orderByValue(queryOptions.orderByValue);
+        }
 
+        for (i = 0; i < filters.length; i++) {
+          filter = queryOptions[filters[i]];
+
+          if (!queryOptions[filters[i]]) {
+            continue;
+          }
+
+          if (!angular.isArray(filter)) {
+            ref = ref[filters[i]](filter);
+          } else if (queryOptions.hasOwnProperty('orderByPriority')) {
+            ref = ref[filters[i]].apply(ref, filter);
+          } else {
+            $log.warning('The query should be ordered by priority to filter by value and key');
+          }
+
+          break;
+        }
+
+        if (queryOptions.limitToFirst) {
+          ref = ref.limitToFirst(queryOptions.limitToFirst);
+        } else if (queryOptions.limitToLast) {
+          ref = ref.limitToLast(queryOptions.limitToLast);
+        }
+
+        $log.debug('singpath base URL: "' + baseUrl + '".');
         $log.debug('singpath ref path: "' + ref.path.toString() + '".');
         return ref;
       };
