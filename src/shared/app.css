@@ -33,7 +33,12 @@ md-sidenav md-list .md-button {
   margin: 0;
   line-height: normal;
 }
+
 md-toolbar .separator {
   width: 48px;
   height: 28px;
+}
+
+md-icon:focus {
+  outline: none;
 }
