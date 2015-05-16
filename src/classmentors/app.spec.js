@@ -1,5 +1,5 @@
-/* eslint camelcase: false*/
-/* global describe, beforeEach, module, inject, it, jasmine, expect */
+/* eslint-env jasmine */
+/* global module, inject, angular */
 
 (function() {
   'use strict';
@@ -819,18 +819,24 @@
         describe('events', function() {
 
           describe('updateProgress', function() {
-            var profileObj;
+            var $rootScope, $q, clmDataStore;
 
-            beforeEach(function() {
-              var profileFactory;
+            beforeEach(inject(function(_$rootScope_, _$q_, _clmDataStore_) {
+              $rootScope = _$rootScope_;
+              $q = _$q_;
+              clmDataStore = _clmDataStore_;
 
-              profileFactory = jasmine.createSpy('profileFactory');
-              profileObj = jasmine.createSpyObj('profileObj', ['$loaded']);
-              profileFactory.and.returnValue(profileObj);
-              spfFirebase.objFactory.and.returnValue(profileFactory);
-            });
+              clmDataStore.profile = jasmine.createSpy('clmDataStore.profile').and.returnValue($q.when({}));
+              clmDataStore.singPath.profile = jasmine.createSpy('clmDataStore.singPath.profile').and.returnValue($q.when({}));
+              clmDataStore.services.codeCombat.fetchBadges = jasmine.createSpy(
+                'clmDataStore.services.codeCombat.fetchBadges'
+              ).and.returnValue($q.when([]));
+              clmDataStore.services.codeSchool.fetchBadges = jasmine.createSpy(
+                'clmDataStore.services.codeSchool.fetchBadges'
+              ).and.returnValue($q.when([]));
+            }));
 
-            it('should reject if the public id is missing', inject(function($rootScope, $q, clmDataStore) {
+            it('should reject if the public id is missing', function() {
               var err;
               var event = {
                 $id: 'someEventId',
@@ -841,318 +847,249 @@
                 }
               };
 
-              clmDataStore.services.codeCombat.updateProfile = jasmine.createSpy('codeCombat.updateProfile');
-              clmDataStore.services.codeSchool.updateProfile = jasmine.createSpy('codeSchool.updateProfile');
-              profileObj.$loaded.and.returnValue($q.when({$id: 'bob'}));
-              spfFirebase.set.and.returnValue({});
-
               clmDataStore.events.updateProgress(event).catch(function(_err) {
                 err = _err;
               });
 
               $rootScope.$apply();
               expect(err).toBeDefined();
-              expect(clmDataStore.services.codeCombat.updateProfile.calls.count()).toBe(0);
-              expect(clmDataStore.services.codeSchool.updateProfile.calls.count()).toBe(0);
-              expect(spfFirebase.set.calls.count()).toBe(0);
-            }));
+            });
 
-            it('should not update progress when user has not joined the required service',
-              inject(function($rootScope, $q, clmDataStore) {
-                var event = {
-                  $id: 'someEventId',
-                  tasks: {
-                    someTaskId: {
-                      serviceId: 'codeSchool'
-                    }
-                  }
-                };
-                var profile = {
-                  $id: 'bob'
-                };
-                var expectedCompletedTask = {};
-                var expectedReturn = {};
-                var actualReturn;
-
-                clmDataStore.services.codeCombat.updateProfile = jasmine.createSpy('codeCombat.updateProfile');
-                clmDataStore.services.codeSchool.updateProfile = jasmine.createSpy('codeSchool.updateProfile');
-                profileObj.$loaded.and.returnValue($q.when(profile));
-                spfFirebase.set.and.returnValue(expectedReturn);
-
-                clmDataStore.events.updateProgress(event, 'bob').then(function(completedTasks) {
-                  actualReturn = completedTasks;
-                });
-
-                $rootScope.$apply();
-                expect(actualReturn).toEqual(expectedReturn);
-                expect(clmDataStore.services.codeCombat.updateProfile.calls.count()).toBe(0);
-                expect(clmDataStore.services.codeSchool.updateProfile.calls.count()).toBe(0);
-                expect(spfFirebase.set).toHaveBeenCalledWith([
-                  'classMentors/eventParticipants', 'someEventId', 'bob', 'tasks'
-                ], expectedCompletedTask);
-              }
-            ));
-
-            it('should update progress when user join required service',
-              inject(function($rootScope, $q, clmDataStore) {
-                var event = {
-                  $id: 'someEventId',
-                  tasks: {
-                    someTaskId: {
-                      serviceId: 'codeSchool'
-                    }
-                  }
-                };
-                var profile = {
-                  $id: 'bob',
-                  services: {
-                    codeSchool: {
-                      details: {
-                        id: 'bobUserName'
-                      }
-                    }
-                  }
-                };
-                var expectedCompletedTask = {
+            it('should fetch the user profiles', function() {
+              var event = {
+                $id: 'someEventId',
+                tasks: {
                   someTaskId: {
-                    completed: true
+                    serviceId: 'codeSchool'
                   }
-                };
-                var expectedReturn = {};
-                var actualReturn;
+                }
+              };
 
-                clmDataStore.services.codeCombat.updateProfile = jasmine.createSpy('codeCombat.updateProfile');
-                clmDataStore.services.codeSchool.updateProfile = jasmine.createSpy('codeSchool.updateProfile');
-                profileObj.$loaded.and.returnValue($q.when(profile));
-                spfFirebase.set.and.returnValue(expectedReturn);
+              clmDataStore.events.updateProgress(event, 'bob');
 
-                clmDataStore.events.updateProgress(event, 'bob').then(function(completedTasks) {
-                  actualReturn = completedTasks;
-                });
+              $rootScope.$apply();
+              expect(clmDataStore.profile).toHaveBeenCalledWith('bob');
+              expect(clmDataStore.singPath.profile).toHaveBeenCalledWith('bob');
+            });
 
-                $rootScope.$apply();
-                expect(actualReturn).toEqual(expectedReturn);
-                expect(clmDataStore.services.codeCombat.updateProfile.calls.count()).toBe(0);
-                expect(clmDataStore.services.codeSchool.updateProfile.calls.count()).toBe(0);
-                expect(spfFirebase.set).toHaveBeenCalledWith([
-                  'classMentors/eventParticipants', 'someEventId', 'bob', 'tasks'
-                ], expectedCompletedTask);
-              }
-            ));
+            it('should fetch the user badges', function() {
+              var event = {
+                $id: 'someEventId',
+                tasks: {
+                  someTaskId: {
+                    serviceId: 'codeSchool'
+                  }
+                }
+              };
+              var profile = {
+                $id: 'bob'
+              };
 
-            it('should update progress when user earns a required badge',
-              inject(function($rootScope, $q, clmDataStore) {
-                var event = {
-                  $id: 'someEventId',
-                  tasks: {
-                    someTaskId: {
-                      serviceId: 'codeSchool',
-                      badge: {
-                        id: 'someBadgeId'
-                      }
+              clmDataStore.profile.and.returnValue($q.when(profile));
+
+              clmDataStore.events.updateProgress(event, 'bob');
+
+              $rootScope.$apply();
+              expect(clmDataStore.services.codeCombat.fetchBadges).toHaveBeenCalledWith(profile);
+              expect(clmDataStore.services.codeCombat.fetchBadges).toHaveBeenCalledWith(profile);
+            });
+
+            it('should set progress and ranking', function() {
+              var event = {
+                $id: 'someEventId',
+                tasks: {
+                  someTaskId: {
+                    serviceId: 'codeSchool'
+                  }
+                }
+              };
+              var profile = {
+                $id: 'bob'
+              };
+
+              clmDataStore.profile.and.returnValue($q.when(profile));
+
+              clmDataStore.events.updateProgress(event, 'bob');
+
+              $rootScope.$apply();
+
+              expect(spfFirebase.set.calls.count()).toBe(2);
+
+              expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
+              expect(
+                spfFirebase.set.calls.argsFor(0)[0].join('/')
+              ).toBe(
+                'classMentors/eventParticipants/someEventId/bob/tasks'
+              );
+              expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({});
+
+              expect(spfFirebase.set.calls.argsFor(1).length).toBe(2);
+              expect(
+                spfFirebase.set.calls.argsFor(1)[0].join('/')
+              ).toBe(
+                'classMentors/eventParticipants/someEventId/bob/ranking'
+              );
+              expect(
+                spfFirebase.set.calls.argsFor(1)[1]
+              ).toEqual(
+                {codeSchool: 0, codeCombat: 0, singPath: 0, total: 0}
+              );
+            });
+
+            it('should update progress when user join required service', function() {
+              var event = {
+                $id: 'someEventId',
+                tasks: {
+                  someTaskId: {
+                    serviceId: 'codeSchool'
+                  },
+                  someOtherId: {
+                    serviceId: 'codeSchool',
+                    badge: {
+                      id: 'someBadgeId'
                     }
                   }
-                };
-                var profile = {
-                  $id: 'bob',
-                  services: {
-                    codeSchool: {
-                      details: {
-                        id: 'bobUserName'
+                }
+              };
+              var profile = {
+                $id: 'bob',
+                services: {
+                  codeSchool: {
+                    details: {
+                      id: 'bob'
+                    }
+                  }
+                }
+              };
+
+              clmDataStore.profile.and.returnValue($q.when(profile));
+
+              clmDataStore.events.updateProgress(event, 'bob');
+
+              $rootScope.$apply();
+
+              expect(spfFirebase.set.calls.count()).toBe(2);
+
+              expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
+              expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
+                someTaskId: {
+                  completed: true
+                }
+              });
+            });
+
+            it('should update progress when user earns a required badge', function() {
+              var event = {
+                $id: 'someEventId',
+                tasks: {
+                  someTaskId: {
+                    serviceId: 'codeSchool'
+                  },
+                  someOtherId: {
+                    serviceId: 'codeSchool',
+                    badge: {
+                      id: 'someBadgeId'
+                    }
+                  }
+                }
+              };
+              var profile = {
+                $id: 'bob',
+                services: {
+                  codeSchool: {
+                    details: {
+                      id: 'bob'
+                    }
+                  }
+                }
+              };
+              var csBadges = [{
+                id: 'someBadgeId'
+              }];
+
+              clmDataStore.profile.and.returnValue($q.when(profile));
+              clmDataStore.services.codeSchool.fetchBadges.and.returnValue($q.when(csBadges));
+
+              clmDataStore.events.updateProgress(event, 'bob');
+
+              $rootScope.$apply();
+
+              expect(spfFirebase.set.calls.count()).toBe(2);
+
+              expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
+              expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
+                someTaskId: {
+                  completed: true
+                },
+                someOtherId: {
+                  completed: true
+                }
+              });
+
+              expect(spfFirebase.set.calls.argsFor(1).length).toBe(2);
+              expect(
+                spfFirebase.set.calls.argsFor(1)[1]
+              ).toEqual(
+                {codeSchool: 1, codeCombat: 0, singPath: 0, total: 1}
+              );
+            });
+
+            it('should update progress when user solves a required problem', function() {
+              var event = {
+                $id: 'someEventId',
+                tasks: {
+                  someTaskId: {
+                    serviceId: 'singPath',
+                    singPathProblem: {
+                      path: {
+                        id: 'pathId'
                       },
-                      badges: {
-                        someBadgeId: {}
+                      level: {
+                        id: 'levelId'
+                      },
+                      problem: {
+                        id: 'problemId'
                       }
                     }
                   }
-                };
-                var expectedCompletedTask = {
-                  someTaskId: {
-                    completed: true
-                  }
-                };
-                var expectedReturn = {};
-                var actualReturn;
-
-                clmDataStore.services.codeCombat.updateProfile = jasmine.createSpy('codeCombat.updateProfile');
-                clmDataStore.services.codeSchool.updateProfile = jasmine.createSpy('codeSchool.updateProfile');
-                profileObj.$loaded.and.returnValue($q.when(profile));
-                spfFirebase.set.and.returnValue(expectedReturn);
-
-                clmDataStore.events.updateProgress(event, 'bob').then(function(completedTasks) {
-                  actualReturn = completedTasks;
-                });
-
-                $rootScope.$apply();
-                expect(actualReturn).toEqual(expectedReturn);
-                expect(clmDataStore.services.codeCombat.updateProfile.calls.count()).toBe(0);
-                expect(clmDataStore.services.codeSchool.updateProfile.calls.count()).toBe(1);
-                expect(clmDataStore.services.codeSchool.updateProfile).toHaveBeenCalledWith(profile);
-                expect(spfFirebase.set).toHaveBeenCalledWith([
-                  'classMentors/eventParticipants', 'someEventId', 'bob', 'tasks'
-                ], expectedCompletedTask);
-              }
-            ));
-
-            it('should not update progress when user has not earned the required badge',
-              inject(function($rootScope, $q, clmDataStore) {
-                var event = {
-                  $id: 'someEventId',
-                  tasks: {
-                    someTaskId: {
-                      serviceId: 'codeSchool',
-                      badge: {
-                        id: 'someBadgeId'
+                }
+              };
+              var profile = {
+                user: {
+                  displayName: 'bob'
+                },
+                solutions: {
+                  pathId: {
+                    levelId: {
+                      problemId: {
+                        solved: true
                       }
                     }
                   }
-                };
-                var profile = {
-                  $id: 'bob',
-                  services: {
-                    codeSchool: {
-                      details: {
-                        id: 'bobUserName'
-                      }
-                    }
-                  }
-                };
-                var expectedCompletedTask = {};
-                var expectedReturn = {};
-                var actualReturn;
+                }
+              };
 
-                clmDataStore.services.codeCombat.updateProfile = jasmine.createSpy('codeCombat.updateProfile');
-                clmDataStore.services.codeSchool.updateProfile = jasmine.createSpy('codeSchool.updateProfile');
-                profileObj.$loaded.and.returnValue($q.when(profile));
-                spfFirebase.set.and.returnValue(expectedReturn);
+              clmDataStore.singPath.profile.and.returnValue(profile);
+              clmDataStore.events.updateProgress(event, 'bob');
 
-                clmDataStore.events.updateProgress(event, 'bob').then(function(completedTasks) {
-                  actualReturn = completedTasks;
-                });
+              $rootScope.$apply();
 
-                $rootScope.$apply();
-                expect(actualReturn).toEqual(expectedReturn);
-                expect(clmDataStore.services.codeCombat.updateProfile.calls.count()).toBe(0);
-                expect(clmDataStore.services.codeSchool.updateProfile.calls.count()).toBe(1);
-                expect(clmDataStore.services.codeSchool.updateProfile).toHaveBeenCalledWith(profile);
-                expect(spfFirebase.set).toHaveBeenCalledWith([
-                  'classMentors/eventParticipants', 'someEventId', 'bob', 'tasks'
-                ], expectedCompletedTask);
-              }
-            ));
+              expect(spfFirebase.set.calls.count()).toBe(2);
 
-            it('should update progress when user solves a required problem',
-              inject(function($rootScope, $q, clmDataStore) {
-                var event = {
-                  $id: 'someEventId',
-                  tasks: {
-                    someTaskId: {
-                      serviceId: 'singPath',
-                      singPathProblem: {
-                        path: {
-                          id: 'somePathId'
-                        },
-                        level: {
-                          id: 'someLevelId'
-                        },
-                        problem: {
-                          id: 'someProblemId'
-                        }
-                      }
-                    }
-                  }
-                };
-                var profile = {
-                  $id: 'bob',
-                  solutions: {
-                    somePathId: {
-                      someLevelId: {
-                        someProblemId: {}
-                      }
-                    }
-                  }
-                };
-                var expectedCompletedTask = {
-                  someTaskId: {
-                    completed: true
-                  }
-                };
-                var expectedReturn = {};
-                var actualReturn;
+              expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
+              expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
+                someTaskId: {
+                  completed: true
+                }
+              });
 
-                clmDataStore.services.codeCombat.updateProfile = jasmine.createSpy('codeCombat.updateProfile');
-                clmDataStore.services.codeSchool.updateProfile = jasmine.createSpy('codeSchool.updateProfile');
-                profileObj.$loaded.and.returnValue($q.when({$id: profile.$id}));
-                spfFirebase.loadedObj.and.returnValue($q.when(profile));
-                spfFirebase.set.and.returnValue(expectedReturn);
-
-                clmDataStore.events.updateProgress(event, 'bob').then(function(completedTasks) {
-                  actualReturn = completedTasks;
-                });
-
-                $rootScope.$apply();
-                expect(clmDataStore.services.codeCombat.updateProfile.calls.count()).toBe(0);
-                expect(clmDataStore.services.codeSchool.updateProfile.calls.count()).toBe(0);
-                expect(actualReturn).toEqual(expectedReturn);
-                expect(spfFirebase.set).toHaveBeenCalledWith([
-                  'classMentors/eventParticipants', 'someEventId', 'bob', 'tasks'
-                ], expectedCompletedTask);
-              }
-            ));
-
-            it('should not update progress when user has not solved the required problem',
-              inject(function($rootScope, $q, clmDataStore) {
-                var event = {
-                  $id: 'someEventId',
-                  tasks: {
-                    someTaskId: {
-                      serviceId: 'singPath',
-                      singPathProblem: {
-                        path: {
-                          id: 'somePathId'
-                        },
-                        level: {
-                          id: 'someLevelId'
-                        },
-                        problem: {
-                          id: 'someProblemId'
-                        }
-                      }
-                    }
-                  }
-                };
-                var profile = {
-                  $id: 'bob',
-                  solutions: {
-                    somePathId: {
-                      someLevelId: {
-                      }
-                    }
-                  }
-                };
-                var expectedCompletedTask = {};
-                var expectedReturn = {};
-                var actualReturn;
-
-                clmDataStore.services.codeCombat.updateProfile = jasmine.createSpy('codeCombat.updateProfile');
-                clmDataStore.services.codeSchool.updateProfile = jasmine.createSpy('codeSchool.updateProfile');
-                profileObj.$loaded.and.returnValue($q.when({$id: profile.$id}));
-                spfFirebase.loadedObj.and.returnValue($q.when(profile));
-                spfFirebase.set.and.returnValue(expectedReturn);
-
-                clmDataStore.events.updateProgress(event, 'bob').then(function(completedTasks) {
-                  actualReturn = completedTasks;
-                });
-
-                $rootScope.$apply();
-                expect(actualReturn).toEqual(expectedReturn);
-                expect(clmDataStore.services.codeCombat.updateProfile.calls.count()).toBe(0);
-                expect(clmDataStore.services.codeSchool.updateProfile.calls.count()).toBe(0);
-                expect(spfFirebase.set).toHaveBeenCalledWith([
-                  'classMentors/eventParticipants', 'someEventId', 'bob', 'tasks'
-                ], expectedCompletedTask);
-              }
-            ));
+              expect(spfFirebase.set.calls.argsFor(1).length).toBe(2);
+              expect(
+                spfFirebase.set.calls.argsFor(1)[1]
+              ).toEqual(
+                {codeSchool: 0, codeCombat: 0, singPath: 1, total: 1}
+              );
+            });
 
           });
 
