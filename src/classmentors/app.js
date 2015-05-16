@@ -387,7 +387,8 @@
 
           list: function() {
             return spfFirebase.loadedArray(['classMentors/events'], {
-              orderByChild: 'timestamp',
+              orderByChild: 'featured',
+              equalTo: true,
               limitToLast: 50
             });
           },
