@@ -2,6 +2,22 @@ html p, body p {
   line-height: 1.25;
 }
 
+#loading-bar .bar {
+  background: #FFC107;
+  height: 5px;
+  border-bottom-right-radius: 2px;
+  border-top-right-radius: 2px;
+}
+
+/* Fancy blur effect */
+#loading-bar .peg {
+  height: 5px;
+  -moz-box-shadow: #FFC107 1px 0 6px 1px;
+  -ms-box-shadow: #FFC107 1px 0 6px 1px;
+  -webkit-box-shadow: #FFC107 1px 0 6px 1px;
+  box-shadow: #FFC107 1px 0 6px 1px;
+}
+
 .md-button {
   margin: 16px 8px;
   padding: 0 8px;
