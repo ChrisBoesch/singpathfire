@@ -56,9 +56,9 @@ Selected School:
     <tr>
       <th></th>
       <th></th>
-      <th ng-repeat="badge in practicedSchoolBadges">
+      <td ng-repeat="badge in practicedSchoolBadges">
           {{badge.serviceName}}
-      </th>
+      </td>
     </tr> 
 
     <tr>
@@ -82,9 +82,46 @@ Selected School:
 
   <table>
   <hr>
-  <b>Table by skill count - add skills arrays to badges.</b><br>
-  <b>Certified skills count and shown in tables - add certifications object to Firebase</b><br>
+<h3>School Skills Practiced</h3>
+  <table class="table table-striped">
+    <tr>
+      <th></th>
+      <th></th>
+      <th ng-repeat="skill in practicedSchoolSkills">
+          {{skill.skill}}
+      </th>
+    </tr> 
+    <tr>
+      <th></th>
+      <th></th>
+      <td ng-repeat="skill in practicedSchoolSkills">
+          {{skill.skillLanguage}}
+      </td>
+    </tr> 
 
+    <tr>
+
+      <th>User</th>
+      <th>Total</th>
+      <th ng-repeat="skill in practicedSchoolSkills">
+          {{skill.count}}
+      </th>
+    </tr>  
+    <tr ng-repeat="student in students | orderBy : '-totalBadges'">
+      <td>{{student.details.user.displayName}}</td>
+      <td></td>
+      
+      <td ng-repeat="skill in practicedSchoolSkills">
+          <span ng-show="skillsByStudent[skill.skillLanguage][skill.skill][student.details.user.displayName]">Ind<span>
+      </td>
+      </td>
+    <tr>
+
+
+  <table>
+  
+  <b>TBD: Add certified task tracking by adding task certifications object to Firebase.<br>
+   Certified tasks will result in certified skills.  </b><br>
 <script>
 
 var app = angular.module("schools", []);
@@ -100,17 +137,22 @@ app.controller("TableCtrl", ['$scope','$http', "$q", function ($scope, $http, $q
 
   $scope.get_students = function(schoolKey){
       $scope.students = [];
+      $scope.allClassSkills = {};
+      $scope.skillsByStudent = {};
+
       for (prop in $scope.example_user_data) {
           if (!$scope.example_user_data.hasOwnProperty(prop)) {
             //The current property is not a direct property of p
             continue;
           }
+
           //Do your logic with the property here
           if('user' in $scope.example_user_data[prop]){
              //console.log($scope.example_user_data[prop].user.displayName);
              if('school' in $scope.example_user_data[prop].user){
                 //console.log($scope.example_user_data[prop].user.school.name);
                 var schoolName = $scope.example_user_data[prop].user.school.name;
+                var username = $scope.example_user_data[prop].user.displayName;
 
                 if(schoolName == $scope.theSchools[schoolKey].name){
                   var theStudent = {"details": $scope.example_user_data[prop],
@@ -133,21 +175,21 @@ app.controller("TableCtrl", ['$scope','$http', "$q", function ($scope, $http, $q
 
                     theStudent.numCodeCombatBadges = Object.keys($scope.example_user_data[prop].services.codeCombat.badges).length;
 
-                    //Loop
+                    
                     for (badge in $scope.example_user_data[prop].services.codeCombat.badges) {
-                      if (!$scope.example_user_data[prop].services.codeCombat.badges.hasOwnProperty(badge)) {
-                        //The current property is not a direct property of p
-                        continue;
-                      }
-                      //console.log(badge);
+                      if ($scope.example_user_data[prop].services.codeCombat.badges.hasOwnProperty(badge)) {
+                        
                         //Count all badges by school. 
-                      if (badge in $scope.badgesBySchool[schoolName].codeCombat){
-                        $scope.badgesBySchool[schoolName].codeCombat[badge] += 1;
-                      }
-                      else{
-                        $scope.badgesBySchool[schoolName].codeCombat[badge] = 1;
+                        if (badge in $scope.badgesBySchool[schoolName].codeCombat){
+                          $scope.badgesBySchool[schoolName].codeCombat[badge] += 1;
+                        }
+                        else{
+                          $scope.badgesBySchool[schoolName].codeCombat[badge] = 1;
+
+                        }
 
                       }
+                       
 
                     }
                     
@@ -156,22 +198,71 @@ app.controller("TableCtrl", ['$scope','$http', "$q", function ($scope, $http, $q
                   if ("services" in $scope.example_user_data[prop] && "codeSchool" in $scope.example_user_data[prop].services && "badges" in $scope.example_user_data[prop].services.codeSchool){
                     theStudent.numCodeSchoolBadges = Object.keys($scope.example_user_data[prop].services.codeSchool.badges).length;
 
-                    //Loop
+                    //Count the Code School badges.
                     for (badge in $scope.example_user_data[prop].services.codeSchool.badges) {
-                      if (!$scope.example_user_data[prop].services.codeSchool.badges.hasOwnProperty(badge)) {
-                        //The current property is not a direct property of p
-                        continue;
-                      }
-                      //console.log(badge);
-                        //Count all badges by school. 
-                      if (badge in $scope.badgesBySchool[schoolName].codeSchool){
-                        $scope.badgesBySchool[schoolName].codeSchool[badge] += 1;
-                      }
-                      else{
-                        $scope.badgesBySchool[schoolName].codeSchool[badge] = 1;
+                      if ($scope.example_user_data[prop].services.codeSchool.badges.hasOwnProperty(badge)) {          
+                        if (badge in $scope.badgesBySchool[schoolName].codeSchool){
+                          $scope.badgesBySchool[schoolName].codeSchool[badge] += 1;
+                        }
+                        else{
+                          $scope.badgesBySchool[schoolName].codeSchool[badge] = 1;
+
+                        }
+                        
+                        //Some badges may not be supported by system yet. 
+                        if(badge in $scope.serviceBadges["codeSchool"] && "name" in $scope.serviceBadges["codeSchool"][badge]){ 
+                          
+                          //if supported, check for skill and loop through skills to count. 
+                          if("skills" in $scope.serviceBadges["codeSchool"][badge]){
+                            for (skillLanguage in $scope.serviceBadges["codeSchool"][badge].skills) {
+                              if ($scope.serviceBadges["codeSchool"][badge].skills.hasOwnProperty(skillLanguage)) {
+                                  //console.log(skillLanguage);
+                                  for (i = 0; i < $scope.serviceBadges["codeSchool"][badge].skills[skillLanguage].length; i++) {
+                                    
+
+
+                                    if (skillLanguage in $scope.allClassSkills){
+
+                                    }
+                                    else{
+                                      $scope.allClassSkills[skillLanguage] = {};
+                                    }
+
+                                    var theSkill = $scope.serviceBadges["codeSchool"][badge].skills[skillLanguage][i];
+                                    
+                                    if (theSkill in $scope.allClassSkills[skillLanguage] ){
+                                      $scope.allClassSkills[skillLanguage][theSkill] += 1;
+                                    }
+                                    else{
+                                      $scope.allClassSkills[skillLanguage][theSkill] = 1;
+                                    }
+
+                                    //The save by student to be able to lookup in table.
+                                    if(skillLanguage in $scope.skillsByStudent){
+                                      if (theSkill in $scope.skillsByStudent[skillLanguage]){
+                                        $scope.skillsByStudent[skillLanguage][theSkill][username] = true;
+                                      }
+                                      else{
+                                        $scope.skillsByStudent[skillLanguage][theSkill] = {"username":true}; 
+                                      }
+                                    } 
+                                    else{
+
+                                      $scope.skillsByStudent[skillLanguage] = {theSkill: {"username":true}}; 
+                                    }
+
+                                    
+
+                                  }
+                              }
+                            }
+
+
+                          }
+
+                        }
 
                       }
-
                     }
 
 
@@ -202,6 +293,7 @@ app.controller("TableCtrl", ['$scope','$http', "$q", function ($scope, $http, $q
                             'count': $scope.badgesBySchool[$scope.schoolKey].codeSchool[badgeKey]};
 
             $scope.practicedSchoolBadges.push(badgeDetails);
+
           }
 
         }
@@ -234,10 +326,30 @@ app.controller("TableCtrl", ['$scope','$http', "$q", function ($scope, $http, $q
 
       $scope.practicedSchoolBadges = sortByKey($scope.practicedSchoolBadges, "count");
 
+      //Track skills
+      $scope.practicedSchoolSkills = [];
+      
+      //$scope.allClassSkills[skillLanguage][theSkill] = 1;
+
+      for (skillLanguage in $scope.allClassSkills) {
+        if ($scope.allClassSkills.hasOwnProperty(skillLanguage)){
+          for (skill in $scope.allClassSkills[skillLanguage]) {
+            if ($scope.allClassSkills[skillLanguage].hasOwnProperty(skill)){
+              //console.log($scope.allClassSkills[skillLanguage][skill]));
+              var skillDetails = {'skillLanguage':skillLanguage, 
+                                'skill': skill,
+                                'count': $scope.allClassSkills[skillLanguage][skill]};
+
+              $scope.practicedSchoolSkills.push(skillDetails);
+
+            }
+          }
+        }
+      }
+
+    $scope.practicedSchoolSkills = sortByKey($scope.practicedSchoolSkills, "count");
+
       console.log("School processing finished.");
-
-
-
   }
 
   //Fetch school list and all user profiles. 
