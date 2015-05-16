@@ -56,7 +56,9 @@
                     <tbody>
                         <tr ng-repeat="(publicId, participant) in ctrl.participants" ng-class="'index-' + $index">
                             <th layout="row" layout-align="start center">
-                                <span flex>{{ participant.user.displayName }}</span>
+                                <md-button ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$id} }}">
+                                    {{ participant.user.displayName }}
+                                </md-button>
                                 <span ng-if="ctrl.currentUser.publicId == participant.$id">
                                     <md-button class="md-icon-button md-primary" aria-label="Update">
                                         <md-icon md-svg-icon="loop" ng-click="ctrl.update(publicId)"></md-icon>
@@ -96,7 +98,11 @@
                     </thead>
                     <tbody>
                         <tr ng-repeat="(publicId, participant) in ctrl.participants | orderBy: '-ranking.total'" ng-class="'index-' + $index">
-                            <th>{{ participant.user.displayName }}</th>
+                            <th>
+                                <md-button ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$id} }}">
+                                    {{ participant.user.displayName }}
+                                </md-button>
+                            </th>
                             <td>{{ participant.ranking.codeCombat || 0 }}</td>
                             <td>{{ participant.ranking.codeSchool || 0 }}</td>
                             <td>{{ participant.ranking.singPath || 0 }}</td>
