@@ -42,7 +42,48 @@ Selected School:
         <td></td>
       </tr>
     </table>
-    <br>
+    <hr>
+
+<h3>School Level Completion</h3>
+  <table class="table table-striped">
+    <tr>
+      <th></th>
+      <th></th>
+      <th ng-repeat="badge in practicedSchoolBadges">
+          {{serviceBadges[badge.serviceKey][badge.badge].name}}
+      </th>
+    </tr> 
+    <tr>
+      <th></th>
+      <th></th>
+      <th ng-repeat="badge in practicedSchoolBadges">
+          {{badge.serviceName}}
+      </th>
+    </tr> 
+
+    <tr>
+
+      <th>User</th>
+      <th>Total Badges</th>
+      <th ng-repeat="badge in practicedSchoolBadges">
+          {{badge.count}}
+      </th>
+    </tr>  
+    <tr ng-repeat="student in students | orderBy : '-totalBadges'">
+      <td>{{student.details.user.displayName}}</td>
+      <td>{{student.totalBadges}}</td>
+      
+      <td ng-repeat="badge in practicedSchoolBadges">
+          <span ng-show="student.details.services[badge.serviceKey].badges[badge.badge]">Ind<span>
+      </td>
+      </td>
+    <tr>
+
+
+  <table>
+  <hr>
+  <b>Table by skill count - add skills arrays to badges.</b><br>
+  <b>Certified skills count and shown in tables - add certifications object to Firebase</b><br>
 
 <script>
 
@@ -52,7 +93,10 @@ var app = angular.module("schools", []);
 
 app.controller("TableCtrl", ['$scope','$http', "$q", function ($scope, $http, $q) {
   
+  //Load ranking for NUS HS by default. 
   $scope.schoolKey='NUS High School';
+
+  $scope.badgesBySchool = {}
 
   $scope.get_students = function(schoolKey){
       $scope.students = [];
@@ -67,18 +111,70 @@ app.controller("TableCtrl", ['$scope','$http', "$q", function ($scope, $http, $q
              if('school' in $scope.example_user_data[prop].user){
                 //console.log($scope.example_user_data[prop].user.school.name);
                 var schoolName = $scope.example_user_data[prop].user.school.name;
+
                 if(schoolName == $scope.theSchools[schoolKey].name){
                   var theStudent = {"details": $scope.example_user_data[prop],
                                     "numCodeCombatBadges":0,
                                     "numCodeSchoolBadges":0}
+
+                    //Count all badges by school. 
+                  if (schoolName in $scope.badgesBySchool){
+                    //
+                  }
+                  else{
+                    $scope.badgesBySchool[schoolName] = {'codeCombat':{}, 'codeSchool':{}};
+                  }
+
+                  //Loop through the students badges and update records. 
+                
                   //Count Code Combat Badges
                   if ("services" in $scope.example_user_data[prop] && "codeCombat" in $scope.example_user_data[prop].services && "badges" in $scope.example_user_data[prop].services.codeCombat){
+                    
+
                     theStudent.numCodeCombatBadges = Object.keys($scope.example_user_data[prop].services.codeCombat.badges).length;
+
+                    //Loop
+                    for (badge in $scope.example_user_data[prop].services.codeCombat.badges) {
+                      if (!$scope.example_user_data[prop].services.codeCombat.badges.hasOwnProperty(badge)) {
+                        //The current property is not a direct property of p
+                        continue;
+                      }
+                      //console.log(badge);
+                        //Count all badges by school. 
+                      if (badge in $scope.badgesBySchool[schoolName].codeCombat){
+                        $scope.badgesBySchool[schoolName].codeCombat[badge] += 1;
+                      }
+                      else{
+                        $scope.badgesBySchool[schoolName].codeCombat[badge] = 1;
+
+                      }
+
+                    }
                     
                   }
                   //Count Code School Badges
                   if ("services" in $scope.example_user_data[prop] && "codeSchool" in $scope.example_user_data[prop].services && "badges" in $scope.example_user_data[prop].services.codeSchool){
                     theStudent.numCodeSchoolBadges = Object.keys($scope.example_user_data[prop].services.codeSchool.badges).length;
+
+                    //Loop
+                    for (badge in $scope.example_user_data[prop].services.codeSchool.badges) {
+                      if (!$scope.example_user_data[prop].services.codeSchool.badges.hasOwnProperty(badge)) {
+                        //The current property is not a direct property of p
+                        continue;
+                      }
+                      //console.log(badge);
+                        //Count all badges by school. 
+                      if (badge in $scope.badgesBySchool[schoolName].codeSchool){
+                        $scope.badgesBySchool[schoolName].codeSchool[badge] += 1;
+                      }
+                      else{
+                        $scope.badgesBySchool[schoolName].codeSchool[badge] = 1;
+
+                      }
+
+                    }
+
+
                   }
                   
                   theStudent.totalBadges = theStudent.numCodeCombatBadges + theStudent.numCodeSchoolBadges;
@@ -90,16 +186,72 @@ app.controller("TableCtrl", ['$scope','$http', "$q", function ($scope, $http, $q
 
       }
 
+      //Create an array of headers for levels table. 
+      $scope.practicedSchoolBadges = [];
+
+      if ('codeSchool' in $scope.badgesBySchool[$scope.schoolKey]){
+        for (badgeKey in $scope.badgesBySchool[$scope.schoolKey].codeSchool) {
+          
+          if ($scope.badgesBySchool[$scope.schoolKey].codeSchool.hasOwnProperty(badgeKey)) {
+            //The current property is a direct property of p
+         
+
+            var badgeDetails = {'badge':badgeKey, 
+                            'serviceName': 'Code School',
+                            'serviceKey':'codeSchool',
+                            'count': $scope.badgesBySchool[$scope.schoolKey].codeSchool[badgeKey]};
+
+            $scope.practicedSchoolBadges.push(badgeDetails);
+          }
+
+        }
+      }
+      
+      if ('codeCombat' in $scope.badgesBySchool[$scope.schoolKey]){
+        for (badgeKey in $scope.badgesBySchool[$scope.schoolKey].codeCombat) {
+          
+          if ($scope.badgesBySchool[$scope.schoolKey].codeCombat.hasOwnProperty(badgeKey)) {
+            //The current property is a direct property of p
+         
+            var badgeDetails = {'badge':badgeKey, 
+                            'serviceName': 'Code Combat',
+                            'serviceKey':'codeCombat',
+                            'count': $scope.badgesBySchool[$scope.schoolKey].codeCombat[badgeKey]};
+
+            $scope.practicedSchoolBadges.push(badgeDetails);
+          }
+
+        }
+      }
+      
+      //Reverse sort of an array by key
+      function sortByKey(array, key) {
+        return array.sort(function(a, b) {
+            var x = a[key]; var y = b[key];
+            return ((x > y) ? -1 : ((x < y) ? 1 : 0));
+        });
+      } 
+
+      $scope.practicedSchoolBadges = sortByKey($scope.practicedSchoolBadges, "count");
+
+      console.log("School processing finished.");
+
+
+
   }
 
   //Fetch school list and all user profiles. 
   //Todo: fetch only user profiles for the selected school. 
   $scope.promise1 = $http.get('https://singpath.firebaseio.com/classMentors/schools.json', {cache: false});
   $scope.promise2 = $http.get('https://singpath.firebaseio.com/classMentors/userProfiles.json', {'cache': false});
+  $scope.promise3 = $http.get('https://singpath.firebaseio.com/classMentors/badges.json', {'cache': false});
   
-  $q.all([$scope.promise1, $scope.promise2]).then(function(values) {
+
+  $q.all([$scope.promise1, $scope.promise2, $scope.promise3]).then(function(values) {
     $scope.theSchools = values[0].data;
     $scope.example_user_data = values[1].data;
+    $scope.serviceBadges = values[2].data;
+    
     numUsers = Object.keys($scope.example_user_data).length;
     console.log("Fetched "+numUsers+" user records for analyis.");
     $scope.get_students('NUS High School'); 
