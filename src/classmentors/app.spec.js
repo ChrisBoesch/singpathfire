@@ -827,7 +827,9 @@
               clmDataStore = _clmDataStore_;
 
               clmDataStore.profile = jasmine.createSpy('clmDataStore.profile').and.returnValue($q.when({}));
-              clmDataStore.singPath.profile = jasmine.createSpy('clmDataStore.singPath.profile').and.returnValue($q.when({}));
+              clmDataStore.singPath.profile = jasmine.createSpy(
+                'clmDataStore.singPath.profile'
+              ).and.returnValue($q.when({}));
               clmDataStore.services.codeCombat.fetchBadges = jasmine.createSpy(
                 'clmDataStore.services.codeCombat.fetchBadges'
               ).and.returnValue($q.when([]));
