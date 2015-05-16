@@ -1153,7 +1153,7 @@
 
             describe('fetchBadges', function() {
 
-              it('should return a promise resolving to an empty array it there are not details', inject(
+              it('should return a promise resolving to an empty array if there are not details', inject(
                 function($rootScope, clmDataStore) {
                   var result;
 
@@ -1163,6 +1163,31 @@
 
                   $rootScope.$apply();
                   expect(result).toEqual([]);
+                }
+              ));
+
+              it('should return a promise resolving to an empty array if fetching profile fails', inject(
+                function($rootScope, $q, clmDataStore) {
+                  var badges;
+
+                  clmDataStore.services.codeSchool.fetchProfile = jasmine.createSpy('fetchProfile');
+                  clmDataStore.services.codeSchool.fetchProfile.and.returnValue($q.reject({}));
+
+                  clmDataStore.services.codeSchool.fetchBadges({
+                    services: {
+                      codeSchool: {
+                        details: {
+                          id: 12345
+                        }
+                      }
+                    }
+                  }).then(function(results) {
+                    badges = results;
+                  });
+
+                  $rootScope.$apply();
+
+                  expect(badges).toEqual([]);
                 }
               ));
 
@@ -1235,7 +1260,7 @@
 
             describe('fetchBadges', function() {
 
-              it('should return a promise resolving to an empty array it there are not details', inject(
+              it('should return a promise resolving to an empty array if there are not details', inject(
                 function($rootScope, clmDataStore) {
                   var result;
 
@@ -1245,6 +1270,33 @@
 
                   $rootScope.$apply();
                   expect(result).toEqual([]);
+                }
+              ));
+
+              it('should return a promise resolving to an empty array if fetching profile fails', inject(
+                function($rootScope, $q, clmDataStore) {
+                  var badges;
+
+                  clmDataStore.services.codeCombat.fetchProfile = jasmine.createSpy('fetchProfile');
+                  clmDataStore.services.codeCombat.fetchProfile.and.returnValue($q.reject({}));
+                  clmDataStore.services.codeCombat.availableBadges = jasmine.createSpy('availableBadges');
+                  clmDataStore.services.codeCombat.availableBadges.and.returnValue({});
+
+                  clmDataStore.services.codeCombat.fetchBadges({
+                    services: {
+                      codeCombat: {
+                        details: {
+                          id: 12345
+                        }
+                      }
+                    }
+                  }).then(function(results) {
+                    badges = results;
+                  });
+
+                  $rootScope.$apply();
+
+                  expect(badges).toEqual([]);
                 }
               ));
 

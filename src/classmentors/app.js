@@ -693,6 +693,10 @@
                 }).filter(function(badge) {
                   return badge !== undefined;
                 });
+              }).catch(function(err) {
+                $log.error('Failed to fetch code combat badges for ' + profile.$id);
+                $log.error(err);
+                return [];
               });
             },
 
@@ -770,6 +774,10 @@
                     'iconUrl': badge.badge
                   };
                 });
+              }).catch(function(err) {
+                $log.error('Failed to fetch code school badges for ' + profile.$id);
+                $log.error(err);
+                return [];
               });
             }
           })
