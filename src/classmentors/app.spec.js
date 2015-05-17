@@ -1095,6 +1095,68 @@
 
           });
 
+          describe('submitLink', function() {
+            var $q, $rootScope, clmDataStore;
+
+            beforeEach(inject(function(_$q_, _$rootScope_, _clmDataStore_) {
+              $q = _$q_;
+              $rootScope = _$rootScope_;
+              clmDataStore = _clmDataStore_;
+            }));
+
+            it('should reject if eventId is not provided', function() {
+              var err;
+
+              clmDataStore.events.submitLink(null, 'someTaskId', 'bob', 'link').catch(function(e) {
+                err = e;
+              });
+
+              $rootScope.$apply();
+              expect(err).toBeDefined();
+            });
+
+            it('should reject if taskId is not provided', function() {
+              var err;
+
+              clmDataStore.events.submitLink('someEventId', null, 'bob', 'link').catch(function(e) {
+                err = e;
+              });
+
+              $rootScope.$apply();
+              expect(err).toBeDefined();
+            });
+
+            it('should reject if participant public id is not provided', function() {
+              var err;
+
+              clmDataStore.events.submitLink('someEventId', 'someTaskId', '', 'link').catch(function(e) {
+                err = e;
+              });
+
+              $rootScope.$apply();
+              expect(err).toBeDefined();
+            });
+
+            it('should save the task as completed', function() {
+              spfFirebase.set.and.returnValue($q.when({}));
+              clmDataStore.events.submitLink('someEventId', 'someTaskId', 'bob', 'link');
+
+              $rootScope.$apply();
+              expect(spfFirebase.set.calls.count()).toBe(1);
+              expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
+              expect(
+                spfFirebase.set.calls.argsFor(0)[0].join('/')
+              ).toEqual(
+                'classMentors/eventParticipants/someEventId/bob/tasks/someTaskId'
+              );
+              expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
+                solution: 'link',
+                completed: true
+              });
+            });
+
+          });
+
         });
 
         describe('services', function() {

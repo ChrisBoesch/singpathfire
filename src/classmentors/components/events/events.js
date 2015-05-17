@@ -331,6 +331,42 @@
 
       updateNavbar();
 
+      this.promptForLink = function(eventId, taskId, task, participant) {
+        $mdDialog.show({
+          parent: $document.body,
+          templateUrl: 'classmentors/components/events/events-view-provide-link.html',
+          controller: DialogController,
+          controllerAs: 'ctrl'
+        });
+
+        function DialogController() {
+          this.task = task;
+          if (
+            participant &&
+            participant.tasks &&
+            participant.tasks[taskId] &&
+            participant.tasks[taskId].solution
+          ) {
+            this.solution = participant.tasks[taskId].solution;
+          }
+
+          this.save = function(link) {
+            clmDataStore.events.submitLink(eventId, taskId, participant.$id, link).then(function() {
+              $mdDialog.hide();
+              spfAlert.success('Link is saved and the the task is completed');
+            }).catch(function(err) {
+              $log.error(err);
+              spfAlert.error('Failed to save the link');
+              return err;
+            });
+          };
+
+          this.cancel = function() {
+            $mdDialog.hide();
+          };
+        }
+      };
+
       function updateNavbar() {
         spfNavBarService.update(
           self.event.title, {
@@ -686,10 +722,14 @@
         });
       };
 
-      this.saveTask = function(event, _, task) {
+      this.saveTask = function(event, _, task, taskType) {
         var copy = spfFirebase.cleanObj(task);
 
-        if (copy.serviceId === 'singPath') {
+        if (taskType === 'linkPattern') {
+          delete copy.badge;
+          delete copy.serviceId;
+          delete copy.singPathProblem;
+        } else if (copy.serviceId === 'singPath') {
           delete copy.badge;
           if (copy.singPathProblem) {
             copy.singPathProblem.path = spfFirebase.cleanObj(task.singPathProblem.path);
@@ -699,6 +739,11 @@
         } else {
           delete copy.singPathProblem;
           copy.badge = spfFirebase.cleanObj(task.badge);
+        }
+
+        if (!copy.link) {
+          // delete empty link. Can't be empty string
+          delete copy.link;
         }
 
         self.creatingTask = true;
@@ -788,6 +833,7 @@
       this.taskId = initialData.taskId;
       this.task = initialData.task;
       this.savingTask = false;
+      this.taskType = this.task.serviceId == null ? 'linkPattern' : 'service';
 
       // md-select badge list and the the ng-model are compared
       // by reference.

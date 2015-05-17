@@ -435,6 +435,10 @@
             return spfFirebase.loadedArray(['classMentors/eventParticipants', eventId]);
           },
 
+          participation: function(eventId, publicId) {
+            return spfFirebase.loadedObj(['classMentors/eventParticipants', eventId, publicId]);
+          },
+
           join: function(eventId, pw) {
             var paths, authData;
 
@@ -562,12 +566,13 @@
             return $q.all({
               singPath: clmDataStore.singPath.profile(publicId),
               classMentors: cmProfilePromise,
-              badges: badgesPromise
-            }).then(function(profilesAndBadges) {
+              badges: badgesPromise,
+              participation: clmDataStore.events.participation(event.$id, publicId)
+            }).then(function(data) {
 
               // Transform array of badges to a collection of badges.
-              var badges = Object.keys(profilesAndBadges.badges).reduce(function(serviceBadges, serviceId) {
-                serviceBadges[serviceId] = profilesAndBadges.badges[serviceId].reduce(function(results, badge) {
+              var badges = Object.keys(data.badges).reduce(function(serviceBadges, serviceId) {
+                serviceBadges[serviceId] = data.badges[serviceId].reduce(function(results, badge) {
                   results[badge.id] = badge;
                   return results;
                 }, {});
@@ -578,8 +583,23 @@
               var progress = Object.keys(event.tasks).reduce(function(results, taskId) {
                 var task = event.tasks[taskId];
 
+                if (task.linkPattern) {
+                  if (
+                    data.participation &&
+                    data.participation.tasks &&
+                    data.participation.tasks[taskId] &&
+                    data.participation.tasks[taskId].solution
+                  ) {
+                    results[taskId] = {
+                      solution: data.participation.tasks[taskId].solution,
+                      completed: data.participation.tasks[taskId].solution.match(task.linkPattern)
+                    };
+                  }
+                  return results;
+                }
+
                 if (!clmDataStore.events._hasRegistered(
-                  task, profilesAndBadges.classMentors, profilesAndBadges.singPath
+                  task, data.classMentors, data.singPath
                 )) {
                   return results;
                 }
@@ -600,7 +620,7 @@
                   task.singPathProblem.level.id &&
                   task.singPathProblem.problem &&
                   task.singPathProblem.problem.id &&
-                  !clmDataStore.events._hasSolved(task, profilesAndBadges.singPath)
+                  !clmDataStore.events._hasSolved(task, data.singPath)
                 ) {
                   return results;
                 }
@@ -611,9 +631,9 @@
 
               // 3. create ranking
               var ranking = {
-                singPath: clmDataStore.events._solvedProblems(profilesAndBadges.singPath),
-                codeCombat: profilesAndBadges.badges.codeCombat.length,
-                codeSchool: profilesAndBadges.badges.codeSchool.length
+                singPath: clmDataStore.events._solvedProblems(data.singPath),
+                codeCombat: data.badges.codeCombat.length,
+                codeSchool: data.badges.codeSchool.length
               };
 
               ranking.total = Object.keys(ranking).reduce(function(sum, key) {
@@ -623,17 +643,35 @@
               // 4. save data
               return $q.all([
                 spfFirebase.set(
-                  ['classMentors/eventParticipants', event.$id, profilesAndBadges.classMentors.$id, 'tasks'],
+                  ['classMentors/eventParticipants', event.$id, data.classMentors.$id, 'tasks'],
                   progress
                 ),
                 spfFirebase.set(
-                  ['classMentors/eventParticipants', event.$id, profilesAndBadges.classMentors.$id, 'ranking'],
+                  ['classMentors/eventParticipants', event.$id, data.classMentors.$id, 'ranking'],
                   ranking
                 )
               ]);
             }).catch(function(err) {
               $log.error('Failed to update progress of ' + publicId + ': ' + err.toString());
             });
+          },
+
+          submitLink: function(eventId, taskId, publicId, link) {
+            if (!eventId) {
+              return $q.reject(new Error('No event id provided'));
+            }
+
+            if (!taskId) {
+              return $q.reject(new Error('No task id provided'));
+            }
+
+            if (!publicId) {
+              return $q.reject(new Error('No task id provided'));
+            }
+
+            return spfFirebase.set([
+              'classMentors/eventParticipants', eventId, publicId, 'tasks', taskId
+            ], {solution: link, completed: true});
           }
         },
 
