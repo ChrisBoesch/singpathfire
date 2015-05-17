@@ -425,17 +425,18 @@
           updateTask: function(eventId, taskId, task) {
             var priority = task.priority || 0;
 
-            return spfFirebase.set(['classMentors/events', eventId, 'tasks', taskId], task).then(function(ref) {
-              ref.setPriority(priority);
-              return ref;
-            });
+            return spfFirebase.setWithPriority(
+              ['classMentors/events', eventId, 'tasks', taskId],
+              task,
+              priority
+            );
           },
 
           participants: function(eventId) {
             return spfFirebase.loadedArray(['classMentors/eventParticipants', eventId]);
           },
 
-          participation: function(eventId, publicId) {
+          progress: function(eventId, publicId) {
             return spfFirebase.loadedObj(['classMentors/eventParticipants', eventId, publicId]);
           },
 
@@ -562,12 +563,12 @@
               });
             });
 
-            // 1. load profile and fetch badges
+            // 1. load profile, badges and current progress
             return $q.all({
               singPath: clmDataStore.singPath.profile(publicId),
               classMentors: cmProfilePromise,
               badges: badgesPromise,
-              participation: clmDataStore.events.participation(event.$id, publicId)
+              progress: clmDataStore.events.progress(event.$id, publicId)
             }).then(function(data) {
 
               // Transform array of badges to a collection of badges.
@@ -585,14 +586,14 @@
 
                 if (task.linkPattern) {
                   if (
-                    data.participation &&
-                    data.participation.tasks &&
-                    data.participation.tasks[taskId] &&
-                    data.participation.tasks[taskId].solution
+                    data.progress &&
+                    data.progress.tasks &&
+                    data.progress.tasks[taskId] &&
+                    data.progress.tasks[taskId].solution
                   ) {
                     results[taskId] = {
-                      solution: data.participation.tasks[taskId].solution,
-                      completed: data.participation.tasks[taskId].solution.match(task.linkPattern)
+                      solution: data.progress.tasks[taskId].solution,
+                      completed: data.progress.tasks[taskId].solution.match(task.linkPattern)
                     };
                   }
                   return results;

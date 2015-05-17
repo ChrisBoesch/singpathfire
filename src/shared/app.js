@@ -283,6 +283,29 @@
           });
         },
 
+        /**
+         * Set a firebase entry to the value with a priority.
+         *
+         * Returns a promise resolving to an error on error or to a Firebase
+         * reference to the firebase entry.
+         *
+         */
+        setWithPriority: function(path, value, priority) {
+          priority = priority || 0;
+
+          return $q(function(resolve, reject) {
+            var ref = spfFirebaseRef(path);
+
+            ref.setWithPriority(value, priority, function(err) {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(ref);
+              }
+            });
+          });
+        },
+
         patch: function(path, value) {
           return $q(function(resolve, reject) {
             var ref = spfFirebaseRef(path);
