@@ -1,5 +1,5 @@
-/* eslint camelcase: false*/
-/* global describe, beforeEach, module, it, inject, expect, jasmine */
+/* eslint-env jasmine */
+/* global module, inject, angular */
 
 (function() {
   'use strict';
@@ -94,9 +94,10 @@
 
         beforeEach(function() {
           firebaseSpy = jasmine.createSpy('Firebase');
-          ref = jasmine.createSpyObj('ref', ['child', 'orderBy', 'limitToLast']);
+          ref = jasmine.createSpyObj('ref', ['child', 'orderByPriority', 'startAt', 'limitToLast']);
           ref.child.and.returnValue(ref);
-          ref.orderBy.and.returnValue(ref);
+          ref.orderByPriority.and.returnValue(ref);
+          ref.startAt.and.returnValue(ref);
           ref.limitToLast.and.returnValue(ref);
           ref.path = {};
           Firebase = function(url) {
@@ -136,12 +137,15 @@
           expect(ref.child.calls.count()).toBe(0);
           spfFirebaseRef = factory();
           spfFirebaseRef(['events'], {
-            orderBy: 'timestamps',
-            limitToLast: 50
+            orderByPriority: null,
+            limitToLast: 50,
+            startAt: [null, 'someKey']
           });
 
-          expect(ref.orderBy).toHaveBeenCalledWith('timestamps');
+          expect(ref.orderByPriority).toHaveBeenCalledWith();
           expect(ref.limitToLast).toHaveBeenCalledWith(50);
+          expect(ref.startAt).toHaveBeenCalledWith(null, 'someKey');
+          // TODO test order
         });
 
       });
@@ -309,6 +313,57 @@
             expect(expectedRef.set).toHaveBeenCalledWith(newValue, jasmine.any(Function));
 
             expectedRef.set.calls.first().args[1](expectedError);
+            $rootScope.$apply();
+
+            expect(actualRef).toBeUndefined();
+            expect(error).toBe(expectedError);
+          }));
+
+        });
+
+        describe('setWithPriority', function() {
+
+          it('should resolve to a Firebase obj for the new item', inject(function($rootScope, spfFirebase) {
+            var newValue = {};
+            var expectedRef = jasmine.createSpyObj('Firebase', ['setWithPriority']);
+            var actualRef;
+
+            spfFirebaseRef.and.returnValue(expectedRef);
+            expectedRef.setWithPriority.and.returnValue();
+
+            spfFirebase.setWithPriority(['foo'], newValue, 2).then(function(ref) {
+              actualRef = ref;
+            });
+
+            expect(spfFirebaseRef).toHaveBeenCalledWith(['foo']);
+            expect(expectedRef.setWithPriority).toHaveBeenCalledWith(newValue, 2, jasmine.any(Function));
+
+            expectedRef.setWithPriority.calls.first().args[2]();
+            $rootScope.$apply();
+
+            expect(actualRef).toBe(expectedRef);
+          }));
+
+          it('should resolve to an error', inject(function($rootScope, spfFirebase) {
+            var newValue = {};
+            var expectedRef = jasmine.createSpyObj('Firebase', ['setWithPriority']);
+            var actualRef;
+            var expectedError = new Error();
+            var error;
+
+            spfFirebaseRef.and.returnValue(expectedRef);
+            expectedRef.setWithPriority.and.returnValue();
+
+            spfFirebase.setWithPriority(['foo'], newValue, 2).then(function(ref) {
+              actualRef = ref;
+            }, function(err) {
+              error = err;
+            });
+
+            expect(spfFirebaseRef).toHaveBeenCalledWith(['foo']);
+            expect(expectedRef.setWithPriority).toHaveBeenCalledWith(newValue, 2, jasmine.any(Function));
+
+            expectedRef.setWithPriority.calls.first().args[2](expectedError);
             $rootScope.$apply();
 
             expect(actualRef).toBeUndefined();

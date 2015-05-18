@@ -1,0 +1,29 @@
+<md-dialog aria-label="{{ctrl.task.title}}">
+    <form name="provideLinkForm" ng-submit="ctrl.save(ctrl.solution)">
+        <md-dialog-content class="sticky-container">
+            <md-subheader class="md-sticky-no-effect">{{ctrl.task.title}}</md-subheader>
+            <div>
+                <p>{{ctrl.task.description}}</p>
+                <md-input-container>
+                    <label for="edit-solution-link">Solution Link</label>
+                    <input type="text" name="linkSolution" id="edit-solution-link"
+                        ng-model="ctrl.solution"
+                        required="true"
+                        ng-pattern="ctrl.task.linkPattern"
+                        placeholer="URL to provide"
+                    />
+                    <div ng-messages="provideLinkForm.linkSolution.$error">
+                        <div ng-message="required">Required.</div>
+                        <div ng-message="pattern">Invalid pattern.</div>
+                    </div>
+                </md-input-container>
+            </div>
+        </md-dialog-content>
+        <div class="md-actions" layout="row">
+            <md-button class="md-primary md-raised" ng-disabled="!provideLinkForm.$valid">
+                Save
+            </md-button>
+            <md-button ng-click="ctrl.cancel()" type="button" class="md-accent">Cancel</md-button>
+        </div>
+    </form>
+</md-dialog>

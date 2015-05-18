@@ -24,7 +24,7 @@
     "angularfire": "^1.0.0",
     "crypto-js": "git://github.com/evanvosberg/crypto-js#~3.1.2",
     "moment": "~2.9.0",
-    "angular-material": "~0.8.0",
+    "angular-material": "~0.9.4",
     "ace-builds": "~1.1.9"
   },
   "devDependencies": {

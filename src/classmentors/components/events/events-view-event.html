@@ -4,73 +4,117 @@
         on {{ ctrl.event.createdAt | date}}
     </h3>
 
-    <h3>Tasks</h3>
-    <table class="events">
-        <thead>
-            <tr>
-                <th>
-                   Challenge
-                </th>
-                <th ng-if="ctrl.event.tasks | spfEmpty">
-                    <em>No challenge</em>
-                </th>
-                <th ng-repeat="task in ctrl.event.tasks">
-                    {{ task.title }}
-                </th>
-            </tr>
-            <tr>
-                <th>
-                   Details
-                </th>
-                <td ng-repeat="task in ctrl.event.tasks">
-                    {{ task.description }}
-                </td>
-            </tr>
-            <tr>
-                <th>
-                    Help
-                </th>
-                <td ng-repeat="task in ctrl.event.tasks">
-                    <a ng-href="{{task.link}}" ng-if="task.link">More details</a>
-                </td>
-            </tr>
-            <tr>
-                <th>
-                    Completed
-                </th>
-                <td ng-repeat="(taskId, task) in ctrl.event.tasks">
-                    {{ctrl.completed(taskId) | number: 0}} %
-                </td>
-            </tr>
-            <tr>
-                <th>
-                   Class Participants
-                </th>
-                <td ng-repeat="task in ctrl.event.tasks"></td>
-            </tr>
-        </thead>
-        <tbody>
-            <tr ng-repeat="(publicId, participant) in ctrl.participants" ng-class="'index-' + $index">
-                <th layout="row" layout-align="start center">
-                    <span flex>{{ participant.user.displayName }}</span>
-                    <span ng-if="ctrl.currentUser.publicId == participant.$id">
-                        <md-button class="md-fab md-mini md-primary" aria-label="Update">
-                            <md-icon md-svg-icon="loop" ng-click="ctrl.update(publicId)"></md-icon>
-                        </md-button>
-                    </span>
-                </th>
-                <td ng-repeat="(taskId, task) in ctrl.event.tasks">
-                    <span ng-if="participant.tasks[taskId].completed">Completed</span>
-                    <span ng-if="!participant.tasks[taskId].completed &amp;&amp; ctrl.currentUser.publicId == participant.$id">
-                        <a class="md-raised md-primary" ng-href="{{ctrl.startLink(task)}}" target="_blank">
-                            Start challenge
-                        </a>
-                    </span>
-                </td>
-            </tr>
-            <tr ng-if="ctrl.participants | spfEmpty">
-                <td>No participants</td>
-            </tr>
-        </tbody>
-    </table>
+    <md-tabs md-dynamic-height="true" md-border-bottom="true">
+        <md-tab label="Tasks">
+            <md-content>
+                <h1>Tasks</h1>
+
+                <table class="events">
+                    <thead>
+                        <tr>
+                            <th>
+                               Challenge
+                            </th>
+                            <th ng-if="ctrl.event.tasks | spfEmpty">
+                                <em>No challenge</em>
+                            </th>
+                            <th ng-repeat="task in ctrl.event.tasks">
+                                {{ task.title }}
+                            </th>
+                        </tr>
+                        <tr>
+                            <th>
+                               Details
+                            </th>
+                            <td ng-repeat="task in ctrl.event.tasks">
+                                {{ task.description }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>
+                                Help
+                            </th>
+                            <td ng-repeat="task in ctrl.event.tasks">
+                                <a ng-href="{{task.link}}" ng-if="task.link">More details</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>
+                                Completed
+                            </th>
+                            <td ng-repeat="(taskId, task) in ctrl.event.tasks">
+                                {{ctrl.completed(taskId) | number: 0}} %
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>
+                               Participants
+                            </th>
+                            <td ng-repeat="task in ctrl.event.tasks"></td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="(publicId, participant) in ctrl.participants" ng-class="'index-' + $index">
+                            <th layout="row" layout-align="start center">
+                                <md-button ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$id} }}">
+                                    {{ participant.user.displayName }}
+                                </md-button>
+                                <span ng-if="ctrl.currentUser.publicId == participant.$id">
+                                    <md-button class="md-icon-button md-primary" aria-label="Update">
+                                        <md-icon md-svg-icon="loop" ng-click="ctrl.update(publicId)"></md-icon>
+                                    </md-button>
+                                </span>
+                            </th>
+                            <td ng-repeat="(taskId, task) in ctrl.event.tasks">
+                                <span ng-if="participant.tasks[taskId].completed">Completed</span>
+                                <span ng-if="!participant.tasks[taskId].completed &amp;&amp; ctrl.currentUser.publicId == participant.$id">
+                                    <md-button class="md-raised md-primary" ng-if="task.serviceId" ng-href="{{ctrl.startLink(task)}}" target="_blank">
+                                        Start challenge
+                                    </md-button>
+                                    <md-button class="md-raised md-primary" ng-if="task.linkPattern" ng-click="ctrl.promptForLink(ctrl.event.$id, taskId, task, participant)">
+                                        Submit link
+                                    </md-button>
+                                </span>
+                            </td>
+                        </tr>
+                        <tr ng-if="ctrl.participants | spfEmpty">
+                            <td>No participants</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </md-content>
+        </md-tab>
+
+        <md-tab label="Ranking">
+            <md-content>
+                <h1>Ranking</h1>
+                
+                <table class="events">
+                    <thead>
+                        <tr>
+                            <th>Participants</th>
+                            <th>Code Combat Badges</th>
+                            <th>Code School Badges</th>
+                            <th>SingPath Problems</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="(publicId, participant) in ctrl.participants | orderBy: '-ranking.total'" ng-class="'index-' + $index">
+                            <th>
+                                <md-button ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$id} }}">
+                                    {{ participant.user.displayName }}
+                                </md-button>
+                            </th>
+                            <td>{{ participant.ranking.codeCombat || 0 }}</td>
+                            <td>{{ participant.ranking.codeSchool || 0 }}</td>
+                            <td>{{ participant.ranking.singPath || 0 }}</td>
+                            <td>{{ participant.ranking.total || 0}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </md-content>
+        </md-tab>
+    </md-tabs>
 </md-content>

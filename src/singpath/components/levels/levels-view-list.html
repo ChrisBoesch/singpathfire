@@ -3,28 +3,26 @@
     <p ng-if="ctrl.levels|spfEmpty">No level found.</p>
 
     <md-list class="level-list">
-        <md-item ng-repeat="level in ctrl.levels">
-            <md-item-content>
-                <div class="md-tile-left language-icon" hide-sm>
-                    <md-icon md-svg-icon="language:{{level.language}}" alt="{{level.language}}">
-                </div>
-                <div class="md-tile-content">
-                    <h3 layout>
-                        <span flex>{{level.title}}</span>
-                        <span hide-gt-sm>[{{level.language}}]</span>
-                    </h3>
-                    <h4>by {{level.owner.displayName}}</h4>
-                    <p>{{level.description}}</p>
-                </div>
-                <div class="md-title-right" layout="column" layout-align="top center">
-                    <md-button ng-href="#{{ 'problems'|urlFor: {pathId: ctrl.path.$id, levelId: level.$id} }}" layout layout-align="center center" class="md-raised md-primary" aria-label="Run">
-                        <md-icon md-svg-icon="play-arrow"></md-icon>
-                        <span ng-if="!ctrl.profile.hasStartedPath(ctrl.path, level)" flex>Start</span>
-                        <span ng-if="ctrl.profile.workingOnPath(ctrl.path, level)" flex>Continue</span>
-                        <span ng-if="ctrl.profile.hasSolvedPath(ctrl.path, level)" flex>Results</span>
-                    </md-button>
-                </div>
-            </md-item-content>
+        <md-list-item class="md-3-line" ng-repeat="level in ctrl.levels">
+            <div class="language-icon" hide-sm>
+                <md-icon md-svg-icon="language:{{level.language}}" alt="{{level.language}}">
+            </div>
+            <div class="md-list-item-text">
+                <h3 layout>
+                    <span flex>{{level.title}}</span>
+                    <span hide-gt-sm>[{{level.language}}]</span>
+                </h3>
+                <h4>by {{level.owner.displayName}}</h4>
+                <p>{{level.description}}</p>
+            </div>
+            <div layout="column" layout-align="top center">
+                <md-button ng-href="#{{ 'problems'|urlFor: {pathId: ctrl.path.$id, levelId: level.$id} }}" layout layout-align="center center" class="md-raised md-primary" aria-label="Run">
+                    <md-icon md-svg-icon="play-arrow"></md-icon>
+                    <span ng-if="!ctrl.profile.hasStartedPath(ctrl.path, level)" flex>Start</span>
+                    <span ng-if="ctrl.profile.workingOnPath(ctrl.path, level)" flex>Continue</span>
+                    <span ng-if="ctrl.profile.hasSolvedPath(ctrl.path, level)" flex>Results</span>
+                </md-button>
+            </div>
             <md-divider ng-if="!$last"></md-divider>
         </md-item>
     </md-list>

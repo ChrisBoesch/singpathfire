@@ -51,7 +51,7 @@
                 <input type="text" name="editTaskLink" id="edit-task-link"
                     ng-model="ctrl.task.link"
                     pattern="^(https?://.+|#/).+$"
-                    placeholer="URL to Challenge"
+                    placeholer="URL to a challenge help page"
                 />
                 <div ng-messages="editTask.editTaskLink.$error">
                     <div ng-message="pattern">Wrong format for an absolute or relative URL.</div>
@@ -59,19 +59,34 @@
             </md-input-container>
         </div>
 
-        <div layout="row">
-            <spf-select-container flex layout="column">
+        <div>
+            <p>
+                Task type:
+                <em ng-switch on="ctrl.taskType">
+                    <span ng-switch-when="service">Service</span>
+                    <span ng-switch-when="linkPattern">Link pattern</span>
+                    <span ng-switch-default>Required</span>
+                </em>
+            </p>
+            <md-radio-group ng-model="ctrl.taskType">
+                <md-radio-button value="service" class="md-primary">Service / Badge / Problem</md-radio-button>
+                <md-radio-button value="linkPattern" class="md-primary">Link pattern</md-radio-button>
+            </md-radio-group>
+        </div>
+
+        <div layout="row" ng-if="ctrl.taskType == 'service'">
+            <md-input-container flex layout="column">
                 <md-select flex name="editTaskServiceId"
-                    ng-model="ctrl.task.serviceId" spf-required placeholder="Select a Service">
+                    ng-model="ctrl.task.serviceId" required placeholder="Select a Service">
                     <md-option ng-value="opt" ng-repeat="opt in ['codeSchool', 'codeCombat', 'treeHouse', 'singPath']">
                         {{opt}}
                     </md-option>
                 </md-select>
                 <div ng-messages="editTask.editTaskServiceId.$error">
-                    <div ng-message="spf-required">A challenge needs a service id.</div>
+                    <div ng-message="required">A challenge needs a service id.</div>
                 </div>
-            </spf-select-container>
-            <spf-select-container flex layout="column" ng-if="ctrl.task.serviceId &amp;&amp; ctrl.task.serviceId != 'singPath'">
+            </md-input-container>
+            <md-input-container flex layout="column" ng-if="ctrl.task.serviceId &amp;&amp; ctrl.task.serviceId != 'singPath'">
                 <md-select flex name="editTaskBadge"
                     ng-model="ctrl.task.badge"
                     placeholder="Select a badge (optional)"
@@ -80,10 +95,11 @@
                         {{badge.name}}
                     </md-option>
                 </md-select>
-            </spf-select-container>
+            </md-input-container>
         </div>
+
         <div layout="row" ng-if="ctrl.task.serviceId == 'singPath'">
-            <spf-select-container flex layout="column">
+            <md-input-container flex layout="column">
                 <md-select flex name="editTaskSingPathPath"
                     ng-model="ctrl.task.singPathProblem.path"
                     placeholder="Select a Path (optional)"
@@ -92,11 +108,11 @@
                         {{opt.title}}
                     </md-option>
                 </md-select>
-            </spf-select-container>
-            <spf-select-container flex layout="column" ng-if="ctrl.task.singPathProblem.path">
+            </md-input-container>
+            <md-input-container flex layout="column" ng-if="ctrl.task.singPathProblem.path">
                 <md-select flex name="editTaskSingPathLevel"
                     ng-model="ctrl.task.singPathProblem.level"
-                    spf-required
+                    required
                     md-on-open="ctrl.loadLevels(ctrl.task.singPathProblem)"
                     placeholder="Select a Level"
                 >
@@ -105,13 +121,13 @@
                     </md-option>
                 </md-select>
                 <div ng-messages="editTask.editTaskSingPathLevel.$error">
-                    <div ng-message="spf-required">A challenge needs a service id.</div>
+                    <div ng-message="required">A challenge needs a service id.</div>
                 </div>
-            </spf-select-container>
-            <spf-select-container flex layout="column" ng-if="ctrl.task.singPathProblem.level">
+            </md-input-container>
+            <md-input-container flex layout="column" ng-if="ctrl.task.singPathProblem.level">
                 <md-select flex name="editTaskSingPathProblem"
                     ng-model="ctrl.task.singPathProblem.problem"
-                    spf-required
+                    required
                     md-on-open="ctrl.loadProblems(ctrl.task.singPathProblem)"
                     placeholder="Select a Problem"
                 >
@@ -120,13 +136,27 @@
                     </md-option>
                 </md-select>
                 <div ng-messages="editTask.editTaskSingPathProblem.$error">
-                    <div ng-message="spf-required">A challenge needs a service id.</div>
+                    <div ng-message="required">A challenge needs a service id.</div>
                 </div>
-            </spf-select-container>
+            </md-input-container>
+        </div>
+
+        <div ng-if="ctrl.taskType == 'linkPattern'">
+            <md-input-container>
+                <label for="edit-link-pattern">Link pattern</label>
+                <input type="text" name="editTaskLink" id="edit-link-pattern"
+                    ng-model="ctrl.task.linkPattern"
+                    required="true"
+                    placeholer="Pat"
+                />
+                <div ng-messages="editTask.editTaskLink.$error">
+                    <div ng-message="required">Required.</div>
+                </div>
+            </md-input-container>
         </div>
 
         <div layout="row" layout-align="center center">
-            <md-button type="submit" class="md-raised md-primary" ng-disabled="editTask.$invalid || ctrl.savingTask">Save</md-button>
+            <md-button type="submit" class="md-raised md-primary" ng-disabled="editTask.$invalid || !ctrl.taskType ||ctrl.savingTask">Save</md-button>
             <md-button type="reset" class="md-raised" ng-href="#{{ 'editEvent' | urlFor: {eventId: ctrl.event.$id} }}">Back</md-button>
         </div>
 
