@@ -86,22 +86,22 @@
     <tr>
       <th></th>
       <th></th>
-      <th ng-repeat="skill in practicedSchoolSkills">
-          {{skill.skill}}
-      </th>
+            <td ng-repeat="skill in practicedSchoolSkills">
+          {{skill.skillLanguage}}
+      </td>
     </tr> 
     <tr>
       <th></th>
       <th></th>
-      <td ng-repeat="skill in practicedSchoolSkills">
-          {{skill.skillLanguage}}
-      </td>
+      <th ng-repeat="skill in practicedSchoolSkills">
+          {{skill.skill}}
+      </th>
     </tr> 
 
     <tr>
 
       <th>User</th>
-      <th>Total</th>
+      <th></th>
       <th ng-repeat="skill in practicedSchoolSkills">
           {{skill.count}}
       </th>

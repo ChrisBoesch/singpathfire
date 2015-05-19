@@ -1,0 +1,98 @@
+<meta name="robots" content="noindex">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Badges and Levels</title>
+  <link rel="stylesheet" href="../vendor/bootstrap.min.css" type="text/css" /> 
+  <script src="../vendor/angular/angular.js" type="text/javascript"></script>
+ 
+</head>
+
+<body ng-app="badges">
+  <div class="panel panel-default" ng-controller="TableCtrl" 
+       ng-init="predicate='-skillCount'">
+
+  <br>
+    <table class="table table-striped"> 
+      <tr>
+        <th>Icon</th>
+        <th><a href="" ng-click="predicate = 'name'">Name</a></th>
+        <th><a href="" ng-click="predicate = '-service'">Service</a></th>
+        <th><a href="" ng-click="predicate = '-skillCount'">Skill Count</a></th>
+        <th><a href="" ng-click="predicate = 'skillLanguage'">Language</a></th>
+        <th><a href="" ng-click="predicate = 'skills'"></a>Skills</th>
+        <th></th>
+
+      </tr>
+
+      <tr ng-repeat="badge in badgeArray | orderBy : predicate"> 
+        <td><img height="24" width="24" ng-src="{{badge.iconUrl}}"></td>
+        <td>{{badge.name}}</td>
+        <td>{{badge.service}}</td>
+        <td>{{badge.skillCount}}</td>
+        <td>{{badge.skillLanguage}}</td>
+        <td>{{badge.skills}}</td>
+      </tr>
+
+    </table>
+    <hr>
+
+
+<script>
+
+var app = angular.module("badges", []);
+
+app.controller("TableCtrl", ['$scope','$http',"$q", function ($scope, $http, $q) {
+
+  $scope.promise1 = $http.get('https://singpath.firebaseio.com/classMentors/badges.json', {'cache': false});
+  $scope.promise2 = $http.get('https://singpath.firebaseio.com/singpath/problems.json', {'cache': false});
+  
+  $q.all([$scope.promise1,$scope.promise2]).then(function(values) {
+    $scope.serviceBadges = values[0].data;
+    $scope.singpathProblems = values[1].data;
+
+
+    $scope.badgeArray = [];
+
+    //Put all badges in to an array to support table sorting. 
+    for (serviceKey in $scope.serviceBadges){
+      for (badgeKey in $scope.serviceBadges[serviceKey]){
+        var theBadge = {"name": $scope.serviceBadges[serviceKey][badgeKey].name, 
+                        "iconUrl": $scope.serviceBadges[serviceKey][badgeKey].iconUrl,
+                        "service": serviceKey,
+                        "skillCount": 0};
+        if("skills" in $scope.serviceBadges[serviceKey][badgeKey]){
+          for (skillLanguage in $scope.serviceBadges[serviceKey][badgeKey]["skills"] ){
+            theBadge.skillLanguage = skillLanguage; 
+            theBadge.skills = $scope.serviceBadges[serviceKey][badgeKey]["skills"][skillLanguage];
+
+            theBadge["skillCount"] = theBadge.skills.length;
+          }
+        }
+        $scope.badgeArray.push(theBadge);
+      }
+    }
+    //Loop through SingPath badges for those will skills assigned. 
+    //path, level, problem
+    for (pathKey in $scope.singpathProblems ){
+      for (levelKey in $scope.singpathProblems[pathKey]){
+        for (problemKey in $scope.singpathProblems[pathKey][levelKey]){
+          console.log($scope.singpathProblems[pathKey][levelKey][problemKey].title);
+          var theBadge = {"name": $scope.singpathProblems[pathKey][levelKey][problemKey].title, 
+                        "iconUrl": "/assets/crests/tempbadge.png",
+                        "service": "SingPath",
+                        "skillLanguage": $scope.singpathProblems[pathKey][levelKey][problemKey].language,
+                        "skillCount": 0};
+          $scope.badgeArray.push(theBadge);
+        }
+      }
+    }
+    
+    
+  });
+
+}]); 
+
+</script>
+</body>
+</html>
+
