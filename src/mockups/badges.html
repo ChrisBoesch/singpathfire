@@ -14,9 +14,11 @@
   <br>
     <table class="table table-striped"> 
       <tr>
+        <th></th>
         <th>Icon</th>
         <th><a href="" ng-click="predicate = 'name'">Name</a></th>
         <th><a href="" ng-click="predicate = '-service'">Service</a></th>
+        <th><a href="" ng-click="predicate = '-level'">Level</a></th>
         <th><a href="" ng-click="predicate = '-skillCount'">Skill Count</a></th>
         <th><a href="" ng-click="predicate = 'skillLanguage'">Language</a></th>
         <th><a href="" ng-click="predicate = 'skills'"></a>Skills</th>
@@ -25,18 +27,19 @@
       </tr>
 
       <tr ng-repeat="badge in badgeArray | orderBy : predicate"> 
+        <td>{{$index+1}}</td>
         <td><img height="24" width="24" ng-src="{{badge.iconUrl}}"></td>
         <td>{{badge.name}}</td>
         <td>{{badge.service}}</td>
+        <td>{{badge.level}}</td>
         <td>{{badge.skillCount}}</td>
         <td>{{badge.skillLanguage}}</td>
         <td>{{badge.skills}}</td>
+        <td><a href="http://goo.gl/forms/mJWKp8HM1C" target="_blank">Recommend a change</a></td>
       </tr>
 
     </table>
     <hr>
-
-
 <script>
 
 var app = angular.module("badges", []);
@@ -45,16 +48,19 @@ app.controller("TableCtrl", ['$scope','$http',"$q", function ($scope, $http, $q)
 
   $scope.promise1 = $http.get('https://singpath.firebaseio.com/classMentors/badges.json', {'cache': false});
   $scope.promise2 = $http.get('https://singpath.firebaseio.com/singpath/problems.json', {'cache': false});
-  
-  $q.all([$scope.promise1,$scope.promise2]).then(function(values) {
+  $scope.promise3 = $http.get('https://singpath.firebaseio.com/singpath/levels.json', {'cache':false});
+
+  $q.all([$scope.promise1, $scope.promise2, $scope.promise3]).then(function(values) {
     $scope.serviceBadges = values[0].data;
     $scope.singpathProblems = values[1].data;
-
+    $scope.singPathLevels = values[2].data;
 
     $scope.badgeArray = [];
 
     //Put all badges in to an array to support table sorting. 
     for (serviceKey in $scope.serviceBadges){
+     //Skip codeCombat for now since we can not verify the langugage played. 
+     if (serviceKey !='codeCombat'){
       for (badgeKey in $scope.serviceBadges[serviceKey]){
         var theBadge = {"name": $scope.serviceBadges[serviceKey][badgeKey].name, 
                         "iconUrl": $scope.serviceBadges[serviceKey][badgeKey].iconUrl,
@@ -70,16 +76,18 @@ app.controller("TableCtrl", ['$scope','$http',"$q", function ($scope, $http, $q)
         }
         $scope.badgeArray.push(theBadge);
       }
+     }
     }
     //Loop through SingPath badges for those will skills assigned. 
     //path, level, problem
     for (pathKey in $scope.singpathProblems ){
       for (levelKey in $scope.singpathProblems[pathKey]){
         for (problemKey in $scope.singpathProblems[pathKey][levelKey]){
-          console.log($scope.singpathProblems[pathKey][levelKey][problemKey].title);
+          //console.log($scope.singpathProblems[pathKey][levelKey][problemKey].title);
           var theBadge = {"name": $scope.singpathProblems[pathKey][levelKey][problemKey].title, 
                         "iconUrl": "/assets/crests/tempbadge.png",
                         "service": "SingPath",
+                        "level": $scope.singPathLevels[pathKey][levelKey].description,
                         "skillLanguage": $scope.singpathProblems[pathKey][levelKey][problemKey].language,
                         "skillCount": 0};
           $scope.badgeArray.push(theBadge);
