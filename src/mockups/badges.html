@@ -85,7 +85,7 @@ app.controller("TableCtrl", ['$scope','$http',"$q", function ($scope, $http, $q)
         for (problemKey in $scope.singpathProblems[pathKey][levelKey]){
           //console.log($scope.singpathProblems[pathKey][levelKey][problemKey].title);
           var theBadge = {"name": $scope.singpathProblems[pathKey][levelKey][problemKey].title, 
-                        "iconUrl": "/assets/crests/tempbadge.png",
+                        "iconUrl": "../assets/crests/tempbadge.png",
                         "service": "SingPath",
                         "level": $scope.singPathLevels[pathKey][levelKey].description,
                         "skillLanguage": $scope.singpathProblems[pathKey][levelKey][problemKey].language,
