@@ -79,7 +79,7 @@
     <tr>
 
 
-  <table>
+  </table>
   <hr>
 <h3>School Skills Practiced</h3>
   <table class="table table-striped">
@@ -117,20 +117,17 @@
     <tr>
 
 
-  <table>
-  
+  </table>
+
   <b>TBD: Add certified task tracking by adding task certifications object to Firebase.<br>
    Certified tasks will result in certified skills.  </b><br>
 <script>
 
 var app = angular.module("schools", []);
 
-/*var app = angular.module("schools", ["firebase","chart.js"])*/
-
 app.controller("TableCtrl", ['$scope','$http', '$location',"$q", function ($scope, $http, $location, $q) {
   
   $scope.location = $location; 
-  console.log($scope.location.search());
   //Load ranking for NUS HS by default. 
   if("school" in $location.search()){
     $scope.schoolKey=$location.search()['school'];     
@@ -292,7 +289,7 @@ app.controller("TableCtrl", ['$scope','$http', '$location',"$q", function ($scop
 
       //Create an array of headers for levels table. 
       $scope.practicedSchoolBadges = [];
-      if($scope.badgeBySchool && $scope.schoolKey in $scope.badgeBySchool){
+      if($scope.badgesBySchool && $scope.schoolKey in $scope.badgesBySchool){
         if ('codeSchool' in $scope.badgesBySchool[$scope.schoolKey]){
           for (badgeKey in $scope.badgesBySchool[$scope.schoolKey].codeSchool) {
             
@@ -313,6 +310,7 @@ app.controller("TableCtrl", ['$scope','$http', '$location',"$q", function ($scop
         }
         
         if ('codeCombat' in $scope.badgesBySchool[$scope.schoolKey]){
+          
           for (badgeKey in $scope.badgesBySchool[$scope.schoolKey].codeCombat) {
             
             if ($scope.badgesBySchool[$scope.schoolKey].codeCombat.hasOwnProperty(badgeKey)) {
