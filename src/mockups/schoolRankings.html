@@ -11,15 +11,14 @@
   <div class="panel panel-default" ng-controller="TableCtrl" 
        ng-init="predicate='-totalBadges'">
 
-  Select School 
+  <h2>Select School
   <select ng-model="schoolKey" 
           ng-options="k as k for (k, v) in theSchools"
           ng-change="get_students(schoolKey)">
-  </select><br>
-Selected School: 
-<img height="24" width="24" title="{{theSchools[schoolKey].name}}" ng-src="{{theSchools[schoolKey].crest}}">
-{{schoolKey}}<br>
-
+  </select>
+</h2>
+ (<a href="/mockups/schoolStats.html">View list of all schools</a>)
+  <br>
     <table class="table table-striped"> 
       <tr>
         <th></th>
@@ -128,10 +127,17 @@ var app = angular.module("schools", []);
 
 /*var app = angular.module("schools", ["firebase","chart.js"])*/
 
-app.controller("TableCtrl", ['$scope','$http', "$q", function ($scope, $http, $q) {
+app.controller("TableCtrl", ['$scope','$http', '$location',"$q", function ($scope, $http, $location, $q) {
   
+  $scope.location = $location; 
+  console.log($scope.location.search());
   //Load ranking for NUS HS by default. 
-  $scope.schoolKey='NUS High School';
+  if("school" in $location.search()){
+    $scope.schoolKey=$location.search()['school'];     
+  }
+  else{
+    $scope.schoolKey='NUS High School';
+  }
 
   $scope.badgesBySchool = {}
 
@@ -373,7 +379,7 @@ app.controller("TableCtrl", ['$scope','$http', "$q", function ($scope, $http, $q
     
     numUsers = Object.keys($scope.example_user_data).length;
     console.log("Fetched "+numUsers+" user records for analyis.");
-    $scope.get_students('NUS High School'); 
+    $scope.get_students($scope.schoolKey); 
 
   });
 
