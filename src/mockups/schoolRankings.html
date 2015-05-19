@@ -35,7 +35,7 @@ Selected School:
       <tr ng-repeat="student in students | orderBy : predicate"> 
         <td>{{$index+1}}</td>
         <td><img height="24" width="24" ng-src="{{theSchools[schoolKey].crest}}"></td>
-        <td>{{student.details.user.displayName}}</td>
+        <td><a href="http://www.classmentors.com/#/profile/{{student.userkey}}">{{student.details.user.displayName}}</a></td>
         <td>{{student.totalBadges}}</td>
         <td>{{student.numCodeCombatBadges}}</td>
         <td>{{student.numCodeSchoolBadges}}</td>
@@ -149,13 +149,15 @@ app.controller("TableCtrl", ['$scope','$http', "$q", function ($scope, $http, $q
           //Do your logic with the property here
           if('user' in $scope.example_user_data[prop]){
              //console.log($scope.example_user_data[prop].user.displayName);
+             var username = $scope.example_user_data[prop].user.displayName;
+
              if('school' in $scope.example_user_data[prop].user){
                 //console.log($scope.example_user_data[prop].user.school.name);
                 var schoolName = $scope.example_user_data[prop].user.school.name;
-                var username = $scope.example_user_data[prop].user.displayName;
-
+                
                 if(schoolName == $scope.theSchools[schoolKey].name){
                   var theStudent = {"details": $scope.example_user_data[prop],
+                                    "userkey": prop,
                                     "numCodeCombatBadges":0,
                                     "numCodeSchoolBadges":0}
 
@@ -272,6 +274,11 @@ app.controller("TableCtrl", ['$scope','$http', "$q", function ($scope, $http, $q
                   //Push the entire object for now. 
                   $scope.students.push(theStudent);
                 }
+
+
+            }
+            else{
+              console.log("no school "+username+" yob "+$scope.example_user_data[prop].user.yearOfBirth);
             }
           }
 
@@ -279,43 +286,43 @@ app.controller("TableCtrl", ['$scope','$http', "$q", function ($scope, $http, $q
 
       //Create an array of headers for levels table. 
       $scope.practicedSchoolBadges = [];
+      if($scope.badgeBySchool && $scope.schoolKey in $scope.badgeBySchool){
+        if ('codeSchool' in $scope.badgesBySchool[$scope.schoolKey]){
+          for (badgeKey in $scope.badgesBySchool[$scope.schoolKey].codeSchool) {
+            
+            if ($scope.badgesBySchool[$scope.schoolKey].codeSchool.hasOwnProperty(badgeKey)) {
+              //The current property is a direct property of p
+           
 
-      if ('codeSchool' in $scope.badgesBySchool[$scope.schoolKey]){
-        for (badgeKey in $scope.badgesBySchool[$scope.schoolKey].codeSchool) {
-          
-          if ($scope.badgesBySchool[$scope.schoolKey].codeSchool.hasOwnProperty(badgeKey)) {
-            //The current property is a direct property of p
-         
+              var badgeDetails = {'badge':badgeKey, 
+                              'serviceName': 'Code School',
+                              'serviceKey':'codeSchool',
+                              'count': $scope.badgesBySchool[$scope.schoolKey].codeSchool[badgeKey]};
 
-            var badgeDetails = {'badge':badgeKey, 
-                            'serviceName': 'Code School',
-                            'serviceKey':'codeSchool',
-                            'count': $scope.badgesBySchool[$scope.schoolKey].codeSchool[badgeKey]};
+              $scope.practicedSchoolBadges.push(badgeDetails);
 
-            $scope.practicedSchoolBadges.push(badgeDetails);
+            }
 
           }
-
         }
-      }
-      
-      if ('codeCombat' in $scope.badgesBySchool[$scope.schoolKey]){
-        for (badgeKey in $scope.badgesBySchool[$scope.schoolKey].codeCombat) {
-          
-          if ($scope.badgesBySchool[$scope.schoolKey].codeCombat.hasOwnProperty(badgeKey)) {
-            //The current property is a direct property of p
-         
-            var badgeDetails = {'badge':badgeKey, 
-                            'serviceName': 'Code Combat',
-                            'serviceKey':'codeCombat',
-                            'count': $scope.badgesBySchool[$scope.schoolKey].codeCombat[badgeKey]};
+        
+        if ('codeCombat' in $scope.badgesBySchool[$scope.schoolKey]){
+          for (badgeKey in $scope.badgesBySchool[$scope.schoolKey].codeCombat) {
+            
+            if ($scope.badgesBySchool[$scope.schoolKey].codeCombat.hasOwnProperty(badgeKey)) {
+              //The current property is a direct property of p
+           
+              var badgeDetails = {'badge':badgeKey, 
+                              'serviceName': 'Code Combat',
+                              'serviceKey':'codeCombat',
+                              'count': $scope.badgesBySchool[$scope.schoolKey].codeCombat[badgeKey]};
 
-            $scope.practicedSchoolBadges.push(badgeDetails);
+              $scope.practicedSchoolBadges.push(badgeDetails);
+            }
+
           }
-
         }
       }
-      
       //Reverse sort of an array by key
       function sortByKey(array, key) {
         return array.sort(function(a, b) {
