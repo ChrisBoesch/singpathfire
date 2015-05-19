@@ -71,7 +71,7 @@
 
       <tr ng-repeat="school in schools | orderBy : predicate" ng-show="school.name"> 
         <td><img height="24" width="24" title="{{school.name}}" ng-src="{{school.crest}}"></td>
-        <td><a href="/mockups/schoolRankings.html#?school={{school.name}}">{{school.name}}</a></td>
+        <td><a href="schoolRankings.html#?school={{school.name}}">{{school.name}}</a></td>
         <td>{{school.group}}</td>
         <td>{{registeredBySchoolAndYear[school.name]["2002"]}}</td>
         <td>{{registeredBySchoolAndYear[school.name]["2001"]}}</td>
