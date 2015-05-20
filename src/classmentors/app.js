@@ -403,7 +403,20 @@
                 hash: hash.value,
                 options: hash.options
               };
-              return spfFirebase.set(['classMentors/eventPasswords/' + eventId], opts);
+              return spfFirebase.set(['classMentors/eventPasswords', eventId], opts);
+            }).then(function() {
+              return clmDataStore.events.get(eventId);
+            }).then(function(eventObj) {
+              return spfFirebase.set([
+                'classMentors/userProfiles',
+                eventObj.owner.publicId,
+                'createdEvents',
+                eventObj.$id
+              ], {
+                createdAt: eventObj.createdAt,
+                title: eventObj.title,
+                featured: eventObj.featured || false
+              });
             }).then(function() {
               return eventId;
             });

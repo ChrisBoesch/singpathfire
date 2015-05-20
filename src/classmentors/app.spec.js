@@ -883,7 +883,7 @@
               var eventRef = jasmine.createSpyObj('eventRef', ['key']);
 
               spfFirebase.push.and.returnValue($q.when(eventRef));
-              spfFirebase.set.and.returnValue($q.when({}));
+              spfFirebase.set.and.returnValue($q.reject()); // stop the chain at this point
               spfCrypto.password.newHash.and.returnValue({
                 value: 'someHash',
                 options: {
@@ -895,7 +895,7 @@
               clmDataStore.events.create({}, 'password');
               $rootScope.$apply();
 
-              expect(spfFirebase.set.calls.count()).toBe(1);
+              expect(spfFirebase.set.calls.count()).toBeGreaterThan(0);
               expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
               expect(
                 spfFirebase.set.calls.argsFor(0)[0].join('/')
@@ -910,9 +910,54 @@
               });
             });
 
+            it('should save the created event in the user profile', function() {
+              var eventRef = jasmine.createSpyObj('eventRef', ['key']);
+              var owner = {
+                publicId: 'bob'
+              };
+              var eventId = 'someEventId';
+
+              spfFirebase.push.and.returnValue($q.when(eventRef));
+              eventRef.key.and.returnValue(eventId);
+              spfFirebase.set.and.returnValue($q.when({}));
+              spfCrypto.password.newHash.and.returnValue({
+                value: 'someHash',
+                options: {
+                  salt: 'someSalt'
+                }
+              });
+              clmDataStore.events.get = jasmine.createSpy('clmDataStore.events.get');
+              clmDataStore.events.get.and.returnValue({
+                $id: eventId,
+                owner: owner,
+                title: 'foo',
+                createdAt: '1234'
+              });
+
+              clmDataStore.events.create({owner: owner}, 'password');
+              $rootScope.$apply();
+
+              expect(clmDataStore.events.get).toHaveBeenCalledWith(eventId);
+              expect(spfFirebase.set.calls.count()).toBe(2);
+              expect(spfFirebase.set.calls.argsFor(1).length).toBe(2);
+              expect(
+                spfFirebase.set.calls.argsFor(1)[0].join('/')
+              ).toBe(
+                'classMentors/userProfiles/bob/createdEvents/someEventId'
+              );
+              expect(spfFirebase.set.calls.argsFor(1)[1]).toEqual({
+                title: 'foo',
+                createdAt: '1234',
+                featured: false
+              });
+            });
+
             it('should return the event id', function() {
               var eventRef = jasmine.createSpyObj('eventRef', ['key']);
               var expected = 'someEventId';
+              var owner = {
+                publicId: 'bob'
+              };
               var actual;
 
               spfFirebase.push.and.returnValue($q.when(eventRef));
@@ -924,8 +969,15 @@
                 }
               });
               eventRef.key.and.returnValue(expected);
+              clmDataStore.events.get = jasmine.createSpy('clmDataStore.events.get');
+              clmDataStore.events.get.and.returnValue({
+                $id: expected,
+                owner: owner,
+                title: 'foo',
+                createdAt: '1234'
+              });
 
-              clmDataStore.events.create({}, 'password').then(function(resp) {
+              clmDataStore.events.create({owner: owner}, 'password').then(function(resp) {
                 actual = resp;
               });
               $rootScope.$apply();
