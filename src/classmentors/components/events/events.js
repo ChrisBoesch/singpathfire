@@ -102,12 +102,18 @@
   factory('classMentorsEventListRsolver', [
     '$q',
     'spfAuth',
+    'spfAuthData',
     'clmDataStore',
-    function classMentorsEventListRsolverFactory($q, spfAuth, clmDataStore) {
+    function classMentorsEventListRsolverFactory($q, spfAuth, spfAuthData, clmDataStore) {
       return function classMentorsEventRsolver() {
         return $q.all({
           events: clmDataStore.events.list(),
-          auth: spfAuth
+          auth: spfAuth,
+          currentUser: spfAuthData.user().catch(function() {
+            return;
+          }),
+          createdEvents: clmDataStore.events.listCreatedEvents(),
+          joinedEvents: clmDataStore.events.listJoinedEvents()
         });
       };
     }
@@ -122,7 +128,10 @@
     'spfNavBarService',
     'urlFor',
     function ClassMentorsEventList(initialData, spfNavBarService, urlFor) {
+      this.currentUser = initialData.currentUser;
       this.events = initialData.events;
+      this.createdEvents = initialData.createdEvents;
+      this.joinedEvents = initialData.joinedEvents;
       this.auth = initialData.auth;
 
       spfNavBarService.update(
@@ -432,7 +441,7 @@
           this.pw = '';
 
           this.join = function(pw) {
-            clmDataStore.events.join(self.event.$id, pw).then(function() {
+            clmDataStore.events.join(self.event, pw).then(function() {
               spfAlert.success('You joined this event');
               clmDataStore.events.updateProgress(self.event, self.currentUser.publicId);
               updateNavbar();

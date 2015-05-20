@@ -393,6 +393,38 @@
             });
           },
 
+          listCreatedEvents: function() {
+            return spfAuthData.user().then(function(authData) {
+              if (!authData.publicId) {
+                return [];
+              }
+
+              return spfFirebase.loadedArray(['classMentors/userProfiles', authData.publicId, 'createdEvents'], {
+                orderByChild: 'createdAt',
+                limitToLast: 50
+              });
+            }).catch(function(err) {
+              $log.error('Failed to list created events: ' + err);
+              return [];
+            });
+          },
+
+          listJoinedEvents: function() {
+            return spfAuthData.user().then(function(authData) {
+              if (!authData.publicId) {
+                return [];
+              }
+
+              return spfFirebase.loadedArray(['classMentors/userProfiles', authData.publicId, 'joinedEvents'], {
+                orderByChild: 'createdAt',
+                limitToLast: 50
+              });
+            }).catch(function(err) {
+              $log.error('Failed to list created events: ' + err);
+              return [];
+            });
+          },
+
           create: function(event, password) {
             var hash, eventId;
 
@@ -453,8 +485,14 @@
             return spfFirebase.loadedObj(['classMentors/eventParticipants', eventId, publicId]);
           },
 
-          join: function(eventId, pw) {
-            var paths, authData;
+          join: function(event, pw) {
+            var paths, authData, eventId;
+
+            if (!event || !event.$id) {
+              return $q.reject('Event was not provided');
+            }
+
+            eventId = event.$id;
 
             return spfAuthData.user().then(function(_authData) {
               authData = _authData;
@@ -467,7 +505,7 @@
                 hashOptions: ['classMentors/eventPasswords', eventId, 'options'],
                 application: ['classMentors/eventApplications', eventId, spfAuth.user.uid],
                 participation: ['classMentors/eventParticipants', eventId, authData.publicId, 'user'],
-                profile: ['classMentors/userProfiles', authData.publicId, 'events', eventId]
+                profile: ['classMentors/userProfiles', authData.publicId, 'joinedEvents', eventId]
               };
             }).then(function() {
               return spfFirebase.loadedObj(paths.hashOptions);
@@ -480,7 +518,12 @@
                 gravatar: authData.gravatar
               });
             }).then(function() {
-              return spfFirebase.set(paths.profile, true);
+              return spfFirebase.set(paths.profile, {
+                createdAt: event.createdAt,
+                featured: event.featured || false,
+                owner: event.owner,
+                title: event.title
+              });
             });
           },
 
@@ -489,7 +532,7 @@
               return spfFirebase.remove([
                 'classMentors/userProfiles',
                 authData.publicId,
-                'events',
+                'joinedEvents',
                 eventId
               ]).then(function() {
                 return authData;
@@ -594,7 +637,7 @@
               }, {});
 
               // 2. check completeness
-              var progress = Object.keys(event.tasks).reduce(function(results, taskId) {
+              var progress = Object.keys(event.tasks || {}).reduce(function(results, taskId) {
                 var task = event.tasks[taskId];
 
                 if (task.linkPattern) {

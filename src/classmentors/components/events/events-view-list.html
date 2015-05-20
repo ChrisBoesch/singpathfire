@@ -1,16 +1,57 @@
 <md-content flex class="md-padding">
-    <p ng-show="!ctrl.events || ctrl.events.length == 0">No event.</p>
 
-    <md-list class="path-list">
-        <md-list-item class="md-2-line" ng-repeat="e in (ctrl.events | orderBy:'createdAt':true) track by e.$id">
-            <div class="md-list-item-text">
-                <h3>
-                    <a href="#{{ 'oneEvent' | urlFor: {eventId: e.$id} }}">{{e.title}}</a>
-                </h3>
-                <h4>created by {{e.owner.displayName}} ({{e.createdAt|date}})</h4>
-            </div>
-            <md-divider ng-if="!$last"></md-divider>
-        </md-list-item>
-    </md-list>
+    <md-tabs md-dynamic-height="true" md-border-bottom="true">
+        <md-tab label="Featured Events">
+            <md-content>
+                <md-list class="path-list">
+                    <md-subheader class="md-no-sticky">{{ ctrl.events.length }} featured event(s)</md-subheader>
+                    <md-list-item class="md-2-line" ng-repeat="e in (ctrl.events | orderBy:'createdAt':true) track by e.$id">
+                        <div class="md-list-item-text">
+                            <h3>
+                                <a href="#{{ 'oneEvent' | urlFor: {eventId: e.$id} }}">{{e.title}}</a>
+                            </h3>
+                            <h4>created by {{e.owner.displayName}} ({{e.createdAt|date}})</h4>
+                        </div>
+                        <md-divider ng-if="!$last"></md-divider>
+                    </md-list-item>
+                </md-list>
+            </md-content>
+        </md-tab>
+        
+        <md-tab label="Created Events" ng-disabled="!ctrl.currentUser">
+            <md-content>
+                <md-list class="path-list">
+                    <md-subheader class="md-no-sticky">{{ ctrl.createdEvents.length }} created event(s)</md-subheader>
+                    <md-list-item class="md-2-line" ng-repeat="e in (ctrl.createdEvents | orderBy:'createdAt':true) track by e.$id">
+                        <div class="md-list-item-text">
+                            <h3>
+                                <a href="#{{ 'oneEvent' | urlFor: {eventId: e.$id} }}">{{e.title}}</a>
+                            </h3>
+                            <h4>created by {{ctrl.currentUser.displayName}} ({{e.createdAt|date}})</h4>
+                        </div>
+                        <md-divider ng-if="!$last"></md-divider>
+                    </md-list-item>
+                </md-list>
+            </md-content>
+        </md-tab>
+
+        <md-tab label="Joined Events" ng-disabled="!ctrl.currentUser">
+            <md-content>
+                <md-list class="path-list">
+                    <md-subheader class="md-no-sticky">{{ ctrl.joinedEvents.length }} joined event(s)</md-subheader>
+                    <md-list-item class="md-2-line" ng-repeat="e in (ctrl.joinedEvents | orderBy:'createdAt':true) track by e.$id">
+                        <div class="md-list-item-text">
+                            <h3>
+                                <a href="#{{ 'oneEvent' | urlFor: {eventId: e.$id} }}">{{e.title}}</a>
+                            </h3>
+                            <h4>created by {{e.owner.displayName}} ({{e.createdAt|date}})</h4>
+                        </div>
+                        <md-divider ng-if="!$last"></md-divider>
+                    </md-list-item>
+                </md-list>
+            </md-content>
+        </md-tab>
+
+    </md-tabs>
 
 </md-content>

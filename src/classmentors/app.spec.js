@@ -1086,10 +1086,32 @@
               clmDataStore = _clmDataStore_;
             }));
 
+            it('should reject if the event it undefined', function() {
+              var err;
+
+              clmDataStore.events.join(undefined, 'password').catch(function(e) {
+                err = e;
+              });
+
+              $rootScope.$apply();
+              expect(err).toBeDefined();
+            });
+
+            it('should reject if the event has no ID', function() {
+              var err;
+
+              clmDataStore.events.join({}, 'password').catch(function(e) {
+                err = e;
+              });
+
+              $rootScope.$apply();
+              expect(err).toBeDefined();
+            });
+
             it('should get the current user data', function() {
               spfAuthData.user.and.returnValue($q.when({}));
 
-              clmDataStore.events.join('someEventId', 'password');
+              clmDataStore.events.join({$id: 'someEventId'}, 'password');
 
               expect(spfAuthData.user).toHaveBeenCalledWith();
             });
@@ -1099,7 +1121,7 @@
 
               spfAuthData.user.and.returnValue($q.when({}));
 
-              clmDataStore.events.join('someEventId').catch(function(e) {
+              clmDataStore.events.join({$id: 'someEventId'}).catch(function(e) {
                 err = e;
               });
 
@@ -1113,7 +1135,7 @@
               // reject to stop the chain fast
               spfFirebase.loadedObj.and.returnValue($q.reject({}));
 
-              clmDataStore.events.join('someEventId', 'password');
+              clmDataStore.events.join({$id: 'someEventId'}, 'password');
 
               $rootScope.$apply();
               expect(spfFirebase.loadedObj.calls.count()).toBe(1);
@@ -1132,11 +1154,10 @@
 
               spfAuth.user = {uid: 'google:1234'};
               spfAuthData.user.and.returnValue($q.when({publicId: 'bob'}));
-              // reject to stop the chain fast
               spfFirebase.loadedObj.and.returnValue($q.when(hashOpts));
               spfFirebase.set.and.returnValue($q.when({}));
 
-              clmDataStore.events.join('someEventId', 'password');
+              clmDataStore.events.join({$id: 'someEventId'}, 'password');
 
               $rootScope.$apply();
               expect(spfCrypto.password.fromSalt).toHaveBeenCalledWith('password', 'someSalt', hashOpts);
@@ -1149,12 +1170,11 @@
 
               spfAuth.user = {uid: 'google:1234'};
               spfAuthData.user.and.returnValue($q.when({publicId: 'bob'}));
-              // reject to stop the chain fast
               spfFirebase.loadedObj.and.returnValue($q.when(hashOpts));
               spfFirebase.set.and.returnValue($q.when({}));
               spfCrypto.password.fromSalt.and.returnValue('someHash');
 
-              clmDataStore.events.join('someEventId', 'password');
+              clmDataStore.events.join({$id: 'someEventId'}, 'password');
 
               $rootScope.$apply();
               expect(spfFirebase.set.calls.count()).toBeGreaterThan(0);
@@ -1178,12 +1198,11 @@
                 displayName: 'Mr Bob',
                 gravatar: 'http://example.com'
               }));
-              // reject to stop the chain fast
               spfFirebase.loadedObj.and.returnValue($q.when(hashOpts));
               spfFirebase.set.and.returnValue($q.when({}));
               spfCrypto.password.fromSalt.and.returnValue('someHash');
 
-              clmDataStore.events.join('someEventId', 'password');
+              clmDataStore.events.join({$id: 'someEventId'}, 'password');
 
               $rootScope.$apply();
               expect(spfFirebase.set.calls.count()).toBeGreaterThan(1);
@@ -1206,12 +1225,18 @@
 
               spfAuth.user = {uid: 'google:1234'};
               spfAuthData.user.and.returnValue($q.when({publicId: 'bob'}));
-              // reject to stop the chain fast
               spfFirebase.loadedObj.and.returnValue($q.when(hashOpts));
               spfFirebase.set.and.returnValue($q.when({}));
               spfCrypto.password.fromSalt.and.returnValue('someHash');
 
-              clmDataStore.events.join('someEventId', 'password');
+              clmDataStore.events.join({
+                $id: 'someEventId',
+                title: 'Some Title',
+                owner: {
+                  publicId: 'somePublicId'
+                },
+                createdAt: 1234
+              }, 'password');
 
               $rootScope.$apply();
               expect(spfFirebase.set.calls.count()).toBe(3);
@@ -1219,9 +1244,16 @@
               expect(
                 spfFirebase.set.calls.argsFor(2)[0].join('/')
               ).toBe(
-                'classMentors/userProfiles/bob/events/someEventId'
+                'classMentors/userProfiles/bob/joinedEvents/someEventId'
               );
-              expect(spfFirebase.set.calls.argsFor(2)[1]).toBe(true);
+              expect(spfFirebase.set.calls.argsFor(2)[1]).toEqual({
+                title: 'Some Title',
+                owner: {
+                  publicId: 'somePublicId'
+                },
+                createdAt: 1234,
+                featured: false
+              });
             });
           });
 
