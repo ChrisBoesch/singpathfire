@@ -518,7 +518,7 @@
               ) && (
                 this.school || (
                   !this.yearOfBirth ||
-                  this.yearOfBirth < 1999 ||
+                  this.yearOfBirth < 1996 ||
                   this.yearOfBirth > 2004
               ))
             );

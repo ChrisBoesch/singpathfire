@@ -48,7 +48,7 @@
             </div>
         </md-input-container>
     	
-		<md-input-container flex layout="column" ng-if="currentUser.yearOfBirth >= 1999 &amp;&amp; currentUser.yearOfBirth <= 2004">
+		<md-input-container flex layout="column" ng-if="currentUser.yearOfBirth >= 1996 &amp;&amp; currentUser.yearOfBirth <= 2004">
             <md-select flex name="userSchool" ng-model="currentUser.school" required placeholder="Select a School">
                 <md-optgroup label="Junior College">
                     <md-option ng-value="opt" ng-repeat="opt in ctrl.schools | filter: {type: 'Junior College' }">{{opt.name}}</md-option>
