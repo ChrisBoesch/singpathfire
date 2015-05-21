@@ -8,6 +8,9 @@
   var module = angular.module('spf.shared', [
     'angular-loading-bar',
     'firebase',
+    'ngAnimate',
+    'ngMessages',
+    'ngRoute',
     'ngMaterial'
   ]);
 
@@ -425,9 +428,10 @@
    */
   module.factory('spfAuth', [
     '$q',
+    '$route',
     '$firebaseAuth',
     'spfFirebaseRef',
-    function($q, $firebaseAuth, spfFirebaseRef) {
+    function($q, $route, $firebaseAuth, spfFirebaseRef) {
       var auth = $firebaseAuth(spfFirebaseRef());
       var options = {
         scope: 'email'
@@ -479,6 +483,8 @@
       };
 
       spfAuth.onAuth(function(currentAuth) {
+        $route.reload();
+
         if (!currentAuth) {
           spfAuth.user = undefined;
         }
@@ -518,7 +524,7 @@
               ) && (
                 this.school || (
                   !this.yearOfBirth ||
-                  this.yearOfBirth < 1999 ||
+                  this.yearOfBirth < 1996 ||
                   this.yearOfBirth > 2004
               ))
             );

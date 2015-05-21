@@ -849,9 +849,9 @@
             expect($completed()).toBe(false);
           });
 
-          it('should return false if the user is from singapore, is 16y old and his school is not set', function() {
+          it('should return false if the user is from singapore, is 19y old and his school is not set', function() {
             userData.publicId = 'bob';
-            userData.yearOfBirth = 1999;
+            userData.yearOfBirth = 1996;
             userData.country = {name: 'Singapore', code: 'SG'};
             expect($completed()).toBe(false);
           });
