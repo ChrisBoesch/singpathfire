@@ -309,7 +309,7 @@
           event: eventPromise,
           profile: profilePromise
         }).then(function(data) {
-          return $q.when(data.profile.canView(data.event));
+          return $q.when(data.profile && data.profile.canView(data.event));
         }).then(function(canView) {
           if (canView) {
             return clmDataStore.events.participants(eventId);
