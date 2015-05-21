@@ -362,12 +362,17 @@
               return resp.profile;
             }
 
+            var userSchool = userData.school && userData.school.name;
+            var profileSchool = resp.currentUser.school && resp.currentUser.school.name;
+            var userCountry = userData.country && userData.country.code;
+            var profileCountry = resp.currentUser.country && resp.currentUser.country.code;
+
             if (
               userData.displayName === resp.currentUser.displayName &&
               userData.gravatar === resp.currentUser.gravatar &&
-              userData.country === resp.currentUser.country &&
+              userCountry === profileCountry &&
               userData.yearOfBirth === resp.currentUser.yearOfBirth &&
-              userData.school === resp.currentUser.school
+              userSchool === profileSchool
             ) {
               return resp.profile;
             }
