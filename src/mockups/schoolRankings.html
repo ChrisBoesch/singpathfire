@@ -56,7 +56,8 @@
       <th></th>
       <th></th>
       <td ng-repeat="badge in practicedSchoolBadges">
-          {{badge.serviceName}}
+           <span style="color:blue" ng-show="badge.hasSkills">{{badge.serviceName}}</span>
+           <span ng-hide="badge.hasSkills">{{badge.serviceName}}</span>
       </td>
     </tr> 
 
@@ -130,7 +131,8 @@ app.controller("TableCtrl", ['$scope','$http', '$location',"$q", function ($scop
   $scope.location = $location; 
   //Load ranking for NUS HS by default. 
   if("school" in $location.search()){
-    $scope.schoolKey=$location.search()['school'];     
+    //Remove apostrophies and . from passed in school names. 
+    $scope.schoolKey=$location.search()['school'].replace("'","").replace(".","");     
   }
   else{
     $scope.schoolKey='NUS High School';
@@ -301,6 +303,12 @@ app.controller("TableCtrl", ['$scope','$http', '$location',"$q", function ($scop
                               'serviceName': 'Code School',
                               'serviceKey':'codeSchool',
                               'count': $scope.badgesBySchool[$scope.schoolKey].codeSchool[badgeKey]};
+
+              //if codeSchool badge has skills then mark true.
+              //codeSchool/javascript-road-trip-part-1-level-1-on-javascript-road-trip-part-1/skills
+              if("codeSchool" in $scope.serviceBadges && badgeKey in $scope.serviceBadges.codeSchool && "skills" in $scope.serviceBadges.codeSchool[badgeKey]){
+                  badgeDetails.hasSkills = true;
+              }
 
               $scope.practicedSchoolBadges.push(badgeDetails);
 
