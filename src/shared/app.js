@@ -754,7 +754,9 @@
           return obj.length;
         }
 
-        return Object.keys(obj).length;
+        return Object.keys(obj).filter(function(k) {
+          return k && k[0] !== '$';
+        }).length;
       };
     }
   ]);

@@ -4,8 +4,8 @@
     </h2>
         
     <md-list>
-        <md-subheader class="md-no-sticky">{{ ctrl.event.tasks | spfLength }} challenges</md-subheader>
-        <md-list-item class="md-3-line" ng-repeat="(taskId, task) in ctrl.event.tasks">
+        <md-subheader class="md-no-sticky">{{ ctrl.tasks | spfLength }} challenges</md-subheader>
+        <md-list-item class="md-3-line" ng-repeat="(taskId, task) in ctrl.tasks">
             <div class="md-list-item-text">
                 <h3>{{ task.title }}</h3>
                 <h4>{{ task.description }}</h4>

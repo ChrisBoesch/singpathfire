@@ -488,10 +488,18 @@
             return spfFirebase.loadedObj(['classMentors/events', eventId]);
           },
 
+          getTasks: function(eventId) {
+            return spfFirebase.loadedObj(['classMentors/eventTasks', eventId]);
+          },
+
+          getTask: function(eventId, taskId) {
+            return spfFirebase.loadedObj(['classMentors/eventTasks', eventId, taskId]);
+          },
+
           addTask: function(eventId, task) {
             var priority = task.priority || 0;
 
-            return spfFirebase.push(['classMentors/events', eventId, 'tasks'], task).then(function(ref) {
+            return spfFirebase.push(['classMentors/eventTasks', eventId], task).then(function(ref) {
               ref.setPriority(priority);
               return ref;
             });
@@ -501,7 +509,7 @@
             var priority = task.priority || 0;
 
             return spfFirebase.setWithPriority(
-              ['classMentors/events', eventId, 'tasks', taskId],
+              ['classMentors/eventTasks', eventId, taskId],
               task,
               priority
             );
@@ -636,7 +644,7 @@
             }, 0);
           },
 
-          updateProgress: function(event, publicId) {
+          updateProgress: function(event, tasks, publicId) {
             if (!publicId) {
               return $q.reject('User public id is missing missing.');
             }
@@ -667,8 +675,10 @@
               }, {});
 
               // 2. check completeness
-              var progress = Object.keys(event.tasks || {}).reduce(function(results, taskId) {
-                var task = event.tasks[taskId];
+              var progress = Object.keys(tasks || {}).filter(function(k) {
+                return k && k[0] !== '$';
+              }).reduce(function(results, taskId) {
+                var task = tasks[taskId];
 
                 if (task.linkPattern) {
                   if (

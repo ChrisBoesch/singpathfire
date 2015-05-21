@@ -305,12 +305,20 @@
           return event;
         });
 
-        var participantsPromise = $q.all({
+        var canviewPromise = $q.all({
           event: eventPromise,
           profile: profilePromise
         }).then(function(data) {
           return $q.when(data.profile && data.profile.canView(data.event));
-        }).then(function(canView) {
+        });
+
+        var tasksPromise = canviewPromise.then(function(canView) {
+          if (canView) {
+            return clmDataStore.events.getTasks(eventId);
+          }
+        });
+
+        var participantsPromise = canviewPromise.then(function(canView) {
           if (canView) {
             return clmDataStore.events.participants(eventId);
           }
@@ -320,6 +328,7 @@
           currentUser: spfAuthData.user(),
           profile: profilePromise,
           event: eventPromise,
+          tasks: tasksPromise,
           participants: participantsPromise
         });
       };
@@ -350,6 +359,7 @@
       this.currentUser = initialData.currentUser;
       this.profile = initialData.profile;
       this.event = initialData.event;
+      this.tasks = initialData.tasks;
       this.participants = initialData.participants;
 
       updateNavbar();
@@ -465,7 +475,7 @@
               self.participants = participants;
               updateNavbar();
               $mdDialog.hide();
-              return clmDataStore.events.updateProgress(self.event, self.currentUser.publicId);
+              return clmDataStore.events.updateProgress(self.event, self.tasks, self.currentUser.publicId);
             }).catch(function(err) {
               spfAlert.error('Failed to add you: ' + err);
             });
@@ -479,7 +489,7 @@
       }
 
       this.update = function() {
-        return clmDataStore.events.updateProgress(self.event, self.currentUser.publicId).then(function() {
+        return clmDataStore.events.updateProgress(self.event, self.tasks, self.currentUser.publicId).then(function() {
           spfAlert.success('User progress updated');
         }).catch(function(err) {
           $log.error(err);
@@ -493,7 +503,7 @@
         }).map(function(index) {
           return self.participants[index];
         }).reduce(function(all, participant) {
-          all[participant.$id] = clmDataStore.events.updateProgress(self.event, participant.$id);
+          all[participant.$id] = clmDataStore.events.updateProgress(self.event, self.tasks, participant.$id);
           return all;
         }, {}));
       };
@@ -646,9 +656,16 @@
   factory('editCtrlInitialData', [
     '$q',
     'baseEditCtrlInitialData',
-    function($q, baseEditCtrlInitialData) {
+    'clmDataStore',
+    function($q, baseEditCtrlInitialData, clmDataStore) {
       return function editCtrlInitialData() {
-        return $q.all(baseEditCtrlInitialData());
+        var data = baseEditCtrlInitialData();
+
+        data.tasks = data.event.then(function(event) {
+          return clmDataStore.events.getTasks(event.$id);
+        });
+
+        return $q.all(data);
       };
     }
   ]).
@@ -666,6 +683,7 @@
     function EditCtrl(initialData, spfNavBarService, urlFor) {
 
       this.event = initialData.event;
+      this.tasks = initialData.tasks;
 
       spfNavBarService.update(
         'Edit', [{
@@ -814,11 +832,14 @@
           return event;
         });
 
-        var taskPromise = eventPromise.then(function(event) {
-          if (!event.tasks || !event.tasks[taskId]) {
-            return $q.reject(errNoTask);
-          }
-          return event.tasks[taskId];
+        var taskPromise = eventPromise.then(function() {
+          return clmDataStore.events.getTask(eventId, taskId).then(function(task) {
+            if (!task || task.$value === null) {
+              return $q.reject(errNoTask);
+            }
+
+            return task;
+          });
         });
 
         return $q.all({

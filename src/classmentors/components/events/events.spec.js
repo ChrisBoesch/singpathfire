@@ -108,6 +108,7 @@
             title: 'some title',
             owner: {}
           },
+          tasks: {},
           currentUser: {
             publicId: 'bob'
           },
@@ -273,7 +274,9 @@
           ctrl.currentUser = {publicId: 'bob'};
           ctrl.update();
 
-          expect(deps.clmDataStore.events.updateProgress).toHaveBeenCalledWith(deps.initialData.event, 'bob');
+          expect(deps.clmDataStore.events.updateProgress).toHaveBeenCalledWith(
+            deps.initialData.event, deps.initialData.tasks, 'bob'
+          );
         }));
 
         it('should show success message on success', inject(function($q, $rootScope) {
@@ -314,12 +317,12 @@
           expect(
             deps.clmDataStore.events.updateProgress
           ).toHaveBeenCalledWith(
-            deps.initialData.event, 'somePublicId'
+            deps.initialData.event, deps.initialData.tasks, 'somePublicId'
           );
           expect(
             deps.clmDataStore.events.updateProgress
           ).toHaveBeenCalledWith(
-            deps.initialData.event, 'someOtherPublicId'
+            deps.initialData.event, deps.initialData.tasks, 'someOtherPublicId'
           );
         });
 

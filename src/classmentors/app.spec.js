@@ -1007,6 +1007,26 @@
             });
           });
 
+          describe('getTasks', function() {
+            var clmDataStore;
+
+            beforeEach(inject(function(_clmDataStore_) {
+              clmDataStore = _clmDataStore_;
+            }));
+
+            it('should retrieve an event tasks', function() {
+              clmDataStore.events.getTasks('someEventId');
+
+              expect(spfFirebase.loadedObj.calls.count()).toBe(1);
+              expect(spfFirebase.loadedObj.calls.argsFor(0).length).toBe(1);
+              expect(
+                spfFirebase.loadedObj.calls.argsFor(0)[0].join('/')
+              ).toBe(
+                'classMentors/eventTasks/someEventId'
+              );
+            });
+          });
+
           describe('addTask', function() {
             var $q, $rootScope, clmDataStore;
 
@@ -1027,7 +1047,7 @@
               expect(
                 spfFirebase.push.calls.argsFor(0)[0].join('/')
               ).toBe(
-                'classMentors/events/someEventId/tasks'
+                'classMentors/eventTasks/someEventId'
               );
               expect(spfFirebase.push.calls.argsFor(0)[1]).toBe(expected);
             });
@@ -1274,7 +1294,7 @@
               expect(
                 spfFirebase.setWithPriority.calls.argsFor(0)[0].join('/')
               ).toBe(
-                'classMentors/events/someEventId/tasks/someTaskId'
+                'classMentors/eventTasks/someEventId/someTaskId'
               );
               expect(spfFirebase.setWithPriority.calls.argsFor(0)[1]).toBe(expected);
               expect(spfFirebase.setWithPriority.calls.argsFor(0)[2]).toBe(2);
@@ -1332,15 +1352,15 @@
             it('should reject if the public id is missing', function() {
               var err;
               var event = {
-                $id: 'someEventId',
-                tasks: {
-                  someTaskId: {
-                    serviceId: 'codeSchool'
-                  }
+                $id: 'someEventId'
+              };
+              var tasks = {
+                someTaskId: {
+                  serviceId: 'codeSchool'
                 }
               };
 
-              clmDataStore.events.updateProgress(event).catch(function(_err) {
+              clmDataStore.events.updateProgress(event, tasks).catch(function(_err) {
                 err = _err;
               });
 
@@ -1350,15 +1370,15 @@
 
             it('should fetch the user profiles', function() {
               var event = {
-                $id: 'someEventId',
-                tasks: {
-                  someTaskId: {
-                    serviceId: 'codeSchool'
-                  }
+                $id: 'someEventId'
+              };
+              var tasks = {
+                someTaskId: {
+                  serviceId: 'codeSchool'
                 }
               };
 
-              clmDataStore.events.updateProgress(event, 'bob');
+              clmDataStore.events.updateProgress(event, tasks, 'bob');
 
               $rootScope.$apply();
               expect(clmDataStore.profile).toHaveBeenCalledWith('bob');
@@ -1367,11 +1387,11 @@
 
             it('should fetch the user badges', function() {
               var event = {
-                $id: 'someEventId',
-                tasks: {
-                  someTaskId: {
-                    serviceId: 'codeSchool'
-                  }
+                $id: 'someEventId'
+              };
+              var tasks = {
+                someTaskId: {
+                  serviceId: 'codeSchool'
                 }
               };
               var profile = {
@@ -1380,7 +1400,7 @@
 
               clmDataStore.profile.and.returnValue($q.when(profile));
 
-              clmDataStore.events.updateProgress(event, 'bob');
+              clmDataStore.events.updateProgress(event, tasks, 'bob');
 
               $rootScope.$apply();
               expect(clmDataStore.services.codeCombat.fetchBadges).toHaveBeenCalledWith(profile);
@@ -1389,11 +1409,11 @@
 
             it('should set progress and ranking', function() {
               var event = {
-                $id: 'someEventId',
-                tasks: {
-                  someTaskId: {
-                    serviceId: 'codeSchool'
-                  }
+                $id: 'someEventId'
+              };
+              var tasks = {
+                someTaskId: {
+                  serviceId: 'codeSchool'
                 }
               };
               var profile = {
@@ -1402,7 +1422,7 @@
 
               clmDataStore.profile.and.returnValue($q.when(profile));
 
-              clmDataStore.events.updateProgress(event, 'bob');
+              clmDataStore.events.updateProgress(event, tasks, 'bob');
 
               $rootScope.$apply();
 
@@ -1431,16 +1451,16 @@
 
             it('should update progress when user join required service', function() {
               var event = {
-                $id: 'someEventId',
-                tasks: {
-                  someTaskId: {
-                    serviceId: 'codeSchool'
-                  },
-                  someOtherId: {
-                    serviceId: 'codeSchool',
-                    badge: {
-                      id: 'someBadgeId'
-                    }
+                $id: 'someEventId'
+              };
+              var tasks = {
+                someTaskId: {
+                  serviceId: 'codeSchool'
+                },
+                someOtherId: {
+                  serviceId: 'codeSchool',
+                  badge: {
+                    id: 'someBadgeId'
                   }
                 }
               };
@@ -1457,7 +1477,7 @@
 
               clmDataStore.profile.and.returnValue($q.when(profile));
 
-              clmDataStore.events.updateProgress(event, 'bob');
+              clmDataStore.events.updateProgress(event, tasks, 'bob');
 
               $rootScope.$apply();
 
@@ -1473,16 +1493,16 @@
 
             it('should update progress when user earns a required badge', function() {
               var event = {
-                $id: 'someEventId',
-                tasks: {
-                  someTaskId: {
-                    serviceId: 'codeSchool'
-                  },
-                  someOtherId: {
-                    serviceId: 'codeSchool',
-                    badge: {
-                      id: 'someBadgeId'
-                    }
+                $id: 'someEventId'
+              };
+              var tasks = {
+                someTaskId: {
+                  serviceId: 'codeSchool'
+                },
+                someOtherId: {
+                  serviceId: 'codeSchool',
+                  badge: {
+                    id: 'someBadgeId'
                   }
                 }
               };
@@ -1503,7 +1523,7 @@
               clmDataStore.profile.and.returnValue($q.when(profile));
               clmDataStore.services.codeSchool.fetchBadges.and.returnValue($q.when(csBadges));
 
-              clmDataStore.events.updateProgress(event, 'bob');
+              clmDataStore.events.updateProgress(event, tasks, 'bob');
 
               $rootScope.$apply();
 
@@ -1529,20 +1549,20 @@
 
             it('should update progress when user solves a required problem', function() {
               var event = {
-                $id: 'someEventId',
-                tasks: {
-                  someTaskId: {
-                    serviceId: 'singPath',
-                    singPathProblem: {
-                      path: {
-                        id: 'pathId'
-                      },
-                      level: {
-                        id: 'levelId'
-                      },
-                      problem: {
-                        id: 'problemId'
-                      }
+                $id: 'someEventId'
+              };
+              var tasks = {
+                someTaskId: {
+                  serviceId: 'singPath',
+                  singPathProblem: {
+                    path: {
+                      id: 'pathId'
+                    },
+                    level: {
+                      id: 'levelId'
+                    },
+                    problem: {
+                      id: 'problemId'
                     }
                   }
                 }
@@ -1563,7 +1583,7 @@
               };
 
               clmDataStore.singPath.profile.and.returnValue(profile);
-              clmDataStore.events.updateProgress(event, 'bob');
+              clmDataStore.events.updateProgress(event, tasks, 'bob');
 
               $rootScope.$apply();
 

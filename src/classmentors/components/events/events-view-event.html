@@ -15,10 +15,10 @@
                             <th>
                                Challenge
                             </th>
-                            <th ng-if="ctrl.event.tasks | spfEmpty">
+                            <th ng-if="ctrl.tasks | spfEmpty">
                                 <em>No challenge</em>
                             </th>
-                            <th ng-repeat="task in ctrl.event.tasks">
+                            <th ng-repeat="task in ctrl.tasks">
                                 {{ task.title }}
                             </th>
                         </tr>
@@ -26,7 +26,7 @@
                             <th>
                                Details
                             </th>
-                            <td ng-repeat="task in ctrl.event.tasks">
+                            <td ng-repeat="task in ctrl.tasks">
                                 {{ task.description }}
                             </td>
                         </tr>
@@ -34,7 +34,7 @@
                             <th>
                                 Help
                             </th>
-                            <td ng-repeat="task in ctrl.event.tasks">
+                            <td ng-repeat="task in ctrl.tasks">
                                 <a ng-href="{{task.link}}" ng-if="task.link">More details</a>
                             </td>
                         </tr>
@@ -42,7 +42,7 @@
                             <th>
                                 Completed
                             </th>
-                            <td ng-repeat="(taskId, task) in ctrl.event.tasks">
+                            <td ng-repeat="(taskId, task) in ctrl.tasks">
                                 {{ctrl.completed(taskId) | number: 0}} %
                             </td>
                         </tr>
@@ -50,7 +50,7 @@
                             <th>
                                Participants
                             </th>
-                            <td ng-repeat="task in ctrl.event.tasks"></td>
+                            <td ng-repeat="task in ctrl.tasks"></td>
                         </tr>
                     </thead>
                     <tbody>
@@ -65,7 +65,7 @@
                                     </md-button>
                                 </span>
                             </th>
-                            <td ng-repeat="(taskId, task) in ctrl.event.tasks">
+                            <td ng-repeat="(taskId, task) in ctrl.tasks">
                                 <span ng-if="participant.tasks[taskId].completed">Completed</span>
                                 <span ng-if="!participant.tasks[taskId].completed &amp;&amp; ctrl.currentUser.publicId == participant.$id">
                                     <md-button class="md-raised md-primary" ng-if="task.serviceId" ng-href="{{ctrl.startLink(task)}}" target="_blank">
@@ -100,6 +100,11 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <tr>
+                            <th colspan="5" ng-if="(ctrl.participants|spfEmpty)">
+                                No participants
+                            </th> 
+                        </tr>
                         <tr ng-repeat="(publicId, participant) in ctrl.participants | orderBy: '-ranking.total'" ng-class="'index-' + $index">
                             <th>
                                 <md-button ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$id} }}">
