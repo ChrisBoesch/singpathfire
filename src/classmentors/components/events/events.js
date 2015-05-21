@@ -296,6 +296,7 @@
       return function viewEventCtrlInitialData() {
         var errNoEvent = new Error('Event not found');
         var eventId = $route.current.params.eventId;
+        var profilePromise = clmDataStore.currentUserProfile();
 
         var eventPromise = clmDataStore.events.get(eventId).then(function(event) {
           if (event.$value === null) {
@@ -304,10 +305,22 @@
           return event;
         });
 
+        var participantsPromise = $q.all({
+          event: eventPromise,
+          profile: profilePromise
+        }).then(function(data) {
+          return $q.when(data.profile.canView(data.event));
+        }).then(function(canView) {
+          if (canView) {
+            return clmDataStore.events.participants(eventId);
+          }
+        });
+
         return $q.all({
           currentUser: spfAuthData.user(),
+          profile: profilePromise,
           event: eventPromise,
-          participants: clmDataStore.events.participants(eventId)
+          participants: participantsPromise
         });
       };
     }
@@ -335,6 +348,7 @@
       var linkers;
 
       this.currentUser = initialData.currentUser;
+      this.profile = initialData.profile;
       this.event = initialData.event;
       this.participants = initialData.participants;
 
@@ -393,7 +407,10 @@
         }
 
         // add join/leave button
-        if (self.participants.$indexFor(self.currentUser.publicId) > -1) {
+        if (
+          self.participants &&
+          self.participants.$indexFor(self.currentUser.publicId) > -1
+        ) {
           options.push({
             title: 'Leave',
             onClick: function() {
@@ -443,9 +460,12 @@
           this.join = function(pw) {
             clmDataStore.events.join(self.event, pw).then(function() {
               spfAlert.success('You joined this event');
-              clmDataStore.events.updateProgress(self.event, self.currentUser.publicId);
+              return clmDataStore.events.participants(self.event.$id);
+            }).then(function(participants) {
+              self.participants = participants;
               updateNavbar();
               $mdDialog.hide();
+              return clmDataStore.events.updateProgress(self.event, self.currentUser.publicId);
             }).catch(function(err) {
               spfAlert.error('Failed to add you: ' + err);
             });

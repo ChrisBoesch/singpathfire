@@ -303,7 +303,32 @@
       var clmDataStore;
 
       clmDataStore = {
-        _profileFactory: spfFirebase.objFactory({}),
+        _profileFactory: spfFirebase.objFactory({
+          canView: function(obj) {
+            var kind = obj && obj.$ref && obj.$ref().parent().path.toString();
+
+            if (this.user && this.user.isAdmin) {
+              return true;
+            }
+
+            if (obj.owner && obj.owner.publicId && this.$id === obj.owner.publicId) {
+              return true;
+            }
+
+            if (
+              kind === '/classMentors/events' &&
+              obj.$id &&
+              this.joinedEvents &&
+              this.joinedEvents[obj.$id]
+            ) {
+              return true;
+            } else {
+              return false;
+            }
+
+            return; //undefined for other kind
+          }
+        }),
 
         /**
          * Return a promise resolving to $firebaseObj pointing to
