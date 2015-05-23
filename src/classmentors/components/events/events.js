@@ -336,6 +336,9 @@
           participants: participantsPromise,
           ranking: clmDataStore.events.getRanking(eventId),
           currentUserStats: $q.all([eventPromise, tasksPromise, profilePromise]).then(function(data) {
+            if (!data || !data.profile) {
+              return {};
+            }
             return clmDataStore.events.updateCurrentUserProfile.apply(clmDataStore.events, data);
           })
         });

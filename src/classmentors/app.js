@@ -773,6 +773,10 @@
            *
            */
           updateCurrentUserProfile: function(event, tasks, profile) {
+            if (!event || !event.$id || !profile || !profile.$id) {
+              return $q.reject(new Error('Event or profile are not valid firebase object'));
+            }
+
             return $q.all({
               // 1. Update user profile
               codeCombat: clmDataStore.services.codeCombat.updateProfile(profile),
