@@ -296,7 +296,11 @@
       return function viewEventCtrlInitialData() {
         var errNoEvent = new Error('Event not found');
         var eventId = $route.current.params.eventId;
-        var profilePromise = clmDataStore.currentUserProfile();
+        var profilePromise = clmDataStore.currentUserProfile().catch(rescue);
+
+        function rescue() {
+          return;
+        }
 
         var eventPromise = clmDataStore.events.get(eventId).then(function(event) {
           if (event.$value === null) {
@@ -325,11 +329,15 @@
         });
 
         return $q.all({
-          currentUser: spfAuthData.user(),
+          currentUser: spfAuthData.user().catch(rescue),
           profile: profilePromise,
           event: eventPromise,
           tasks: tasksPromise,
-          participants: participantsPromise
+          participants: participantsPromise,
+          ranking: clmDataStore.events.getRanking(eventId),
+          currentUserStats: $q.all([eventPromise, tasksPromise, profilePromise]).then(function(data) {
+            return clmDataStore.events.updateCurrentUserProfile.apply(clmDataStore.events, data);
+          })
         });
       };
     }
@@ -360,7 +368,10 @@
       this.profile = initialData.profile;
       this.event = initialData.event;
       this.tasks = initialData.tasks;
+      this.ranking = initialData.ranking;
+      this.currentUserRanking = initialData.currentUserStats.ranking;
       this.participants = initialData.participants;
+      this.currentUserProgress = initialData.currentUserStats.progress;
 
       updateNavbar();
 
@@ -488,12 +499,16 @@
         }
       }
 
-      this.update = function() {
-        return clmDataStore.events.updateProgress(self.event, self.tasks, self.currentUser.publicId).then(function() {
-          spfAlert.success('User progress updated');
+      this.update = function(event, tasks, profile) {
+        return clmDataStore.events.updateCurrentUserProfile(
+          event, tasks, profile
+        ).then(function(stats) {
+          self.currentUserProgress = stats.progress;
+          self.currentUserRanking = stats.ranking;
+          spfAlert.success('Profile updated');
         }).catch(function(err) {
           $log.error(err);
-          spfAlert.error('Failed to update progress');
+          spfAlert.error('Failed to update profile');
         });
       };
 

@@ -488,6 +488,10 @@
             return spfFirebase.loadedObj(['classMentors/events', eventId]);
           },
 
+          getRanking: function(eventId) {
+            return spfFirebase.loadedObj(['classMentors/eventRankings', eventId]);
+          },
+
           getTasks: function(eventId) {
             return spfFirebase.loadedObj(['classMentors/eventTasks', eventId]);
           },
@@ -644,6 +648,85 @@
             }, 0);
           },
 
+          _getProgress: function(tasks, data) {
+            // Transform array of badges to a collection of badges.
+            var badges = Object.keys(data.badges).reduce(function(serviceBadges, serviceId) {
+              serviceBadges[serviceId] = data.badges[serviceId].reduce(function(results, badge) {
+                results[badge.id] = badge;
+                return results;
+              }, {});
+              return serviceBadges;
+            }, {});
+
+            // check completeness
+            return Object.keys(tasks || {}).filter(function(k) {
+              return k && k[0] !== '$';
+            }).reduce(function(results, taskId) {
+              var task = tasks[taskId];
+
+              if (task.linkPattern) {
+                if (
+                  data.progress &&
+                  data.progress.tasks &&
+                  data.progress.tasks[taskId] &&
+                  data.progress.tasks[taskId].solution
+                ) {
+                  results[taskId] = {
+                    solution: data.progress.tasks[taskId].solution,
+                    completed: data.progress.tasks[taskId].solution.match(task.linkPattern)
+                  };
+                }
+                return results;
+              }
+
+              if (!clmDataStore.events._hasRegistered(
+                task, data.classMentors, data.singPath
+              )) {
+                return results;
+              }
+
+              if (
+                task.badge &&
+                task.badge.id &&
+                !clmDataStore.events._hasBadge(task, badges)
+              ) {
+                return results;
+              }
+
+              if (
+                task.singPathProblem &&
+                task.singPathProblem.path &&
+                task.singPathProblem.path.id &&
+                task.singPathProblem.level &&
+                task.singPathProblem.level.id &&
+                task.singPathProblem.problem &&
+                task.singPathProblem.problem.id &&
+                !clmDataStore.events._hasSolved(task, data.singPath)
+              ) {
+                return results;
+              }
+
+              results[taskId] = {completed: true};
+              return results;
+            }, {});
+          },
+
+          _getRanking: function(data) {
+            var ranking = {
+              singPath: clmDataStore.events._solvedProblems(data.singPath),
+              codeCombat: data.badges.codeCombat.length,
+              codeSchool: data.badges.codeSchool.length
+            };
+
+            ranking.total = Object.keys(ranking).reduce(function(sum, key) {
+              return sum + ranking[key];
+            }, 0);
+
+            ranking.user = data.classMentors.user;
+
+            return ranking;
+          },
+
           updateProgress: function(event, tasks, publicId) {
             if (!publicId) {
               return $q.reject('User public id is missing missing.');
@@ -664,92 +747,55 @@
               badges: badgesPromise,
               progress: clmDataStore.events.progress(event.$id, publicId)
             }).then(function(data) {
-
-              // Transform array of badges to a collection of badges.
-              var badges = Object.keys(data.badges).reduce(function(serviceBadges, serviceId) {
-                serviceBadges[serviceId] = data.badges[serviceId].reduce(function(results, badge) {
-                  results[badge.id] = badge;
-                  return results;
-                }, {});
-                return serviceBadges;
-              }, {});
-
-              // 2. check completeness
-              var progress = Object.keys(tasks || {}).filter(function(k) {
-                return k && k[0] !== '$';
-              }).reduce(function(results, taskId) {
-                var task = tasks[taskId];
-
-                if (task.linkPattern) {
-                  if (
-                    data.progress &&
-                    data.progress.tasks &&
-                    data.progress.tasks[taskId] &&
-                    data.progress.tasks[taskId].solution
-                  ) {
-                    results[taskId] = {
-                      solution: data.progress.tasks[taskId].solution,
-                      completed: data.progress.tasks[taskId].solution.match(task.linkPattern)
-                    };
-                  }
-                  return results;
-                }
-
-                if (!clmDataStore.events._hasRegistered(
-                  task, data.classMentors, data.singPath
-                )) {
-                  return results;
-                }
-
-                if (
-                  task.badge &&
-                  task.badge.id &&
-                  !clmDataStore.events._hasBadge(task, badges)
-                ) {
-                  return results;
-                }
-
-                if (
-                  task.singPathProblem &&
-                  task.singPathProblem.path &&
-                  task.singPathProblem.path.id &&
-                  task.singPathProblem.level &&
-                  task.singPathProblem.level.id &&
-                  task.singPathProblem.problem &&
-                  task.singPathProblem.problem.id &&
-                  !clmDataStore.events._hasSolved(task, data.singPath)
-                ) {
-                  return results;
-                }
-
-                results[taskId] = {completed: true};
-                return results;
-              }, {});
-
-              // 3. create ranking
-              var ranking = {
-                singPath: clmDataStore.events._solvedProblems(data.singPath),
-                codeCombat: data.badges.codeCombat.length,
-                codeSchool: data.badges.codeSchool.length
-              };
-
-              ranking.total = Object.keys(ranking).reduce(function(sum, key) {
-                return sum + ranking[key];
-              }, 0);
-
               // 4. save data
               return $q.all([
                 spfFirebase.set(
                   ['classMentors/eventParticipants', event.$id, data.classMentors.$id, 'tasks'],
-                  progress
+                  // 2. check completness
+                  clmDataStore.events._getProgress(tasks, data)
                 ),
                 spfFirebase.set(
-                  ['classMentors/eventParticipants', event.$id, data.classMentors.$id, 'ranking'],
-                  ranking
+                  ['classMentors/eventRankings', event.$id, data.classMentors.$id],
+                  // 3. get ranking
+                  clmDataStore.events._getRanking(data)
                 )
               ]);
             }).catch(function(err) {
               $log.error('Failed to update progress of ' + publicId + ': ' + err.toString());
+            });
+          },
+
+          /**
+           * Only update the the current user profile and return his progress
+           * and ranking.
+           *
+           * Only admin and event onwer can save the progress and ranking.
+           *
+           */
+          updateCurrentUserProfile: function(event, tasks, profile) {
+            return $q.all({
+              // 1. Update user profile
+              codeCombat: clmDataStore.services.codeCombat.updateProfile(profile),
+              codeSchool: clmDataStore.services.codeSchool.updateProfile(profile),
+              singPath: clmDataStore.singPath.profile(profile.$id),
+              progress: clmDataStore.events.progress(event.$id, profile.$id)
+            }).then(function(data) {
+              return $q.all({
+                singPath: data.singPath,
+                classMentors: profile, // assuming it got synched
+                badges: {
+                  codeCombat: objToArray(clmDataStore.services.codeCombat.badges(profile)),
+                  codeSchool: objToArray(clmDataStore.services.codeSchool.badges(profile))
+                },
+                progress: data.progress
+              });
+            }).then(function(data) {
+              return {
+                progress: clmDataStore.events._getProgress(tasks, data),
+                ranking: clmDataStore.events._getRanking(data)
+              };
+            }).catch(function(err) {
+              $log.error('Failed to get progress of ' + profile.$id + ': ' + err.toString());
             });
           },
 
@@ -1008,5 +1054,11 @@
   ])
 
   ;
+
+  function objToArray(obj) {
+    return Object.keys(obj).map(function(k) {
+      return obj[k];
+    });
+  }
 
 })();

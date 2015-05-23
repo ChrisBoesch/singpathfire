@@ -61,19 +61,24 @@
                                 </md-button>
                                 <span ng-if="ctrl.currentUser.publicId == participant.$id">
                                     <md-button class="md-icon-button md-primary" aria-label="Update">
-                                        <md-icon md-svg-icon="loop" ng-click="ctrl.update(publicId)"></md-icon>
+                                        <md-icon md-svg-icon="loop" ng-click="ctrl.update(ctrl.event, ctrl.tasks, ctrl.profile)"></md-icon>
                                     </md-button>
                                 </span>
                             </th>
                             <td ng-repeat="(taskId, task) in ctrl.tasks">
                                 <span ng-if="participant.tasks[taskId].completed">Completed</span>
                                 <span ng-if="!participant.tasks[taskId].completed &amp;&amp; ctrl.currentUser.publicId == participant.$id">
-                                    <md-button class="md-raised md-primary" ng-if="task.serviceId" ng-href="{{ctrl.startLink(task)}}" target="_blank">
-                                        Start challenge
-                                    </md-button>
-                                    <md-button class="md-raised md-primary" ng-if="task.linkPattern" ng-click="ctrl.promptForLink(ctrl.event.$id, taskId, task, participant)">
-                                        Submit link
-                                    </md-button>
+                                    <span ng-if="ctrl.currentUserProgress[taskId].completed">
+                                        Completed*
+                                    </span>
+                                    <span ng-if="!ctrl.currentUserProgress[taskId].completed">
+                                        <md-button class="md-raised md-primary" ng-if="task.serviceId" ng-href="{{ctrl.startLink(task)}}" target="_blank">
+                                            Start challenge
+                                        </md-button>
+                                        <md-button class="md-raised md-primary" ng-if="task.linkPattern" ng-click="ctrl.promptForLink(ctrl.event.$id, taskId, task, participant)">
+                                            Submit link
+                                        </md-button>
+                                    </span>
                                 </span>
                             </td>
                         </tr>
@@ -101,20 +106,20 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <th colspan="5" ng-if="(ctrl.participants|spfEmpty)">
+                            <th colspan="5" ng-if="(ctrl.ranking|spfEmpty)">
                                 No participants
                             </th> 
                         </tr>
-                        <tr ng-repeat="(publicId, participant) in ctrl.participants | orderBy: '-ranking.total'" ng-class="'index-' + $index">
+                        <tr ng-repeat="(publicId, participant) in ctrl.ranking | orderBy: '-total'" ng-class="'index-' + $index">
                             <th>
                                 <md-button ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$id} }}">
                                     {{ participant.user.displayName }}
                                 </md-button>
                             </th>
-                            <td>{{ participant.ranking.codeCombat || 0 }}</td>
-                            <td>{{ participant.ranking.codeSchool || 0 }}</td>
-                            <td>{{ participant.ranking.singPath || 0 }}</td>
-                            <td>{{ participant.ranking.total || 0}}</td>
+                            <td>{{ participant.codeCombat || 0 }}</td>
+                            <td>{{ participant.codeSchool || 0 }}</td>
+                            <td>{{ participant.singPath || 0 }}</td>
+                            <td>{{ participant.total || 0}}</td>
                         </tr>
                     </tbody>
                 </table>

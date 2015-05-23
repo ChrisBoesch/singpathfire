@@ -1417,7 +1417,8 @@
                 }
               };
               var profile = {
-                $id: 'bob'
+                $id: 'bob',
+                user: {}
               };
 
               clmDataStore.profile.and.returnValue($q.when(profile));
@@ -1440,12 +1441,12 @@
               expect(
                 spfFirebase.set.calls.argsFor(1)[0].join('/')
               ).toBe(
-                'classMentors/eventParticipants/someEventId/bob/ranking'
+                'classMentors/eventRankings/someEventId/bob'
               );
               expect(
                 spfFirebase.set.calls.argsFor(1)[1]
               ).toEqual(
-                {codeSchool: 0, codeCombat: 0, singPath: 0, total: 0}
+                {codeSchool: 0, codeCombat: 0, singPath: 0, total: 0, user: {}}
               );
             });
 
@@ -1508,6 +1509,7 @@
               };
               var profile = {
                 $id: 'bob',
+                user: {},
                 services: {
                   codeSchool: {
                     details: {
@@ -1543,7 +1545,7 @@
               expect(
                 spfFirebase.set.calls.argsFor(1)[1]
               ).toEqual(
-                {codeSchool: 1, codeCombat: 0, singPath: 0, total: 1}
+                {codeSchool: 1, codeCombat: 0, singPath: 0, total: 1, user: {}}
               );
             });
 
@@ -1583,6 +1585,7 @@
               };
 
               clmDataStore.singPath.profile.and.returnValue(profile);
+              clmDataStore.profile.and.returnValue($q.when({$id: 'bob', user: {}}));
               clmDataStore.events.updateProgress(event, tasks, 'bob');
 
               $rootScope.$apply();
@@ -1600,7 +1603,7 @@
               expect(
                 spfFirebase.set.calls.argsFor(1)[1]
               ).toEqual(
-                {codeSchool: 0, codeCombat: 0, singPath: 1, total: 1}
+                {codeSchool: 0, codeCombat: 0, singPath: 1, total: 1, user: {}}
               );
             });
 
