@@ -296,6 +296,11 @@
       return function viewEventCtrlInitialData() {
         var errNoEvent = new Error('Event not found');
         var eventId = $route.current.params.eventId;
+        var profilePromise = clmDataStore.currentUserProfile().catch(rescue);
+
+        function rescue() {
+          return;
+        }
 
         var eventPromise = clmDataStore.events.get(eventId).then(function(event) {
           if (event.$value === null) {
@@ -304,10 +309,35 @@
           return event;
         });
 
-        return $q.all({
-          currentUser: spfAuthData.user(),
+        var canviewPromise = $q.all({
           event: eventPromise,
-          participants: clmDataStore.events.participants(eventId)
+          profile: profilePromise
+        }).then(function(data) {
+          return $q.when(data.profile && data.profile.canView(data.event));
+        });
+
+        var tasksPromise = canviewPromise.then(function(canView) {
+          if (canView) {
+            return clmDataStore.events.getTasks(eventId);
+          }
+        });
+
+        var participantsPromise = canviewPromise.then(function(canView) {
+          if (canView) {
+            return clmDataStore.events.participants(eventId);
+          }
+        });
+
+        return $q.all({
+          currentUser: spfAuthData.user().catch(rescue),
+          profile: profilePromise,
+          event: eventPromise,
+          tasks: tasksPromise,
+          participants: participantsPromise,
+          ranking: clmDataStore.events.getRanking(eventId),
+          currentUserStats: $q.all([eventPromise, tasksPromise, profilePromise]).then(function(data) {
+            return clmDataStore.events.updateCurrentUserProfile.apply(clmDataStore.events, data);
+          })
         });
       };
     }
@@ -335,8 +365,13 @@
       var linkers;
 
       this.currentUser = initialData.currentUser;
+      this.profile = initialData.profile;
       this.event = initialData.event;
+      this.tasks = initialData.tasks;
+      this.ranking = initialData.ranking;
+      this.currentUserRanking = initialData.currentUserStats.ranking;
       this.participants = initialData.participants;
+      this.currentUserProgress = initialData.currentUserStats.progress;
 
       updateNavbar();
 
@@ -393,7 +428,10 @@
         }
 
         // add join/leave button
-        if (self.participants.$indexFor(self.currentUser.publicId) > -1) {
+        if (
+          self.participants &&
+          self.participants.$indexFor(self.currentUser.publicId) > -1
+        ) {
           options.push({
             title: 'Leave',
             onClick: function() {
@@ -443,9 +481,12 @@
           this.join = function(pw) {
             clmDataStore.events.join(self.event, pw).then(function() {
               spfAlert.success('You joined this event');
-              clmDataStore.events.updateProgress(self.event, self.currentUser.publicId);
+              return clmDataStore.events.participants(self.event.$id);
+            }).then(function(participants) {
+              self.participants = participants;
               updateNavbar();
               $mdDialog.hide();
+              return clmDataStore.events.updateProgress(self.event, self.tasks, self.currentUser.publicId);
             }).catch(function(err) {
               spfAlert.error('Failed to add you: ' + err);
             });
@@ -458,12 +499,16 @@
         }
       }
 
-      this.update = function() {
-        return clmDataStore.events.updateProgress(self.event, self.currentUser.publicId).then(function() {
-          spfAlert.success('User progress updated');
+      this.update = function(event, tasks, profile) {
+        return clmDataStore.events.updateCurrentUserProfile(
+          event, tasks, profile
+        ).then(function(stats) {
+          self.currentUserProgress = stats.progress;
+          self.currentUserRanking = stats.ranking;
+          spfAlert.success('Profile updated');
         }).catch(function(err) {
           $log.error(err);
-          spfAlert.error('Failed to update progress');
+          spfAlert.error('Failed to update profile');
         });
       };
 
@@ -473,7 +518,7 @@
         }).map(function(index) {
           return self.participants[index];
         }).reduce(function(all, participant) {
-          all[participant.$id] = clmDataStore.events.updateProgress(self.event, participant.$id);
+          all[participant.$id] = clmDataStore.events.updateProgress(self.event, self.tasks, participant.$id);
           return all;
         }, {}));
       };
@@ -626,9 +671,16 @@
   factory('editCtrlInitialData', [
     '$q',
     'baseEditCtrlInitialData',
-    function($q, baseEditCtrlInitialData) {
+    'clmDataStore',
+    function($q, baseEditCtrlInitialData, clmDataStore) {
       return function editCtrlInitialData() {
-        return $q.all(baseEditCtrlInitialData());
+        var data = baseEditCtrlInitialData();
+
+        data.tasks = data.event.then(function(event) {
+          return clmDataStore.events.getTasks(event.$id);
+        });
+
+        return $q.all(data);
       };
     }
   ]).
@@ -646,6 +698,7 @@
     function EditCtrl(initialData, spfNavBarService, urlFor) {
 
       this.event = initialData.event;
+      this.tasks = initialData.tasks;
 
       spfNavBarService.update(
         'Edit', [{
@@ -794,11 +847,14 @@
           return event;
         });
 
-        var taskPromise = eventPromise.then(function(event) {
-          if (!event.tasks || !event.tasks[taskId]) {
-            return $q.reject(errNoTask);
-          }
-          return event.tasks[taskId];
+        var taskPromise = eventPromise.then(function() {
+          return clmDataStore.events.getTask(eventId, taskId).then(function(task) {
+            if (!task || task.$value === null) {
+              return $q.reject(errNoTask);
+            }
+
+            return task;
+          });
         });
 
         return $q.all({

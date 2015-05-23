@@ -429,9 +429,10 @@
   module.factory('spfAuth', [
     '$q',
     '$route',
+    '$log',
     '$firebaseAuth',
     'spfFirebaseRef',
-    function($q, $route, $firebaseAuth, spfFirebaseRef) {
+    function($q, $route, $log, $firebaseAuth, spfFirebaseRef) {
       var auth = $firebaseAuth(spfFirebaseRef());
       var options = {
         scope: 'email'
@@ -483,6 +484,7 @@
       };
 
       spfAuth.onAuth(function(currentAuth) {
+        $log.debug('reloading');
         $route.reload();
 
         if (!currentAuth) {
@@ -555,13 +557,15 @@
             return $q.when(userDataPromise);
           }
 
-          return spfAuthData._user().then(
+          userDataPromise = spfAuthData._user().then(
             spfAuthData.register
           ).then(function(data) {
             userData = data;
             userDataPromise = null;
             return data;
           });
+
+          return userDataPromise;
         },
 
         /**
@@ -750,7 +754,9 @@
           return obj.length;
         }
 
-        return Object.keys(obj).length;
+        return Object.keys(obj).filter(function(k) {
+          return k && k[0] !== '$';
+        }).length;
       };
     }
   ]);

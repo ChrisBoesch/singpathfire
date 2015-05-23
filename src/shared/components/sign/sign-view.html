@@ -2,12 +2,12 @@
 	<div layout layout-sm="column">
         <md-input-container flex ng-if="!ctrl.publicIdIsReadOnly">
             <label for="sign-public-id">Your Public Id</label>
-            <input ng-minlength="3" md-maxlength="64" ng-pattern="/^[-a-z0-9]+$/" required id="sign-public-id" name="userPublicId" ng-model="currentUser.publicId" spf-uniq-public-id>
+            <input ng-minlength="3" md-maxlength="20" ng-pattern="/^[-a-z0-9]+$/" required id="sign-public-id" name="userPublicId" ng-model="currentUser.publicId" spf-uniq-public-id>
             <div ng-messages="signForm.userPublicId.$error">
                 <div ng-message="required">This is required.</div>
                 <div ng-message="minlength">The public id has to be more than 2 characters long.</div>
-                <div ng-message="md-maxlength">The public id has to be less than 64 characters long.</div>
-                <div ng-message="pattern">The public id should include letters, numbers and "-".</div>
+                <div ng-message="md-maxlength">The public id has to be less than 20 characters long.</div>
+                <div ng-message="pattern">The public id should only include lowercase letters and numbers.</div>
                 <div ng-message="spfUniqPublicId">This public ID is already taken.</div>
             </div>
         </md-input-container>
