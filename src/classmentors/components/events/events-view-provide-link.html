@@ -9,12 +9,12 @@
                     <input type="text" name="linkSolution" id="edit-solution-link"
                         ng-model="ctrl.solution"
                         required="true"
-                        ng-pattern="ctrl.task.linkPattern"
+                        cm-contains="ctrl.task.linkPattern"
                         placeholer="URL to provide"
                     />
                     <div ng-messages="provideLinkForm.linkSolution.$error">
                         <div ng-message="required">Required.</div>
-                        <div ng-message="pattern">Invalid pattern.</div>
+                        <div ng-message="cmContains">Invalid pattern.</div>
                     </div>
                 </md-input-container>
             </div>
