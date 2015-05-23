@@ -50,14 +50,18 @@
       <th></th>
       <th ng-repeat="badge in practicedSchoolBadges">
           {{serviceBadges[badge.serviceKey][badge.badge].name}}
+          <span ng-hide="serviceBadges[badge.serviceKey][badge.badge].name" style="color:purple">{{badge.badge}}<span>
       </th>
     </tr> 
     <tr>
       <th></th>
       <th></th>
       <td ng-repeat="badge in practicedSchoolBadges">
-           <span style="color:blue" ng-show="badge.hasSkills">{{badge.serviceName}}</span>
-           <span ng-hide="badge.hasSkills">{{badge.serviceName}}</span>
+           <span ng-show="badge.serviceKey=='codeSchool'">
+              <span ng-show="badge.hasSkills" style="color:blue">{{badge.serviceName}}</span>
+              <span ng-hide="badge.hasSkills" style="color:yellow">{{badge.serviceName}}</span>
+           </span>
+           <span ng-hide="badge.serviceKey=='codeSchool'">{{badge.serviceName}}</span> 
       </td>
     </tr> 
 
