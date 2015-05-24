@@ -9,6 +9,20 @@
     function($routeProvider, routes) {
       $routeProvider.
 
+      when(routes.setProfileCodeCombatId, {
+        template: '<md-content flex class="md-padding" layout="row">Something went wrong...</md-content>',
+        controller: 'SetCodeCombatUserIdCtrl',
+        controllerAs: 'ctrl',
+        resolve: {
+          'initialData': [
+            'setCodeCombatUserIdCtrlInitialData',
+            function(setCodeCombatUserIdCtrlInitialData) {
+              return setCodeCombatUserIdCtrlInitialData();
+            }
+          ]
+        }
+      }).
+
       when(routes.editProfile, {
         templateUrl: 'classmentors/components/profiles/profiles-view-edit.html',
         controller: 'ClmProfileCtrl',
@@ -184,7 +198,7 @@
           id: undefined,
 
           save: function() {
-            return clmDataStore.services.codeSchool.saveDetails(self.profile, {
+            return clmDataStore.services.codeSchool.saveDetails(self.profile.$id, {
               id: self.lookUp.codeSchool.id,
               name: self.lookUp.codeSchool.id
             }).then(function() {
@@ -203,23 +217,11 @@
           find: function() {
             self.lookUp.codeCombat.errors.isLoggedToCodeCombat = undefined;
             self.lookUp.codeCombat.errors.hasACodeCombatName = undefined;
-
-            clmDataStore.services.codeCombat.auth().then(function(details) {
-              self.lookUp.codeCombat.id = details.id;
-              self.lookUp.codeCombat.name = details.name;
-            }).catch(function(err) {
-              if (err === clmDataStore.services.codeCombat.errLoggedOff) {
-                self.lookUp.codeCombat.errors.isLoggedToCodeCombat = true;
-              } else if (err === clmDataStore.services.codeCombat.errNoName) {
-                self.lookUp.codeCombat.errors.hasACodeCombatName = true;
-              } else {
-                spfAlert.error(err.toString());
-              }
-            });
+            clmDataStore.services.codeCombat.requestUserName();
           },
 
           save: function() {
-            return clmDataStore.services.codeCombat.saveDetails(self.profile, {
+            return clmDataStore.services.codeCombat.saveDetails(self.profile.$id, {
               id: self.lookUp.codeCombat.id,
               name: self.lookUp.codeCombat.name
             }).then(function() {
@@ -236,6 +238,44 @@
         }
       };
     }
+  ]).
+
+  /**
+   * Use to resolve `initialData` of `SetCodeCombatUserIdCtrl`.
+   *
+   */
+  factory('setCodeCombatUserIdCtrlInitialData', [
+    '$q',
+    '$location',
+    'routes',
+    'spfAlert',
+    'clmDataStore',
+    function setCodeCombatUserIdCtrlInitialDataFactory($q, $location, routes, spfAlert, clmDataStore) {
+      return function setCodeCombatUserIdCtrlInitialData() {
+        var search = $location.search();
+        var verificationKey = search.id;
+        var username = search.username;
+
+        return clmDataStore.services.codeCombat.setUser(username, verificationKey).then(function() {
+          spfAlert.success('Your Code School user name and id have been saved.');
+          $location.path(routes.editProfile);
+        }).catch(function(err) {
+          spfAlert.error('Failed to set user name and id: ' + err);
+          return {
+            initialData: {err: err}
+          };
+        });
+      };
+    }
+  ]).
+
+  /**
+   * SetCodeCombatUserIdCtrl
+   *
+   */
+  controller('SetCodeCombatUserIdCtrl', [
+    'initialData',
+    function SetCodeCombatUserIdCtrl() {}
   ]).
 
   directive('clmProfile', [

@@ -101,7 +101,7 @@
             delete profile.services;
             spfFirebase.set.and.returnValue($q.when());
 
-            service.saveDetails(profile, {id: '12345', name: 'bob smith'});
+            service.saveDetails(profile.$id, {id: '12345', name: 'bob smith'});
             $rootScope.$apply();
 
             expect(spfFirebase.set.calls.count()).toBeGreaterThan(0);
@@ -119,7 +119,7 @@
             delete profile.services;
             spfFirebase.set.and.returnValue($q.when());
 
-            service.saveDetails(profile, {id: '12345', name: 'bob smith'});
+            service.saveDetails(profile.$id, {id: '12345', name: 'bob smith'});
             $rootScope.$apply();
 
             expect(spfFirebase.set.calls.count()).toBeGreaterThan(1);
@@ -362,11 +362,13 @@
       });
 
       describe('clmDataStore', function() {
-        var spfAuth, spfAuthData, spfFirebase, spfCrypto;
+        var $location, $window, spfAuth, spfAuthData, spfFirebase, spfCrypto;
 
         beforeEach(module('clm'));
 
         beforeEach(function() {
+          $location = jasmine.createSpyObj('$location', ['path', 'protocol', 'port', 'host']);
+          $window = {};
           spfAuth = jasmine.createSpyObj('spfAuth', ['login', 'logout', 'onAuth']);
           spfAuthData = jasmine.createSpyObj('spfAuthData', ['user']);
           spfFirebase = jasmine.createSpyObj('spfFirebase', [
@@ -384,7 +386,8 @@
             'setWithPriority'
           ]);
           spfCrypto = {
-            password: jasmine.createSpyObj('spfCrypto.password', ['newHash', 'fromSalt'])
+            password: jasmine.createSpyObj('spfCrypto.password', ['newHash', 'fromSalt']),
+            randomString: jasmine.createSpy('randomString')
           };
 
           spfFirebase.cleanObj.and.callFake(function(obj) {
@@ -400,6 +403,8 @@
           });
 
           module(function($provide) {
+            $provide.value('$location', $location);
+            $provide.value('$window', $window);
             $provide.value('spfAuth', spfAuth);
             $provide.value('spfAuthData', spfAuthData);
             $provide.value('spfFirebase', spfFirebase);
@@ -1975,6 +1980,278 @@
                 });
               }));
 
+            });
+
+            describe('requestUserName', function() {
+              var $q, $rootScope, clmDataStore, routes;
+
+              beforeEach(inject(function(_$q_, _$rootScope_, _clmDataStore_, _routes_) {
+                $q = _$q_;
+                $rootScope = _$rootScope_;
+                clmDataStore = _clmDataStore_;
+                routes = _routes_;
+              }));
+
+              it('should request the current user auth data', function() {
+                spfAuthData.user.and.returnValue($q.when());
+
+                clmDataStore.services.codeCombat.requestUserName();
+
+                expect(spfAuthData.user).toHaveBeenCalledWith();
+              });
+
+              it('should create/replace a verification key for the current user', function() {
+                var authData = jasmine.createSpyObj('authData', ['$save']);
+
+                spfAuthData.user.and.returnValue($q.when(authData));
+                authData.$save.and.returnValue($q.reject()); // stop the chain
+                authData.secretKey = 'foo';
+                spfCrypto.randomString.and.returnValue('random');
+                $window.Date = jasmine.createSpyObj('Date', ['now']);
+
+                clmDataStore.services.codeCombat.requestUserName();
+
+                $rootScope.$apply();
+                expect(authData.$save).toHaveBeenCalledWith();
+                expect(authData.secretKey).toBeDefined();
+                expect(authData.secretKey).toBe('random');
+              });
+
+              it('should create a verification key valid for 15 minutes', function() {
+                var authData = jasmine.createSpyObj('authData', ['$save']);
+
+                spfAuthData.user.and.returnValue($q.when(authData));
+                authData.$save.and.returnValue($q.reject()); // stop the chain
+                $window.Date = jasmine.createSpyObj('Date', ['now']);
+                $window.Date.now.and.returnValue(1);
+
+                clmDataStore.services.codeCombat.requestUserName();
+
+                $rootScope.$apply();
+                expect(authData.secretKeyValidUntil).toBeDefined(15 * 60 * 1000 + 1);
+              });
+
+              it('should redirect to code combat identifyer endpoint', function() {
+                var authData = jasmine.createSpyObj('authData', ['$save']);
+
+                spfAuthData.user.and.returnValue($q.when(authData));
+                authData.$save.and.returnValue($q.when());
+                spfCrypto.randomString.and.returnValue('random');
+                $window.Date = jasmine.createSpyObj('Date', ['now']);
+                $window.Date.now.and.returnValue(1);
+                $window.location = jasmine.createSpyObj('location', ['replace']);
+                $window.encodeURIComponent = jasmine.createSpy('encodeURIComponent');
+                $window.encodeURIComponent.and.returnValue('CALLBACK');
+
+                clmDataStore.services.codeCombat.requestUserName();
+
+                $rootScope.$apply();
+                expect(
+                  $window.location.replace
+                ).toHaveBeenCalledWith(
+                  'https://codecombat.com/identify?id=random&callback=CALLBACK&source=Class%20Mentors'
+                );
+              });
+
+              it('should set the codecombat callback url', function() {
+                var authData = jasmine.createSpyObj('authData', ['$save']);
+
+                spfAuthData.user.and.returnValue($q.when(authData));
+                authData.$save.and.returnValue($q.when());
+                spfCrypto.randomString.and.returnValue('random');
+                $window.Date = jasmine.createSpyObj('Date', ['now']);
+                $window.Date.now.and.returnValue(1);
+                $window.location = jasmine.createSpyObj('location', ['replace']);
+                $window.encodeURIComponent = jasmine.createSpy('encodeURIComponent');
+                $window.encodeURIComponent.and.returnValue('CALLBACK');
+                $location.protocol.and.returnValue('https');
+                $location.host.and.returnValue('classmentors.com');
+                $location.port.and.returnValue(80);
+                $window.location.pathname = '/somepath/';
+                routes.setProfileCodeCombatId = '/someviewpath';
+
+                clmDataStore.services.codeCombat.requestUserName();
+
+                $rootScope.$apply();
+                expect(
+                  $window.encodeURIComponent
+                ).toHaveBeenCalledWith(
+                  'https://classmentors.com/somepath/#/someviewpath'
+                );
+              });
+
+              it('should set the codecombat callback url with the port', function() {
+                var authData = jasmine.createSpyObj('authData', ['$save']);
+
+                spfAuthData.user.and.returnValue($q.when(authData));
+                authData.$save.and.returnValue($q.when());
+                spfCrypto.randomString.and.returnValue('random');
+                $window.Date = jasmine.createSpyObj('Date', ['now']);
+                $window.Date.now.and.returnValue(1);
+                $window.location = jasmine.createSpyObj('location', ['replace']);
+                $window.encodeURIComponent = jasmine.createSpy('encodeURIComponent');
+                $window.encodeURIComponent.and.returnValue('CALLBACK');
+                $location.protocol.and.returnValue('https');
+                $location.host.and.returnValue('classmentors.com');
+                $location.port.and.returnValue(8080);
+                $window.location.pathname = '/somepath/';
+                routes.setProfileCodeCombatId = '/someviewpath';
+
+                clmDataStore.services.codeCombat.requestUserName();
+
+                $rootScope.$apply();
+                expect(
+                  $window.encodeURIComponent
+                ).toHaveBeenCalledWith(
+                  'https://classmentors.com:8080/somepath/#/someviewpath'
+                );
+              });
+
+            });
+
+            describe('setUser', function() {
+              var $q, $rootScope, $httpBackend, clmDataStore;
+
+              beforeEach(inject(function(_$q_, _$rootScope_, _$httpBackend_, _clmDataStore_) {
+                $q = _$q_;
+                $rootScope = _$rootScope_;
+                $httpBackend = _$httpBackend_;
+                clmDataStore = _clmDataStore_;
+              }));
+
+              it('should request the current user auth data', function() {
+                spfAuthData.user.and.returnValue($q.when());
+
+                clmDataStore.services.codeCombat.setUser();
+
+                expect(spfAuthData.user).toHaveBeenCalledWith();
+              });
+
+              it('should reject when the verification keys do not match', function() {
+                var authData = {
+                  secretKey: '1234',
+                  publicId: 'bob'
+                };
+                var err;
+
+                spfAuthData.user.and.returnValue($q.when(authData));
+                $window.Date = jasmine.createSpyObj('Date', ['now']);
+                authData.secretKey = 'wrongKey';
+                authData.secretKeyValidUntil = 2;
+                $window.Date.now.and.returnValue(1);
+                $httpBackend.whenGET(/proxy/).respond('abc');
+
+                clmDataStore.services.codeCombat.setUser('bob', '1234').catch(function(e) {
+                  err = e;
+                });
+
+                $rootScope.$apply();
+
+                expect(err).toBeDefined();
+              });
+
+              it('should reject the verification keys is too old', function() {
+                var authData = {
+                  secretKey: '1234',
+                  publicId: 'bob'
+                };
+                var err;
+
+                spfAuthData.user.and.returnValue($q.when(authData));
+                $window.Date = jasmine.createSpyObj('Date', ['now']);
+                authData.secretKey = '1234';
+                authData.secretKeyValidUntil = 2;
+                $window.Date.now.and.returnValue(3);
+                $httpBackend.whenGET(/proxy/).respond('abc');
+
+                clmDataStore.services.codeCombat.setUser('bob', '1234').catch(function(e) {
+                  err = e;
+                });
+
+                $rootScope.$apply();
+
+                expect(err).toBeDefined();
+              });
+
+              it('should get the codeCombat user id mapping to user name', function() {
+                var authData = {
+                  secretKey: '1234',
+                  publicId: 'bob'
+                };
+
+                spfAuthData.user.and.returnValue($q.when(authData));
+                $window.Date = jasmine.createSpyObj('Date', ['now']);
+                clmDataStore.services.codeCombat.saveDetails = jasmine.createSpy(
+                  'clmDataStore.services.codeCombat.saveDetails'
+                );
+
+                authData.secretKey = '1234';
+                authData.secretKeyValidUntil = 2;
+                $window.Date.now.and.returnValue(1);
+                $httpBackend.expectGET('/proxy/codecombat.com/db/user/bob/nameToID').respond('abc');
+
+                clmDataStore.services.codeCombat.setUser('bob', '1234');
+
+                $rootScope.$apply();
+                $httpBackend.flush();
+              });
+
+              it('should reject if the code combat user id is not found', function() {
+                var authData = {
+                  secretKey: '1234',
+                  publicId: 'bob'
+                };
+                var err;
+
+                spfAuthData.user.and.returnValue($q.when(authData));
+                $window.Date = jasmine.createSpyObj('Date', ['now']);
+                clmDataStore.services.codeCombat.saveDetails = jasmine.createSpy(
+                  'clmDataStore.services.codeCombat.saveDetails'
+                );
+
+                authData.secretKey = '1234';
+                authData.secretKeyValidUntil = 2;
+                $window.Date.now.and.returnValue(1);
+                $httpBackend.whenGET(/proxy/).respond('');
+
+                clmDataStore.services.codeCombat.setUser('bob', '1234').catch(function(e) {
+                  err = e;
+                });
+
+                $rootScope.$apply();
+                $httpBackend.flush();
+
+                expect(err).toBeDefined();
+              });
+
+              it('should save the code combat user details', function() {
+                var authData = {
+                  secretKey: '1234',
+                  publicId: 'bob'
+                };
+
+                spfAuthData.user.and.returnValue($q.when(authData));
+                $window.Date = jasmine.createSpyObj('Date', ['now']);
+                clmDataStore.services.codeCombat.saveDetails = jasmine.createSpy(
+                  'clmDataStore.services.codeCombat.saveDetails'
+                );
+
+                authData.secretKey = '1234';
+                authData.secretKeyValidUntil = 2;
+                $window.Date.now.and.returnValue(1);
+                $httpBackend.whenGET(/proxy/).respond('abc');
+
+                clmDataStore.services.codeCombat.setUser('ccBob', '1234');
+
+                $rootScope.$apply();
+                $httpBackend.flush();
+
+                expect(
+                  clmDataStore.services.codeCombat.saveDetails
+                ).toHaveBeenCalledWith(
+                  'bob', {id: 'abc', name: 'ccBob'}
+                );
+              });
             });
 
           });

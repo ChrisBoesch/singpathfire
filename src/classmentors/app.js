@@ -33,7 +33,8 @@
     editEventTask: '/events/:eventId/task/:taskId',
     addEventTask: '/events/:eventId/new-task',
     profile: '/profile/:publicId',
-    editProfile: '/profile/'
+    editProfile: '/profile/',
+    setProfileCodeCombatId: '/profile/codeCombat'
   }).
 
   /**
@@ -135,14 +136,14 @@
 
           /**
            * Claim the user name for t
-           * @param  firebaseObj profile Class Mentor profile of a user.
+           * @param  string      user's publiId.
            * @param  Object      details object holding the user id and user name.
            *                     of the user for that service.
            * @return Promise     Promise resolving to the updated Class Mentor profile
            *                     service details firebase ref.
            */
-          saveDetails: function(profile, details) {
-            if (!profile || !profile.$id) {
+          saveDetails: function(publicId, details) {
+            if (!publicId) {
               return $q.reject(new Error('The Classmentors profile should have an id.'));
             }
 
@@ -154,10 +155,10 @@
 
             return spfFirebase.set(
               ['classMentors/servicesUserIds', serviceId, details.id],
-              profile.$id
+              publicId
             ).then(function() {
               return spfFirebase.set(
-                ['classMentors/userProfiles', profile.$id, 'services', serviceId, 'details'], {
+                ['classMentors/userProfiles', publicId, 'services', serviceId, 'details'], {
                   id: details.id,
                   name: details.name,
                   registeredBefore: {
@@ -291,15 +292,21 @@
    *
    */
   factory('clmDataStore', [
+    '$window',
+    '$location',
     '$q',
     '$log',
     '$http',
+    'routes',
     'spfFirebase',
     'spfAuth',
     'spfAuthData',
     'spfCrypto',
     'clmService',
-    function clmDataStoreFactory($q, $log, $http, spfFirebase, spfAuth, spfAuthData, spfCrypto, clmService) {
+    function clmDataStoreFactory(
+      $window, $location, $q, $log, $http,
+      routes, spfFirebase, spfAuth, spfAuthData, spfCrypto, clmService
+    ) {
       var clmDataStore;
 
       clmDataStore = {
@@ -903,6 +910,71 @@
               }, function(e) {
                 $log.error('Failed request to //codecombat.com/auth/whoami: ' + e.toString());
                 return $q.reject(clmDataStore.services.codeCombat.errServerError);
+              });
+            },
+
+            requestUserName: function() {
+              return spfAuthData.user().then(function(authData) {
+                authData.secretKey = spfCrypto.randomString(16);
+                authData.secretKeyValidUntil = $window.Date.now() + (1000 * 60 * 15);
+                return authData.$save().then(function() {
+                  return authData;
+                });
+              }).then(function(authData) {
+                var cbUrl = [
+                  $location.protocol(),
+                  '://',
+                  $location.host()
+                ];
+                var port = $location.port();
+
+                if (port !== 80) {
+                  cbUrl.push(':' + port);
+                }
+
+                $window.location.replace([
+                  'https://codecombat.com/identify?id=',
+                  authData.secretKey,
+                  '&callback=',
+                  $window.encodeURIComponent(
+                    cbUrl.concat([
+                      $window.location.pathname || '/',
+                      '#',
+                      routes.setProfileCodeCombatId
+                    ]).join('')
+                  ),
+                  '&source=Class%20Mentors'
+                ].join(''));
+              });
+            },
+
+            setUser: function(userName, verificationKey) {
+              return spfAuthData.user().then(function(authData) {
+                if (!authData.secretKey || authData.secretKey !== verificationKey) {
+                  return $q.reject(new Error('Wrong verification key'));
+                }
+
+                if (!authData.secretKeyValidUntil || authData.secretKeyValidUntil < $window.Date.now()) {
+                  return $q.reject(new Error('The verification key is too old'));
+                }
+
+                return $http.get('/proxy/codecombat.com/db/user/' + userName + '/nameToID').then(function(resp) {
+                  return {
+                    auth: authData,
+                    userId: resp.data
+                  };
+                });
+              }).then(function(data) {
+                if (!data.userId) {
+                  return $q.reject('We failed to lookup your Code Combat user id.');
+                }
+
+                return clmDataStore.services.codeCombat.saveDetails(
+                  data.auth.publicId, {
+                    id: data.userId,
+                    name: userName
+                  }
+                );
               });
             }
           }),

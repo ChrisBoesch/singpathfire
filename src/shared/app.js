@@ -712,6 +712,11 @@
                 });
                 return hex.stringify(hash);
               }
+            },
+
+            randomString: function(size) {
+              var random = CryptoJS.lib.WordArray.random(size);
+              return hex.stringify(random);
             }
           };
         }
