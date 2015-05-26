@@ -41,7 +41,7 @@
    * Root url for services
    */
   value('clmServicesUrl', {
-    singPath: '/singpath',
+    singPath: 'http://www.singpath.com/',
     codeCombat: 'https://codecombat.com',
     codeSchool: 'https://www.codeschool.com'
   }).

@@ -235,7 +235,7 @@
           };
 
           expect(ctrl.startLink(task)).toBe(
-            '/singpath/#/paths/pathId/levels/levelId/problems/problemId/play'
+            'http://www.singpath.com//#/paths/pathId/levels/levelId/problems/problemId/play'
           );
         });
 
