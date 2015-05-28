@@ -1,5 +1,4 @@
-/* eslint-env jasmine */
-/* global module, inject, angular */
+/* eslint-env jasmine */ /* global module, inject, angular */
 
 (function() {
   'use strict';
@@ -1468,6 +1467,9 @@
                   badge: {
                     id: 'someBadgeId'
                   }
+                },
+                lastTaskId: {
+                  serviceId: 'codeCombat'
                 }
               };
               var profile = {
@@ -1572,7 +1574,22 @@
                       id: 'problemId'
                     }
                   }
+                },
+                someOtherTaskId: {
+                  serviceId: 'singPath',
+                  singPathProblem: {
+                    path: {
+                      id: 'pathId'
+                    },
+                    level: {
+                      id: 'levelId'
+                    },
+                    problem: {
+                      id: 'otherProblemId'
+                    }
+                  }
                 }
+
               };
               var profile = {
                 user: {
@@ -1582,7 +1599,12 @@
                   pathId: {
                     levelId: {
                       problemId: {
-                        solved: true
+                        started: 1234,
+                        solved: true,
+                        duration: 10000
+                      },
+                      otherProblemId: {
+                        started: 1234
                       }
                     }
                   }
