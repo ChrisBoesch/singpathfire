@@ -475,6 +475,94 @@
 
         });
 
+        describe('transaction', function() {
+          var $q, $rootScope, spfFirebase, fn;
+
+          beforeEach(inject(function(_$q_, _$rootScope_, _spfFirebase_) {
+            $q = _$q_;
+            $rootScope = _$rootScope_;
+            spfFirebase = _spfFirebase_;
+            fn = jasmine.createSpy('fn');
+          }));
+
+          it('should call spfFirebase.ref with the given path', function() {
+            var path = ['foo'];
+
+            spfFirebase.ref = jasmine.createSpy('spfFirebase.ref');
+            spfFirebase.ref.and.returnValue(jasmine.createSpyObj('ref', ['transaction']));
+            spfFirebase.transaction(path, fn);
+
+            expect(spfFirebase.ref).toHaveBeenCalledWith(path);
+          });
+
+          it('should call the firebase ref transaction method', function() {
+            var ref = jasmine.createSpyObj('ref', ['transaction']);
+
+            spfFirebase.ref = jasmine.createSpy('spfFirebase.ref');
+            spfFirebase.ref.and.returnValue(ref);
+            spfFirebase.transaction(['some/path'], fn);
+
+            expect(ref.transaction.calls.count()).toBe(1);
+            expect(ref.transaction).toHaveBeenCalledWith(fn, jasmine.any(Function), false);
+          });
+
+          it('should return a promise resolving to the snapshot of the update path', function() {
+            var ref = jasmine.createSpyObj('ref', ['transaction']);
+            var expected = {someProp: 'someValue'};
+            var actual, onComplete;
+
+            spfFirebase.ref = jasmine.createSpy('spfFirebase.ref');
+            spfFirebase.ref.and.returnValue(ref);
+            spfFirebase.transaction(['some/path'], fn).then(function(ss) {
+              actual = ss;
+            });
+
+            onComplete = ref.transaction.calls.argsFor(0)[1];
+            onComplete(null, true, expected);
+            $rootScope.$apply();
+
+            expect(actual).toBe(expected);
+          });
+
+          it('should return a promise resolving to an error if the transaction failed', function() {
+            var ref = jasmine.createSpyObj('ref', ['transaction']);
+            var transactionError = new Error('some error');
+            var err, onComplete;
+
+            spfFirebase.ref = jasmine.createSpy('spfFirebase.ref');
+            spfFirebase.ref.and.returnValue(ref);
+            spfFirebase.transaction(['some/path'], fn).catch(function(e) {
+              err = e;
+            });
+
+            onComplete = ref.transaction.calls.argsFor(0)[1];
+            onComplete(transactionError, true, 'someValue');
+            $rootScope.$apply();
+
+            expect(err).toEqual(jasmine.any(Error));
+            expect(err).toBe(spfFirebase.errTransactionFailed);
+          });
+
+          it('should return a promise resolving to an error if the transaction failed', function() {
+            var ref = jasmine.createSpyObj('ref', ['transaction']);
+            var err, onComplete;
+
+            spfFirebase.ref = jasmine.createSpy('spfFirebase.ref');
+            spfFirebase.ref.and.returnValue(ref);
+            spfFirebase.transaction(['some/path'], fn).catch(function(e) {
+              err = e;
+            });
+
+            onComplete = ref.transaction.calls.argsFor(0)[1];
+            onComplete(null, false, 'someValue');
+            $rootScope.$apply();
+
+            expect(err).toEqual(jasmine.any(Error));
+            expect(err).toBe(spfFirebase.errTransactionAborted);
+          });
+
+        });
+
       });
 
       describe('spfAuth', function() {

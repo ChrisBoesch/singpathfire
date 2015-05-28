@@ -415,6 +415,24 @@
             }
             return copy;
           }, {});
+        },
+
+        errTransactionFailed: new Error('Transaction failed'),
+        errTransactionAborted: new Error('Transaction aborted'),
+
+        transaction: function(path, fn) {
+          return $q(function(ok, fails) {
+            spfFirebase.ref(path).transaction(fn, function(error, committed, snapshot) {
+              if (error) {
+                $log.error(error);
+                fails(spfFirebase.errTransactionFailed);
+              } else if (!committed) {
+                fails(spfFirebase.errTransactionAborted);
+              } else {
+                ok(snapshot);
+              }
+            }, false);
+          });
         }
       };
 
