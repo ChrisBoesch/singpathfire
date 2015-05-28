@@ -27,6 +27,7 @@
             currentUserStats: {}
           },
           $document: {},
+          $route: jasmine.createSpyObj('$route', ['reload']),
           $mdDialog: jasmine.createSpyObj('$mdDialog', ['show', 'hide']),
           spfAlert: jasmine.createSpyObj('spfAlert', ['info', 'success', 'error', 'warning']),
           spfNavBarService: jasmine.createSpyObj('spfNavBarService', ['update']),

@@ -356,13 +356,15 @@
     '$log',
     '$document',
     '$mdDialog',
+    '$route',
     'spfAlert',
     'urlFor',
     'spfNavBarService',
     'clmDataStore',
     'clmServicesUrl',
     function ViewEventCtrl(
-      initialData, $q, $log, $document, $mdDialog, spfAlert, urlFor, spfNavBarService, clmDataStore, clmServicesUrl
+      initialData, $q, $log, $document, $mdDialog, $route,
+      spfAlert, urlFor, spfNavBarService, clmDataStore, clmServicesUrl
     ) {
       var self = this;
       var linkers;
@@ -438,8 +440,9 @@
           options.push({
             title: 'Leave',
             onClick: function() {
-              clmDataStore.events.leave(self.event.$id);
-              updateNavbar();
+              clmDataStore.events.leave(self.event.$id).then(function() {
+                $route.reload();
+              });
             },
             icon: 'highlight-remove'
           });
@@ -490,10 +493,11 @@
               updateNavbar();
               $mdDialog.hide();
               return clmDataStore.events.updateProgress(self.event, self.tasks, self.currentUser.publicId);
+            }).then(function() {
+              $route.reload();
             }).catch(function(err) {
               spfAlert.error('Failed to add you: ' + err);
             });
-            this.closeDialog();
           };
 
           this.closeDialog = function() {
