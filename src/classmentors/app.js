@@ -630,7 +630,8 @@
               profile.solutions &&
               profile.solutions[path] &&
               profile.solutions[path][level] &&
-              profile.solutions[path][level][problem]
+              profile.solutions[path][level][problem] &&
+              profile.solutions[path][level][problem].solved
             );
           },
 
