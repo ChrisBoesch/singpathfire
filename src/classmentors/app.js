@@ -959,7 +959,9 @@
                   return $q.reject(new Error('The verification key is too old'));
                 }
 
-                return $http.get('/proxy/codecombat.com/db/user/' + userName + '/nameToID').then(function(resp) {
+                var encodedName = $window.encodeURIComponent(userName);
+
+                return $http.get('/proxy/codecombat.com/db/user/' + encodedName + '/nameToID').then(function(resp) {
                   return {
                     auth: authData,
                     userId: resp.data

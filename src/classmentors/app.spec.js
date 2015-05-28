@@ -2195,6 +2195,33 @@
                 expect(err).toBeDefined();
               });
 
+              it('should encode the code combat userName', function() {
+                var authData = {
+                  secretKey: '1234',
+                  publicId: 'bob'
+                };
+
+                spfAuthData.user.and.returnValue($q.when(authData));
+                $window.Date = jasmine.createSpyObj('Date', ['now']);
+                $window.encodeURIComponent = jasmine.createSpy('encodeURIComponent');
+                clmDataStore.services.codeCombat.saveDetails = jasmine.createSpy(
+                  'clmDataStore.services.codeCombat.saveDetails'
+                );
+
+                authData.secretKey = '1234';
+                authData.secretKeyValidUntil = 2;
+                $window.Date.now.and.returnValue(1);
+                $window.encodeURIComponent.and.returnValue('bob%20almity');
+                $httpBackend.expectGET('/proxy/codecombat.com/db/user/bob%20almity/nameToID').respond('abc');
+
+                clmDataStore.services.codeCombat.setUser('bob almighty', '1234');
+
+                $rootScope.$apply();
+                $httpBackend.flush();
+
+                expect($window.encodeURIComponent).toHaveBeenCalledWith('bob almighty');
+              });
+
               it('should get the codeCombat user id mapping to user name', function() {
                 var authData = {
                   secretKey: '1234',
@@ -2203,6 +2230,7 @@
 
                 spfAuthData.user.and.returnValue($q.when(authData));
                 $window.Date = jasmine.createSpyObj('Date', ['now']);
+                $window.encodeURIComponent = jasmine.createSpy('encodeURIComponent');
                 clmDataStore.services.codeCombat.saveDetails = jasmine.createSpy(
                   'clmDataStore.services.codeCombat.saveDetails'
                 );
@@ -2210,6 +2238,7 @@
                 authData.secretKey = '1234';
                 authData.secretKeyValidUntil = 2;
                 $window.Date.now.and.returnValue(1);
+                $window.encodeURIComponent.and.returnValue('bob');
                 $httpBackend.expectGET('/proxy/codecombat.com/db/user/bob/nameToID').respond('abc');
 
                 clmDataStore.services.codeCombat.setUser('bob', '1234');
@@ -2227,6 +2256,7 @@
 
                 spfAuthData.user.and.returnValue($q.when(authData));
                 $window.Date = jasmine.createSpyObj('Date', ['now']);
+                $window.encodeURIComponent = jasmine.createSpy('encodeURIComponent');
                 clmDataStore.services.codeCombat.saveDetails = jasmine.createSpy(
                   'clmDataStore.services.codeCombat.saveDetails'
                 );
@@ -2234,6 +2264,7 @@
                 authData.secretKey = '1234';
                 authData.secretKeyValidUntil = 2;
                 $window.Date.now.and.returnValue(1);
+                $window.encodeURIComponent.and.returnValue('bob');
                 $httpBackend.whenGET(/proxy/).respond('');
 
                 clmDataStore.services.codeCombat.setUser('bob', '1234').catch(function(e) {
@@ -2254,12 +2285,14 @@
 
                 spfAuthData.user.and.returnValue($q.when(authData));
                 $window.Date = jasmine.createSpyObj('Date', ['now']);
+                $window.encodeURIComponent = jasmine.createSpy('encodeURIComponent');
                 clmDataStore.services.codeCombat.saveDetails = jasmine.createSpy(
                   'clmDataStore.services.codeCombat.saveDetails'
                 );
 
                 authData.secretKey = '1234';
                 authData.secretKeyValidUntil = 2;
+                $window.encodeURIComponent.and.returnValue('bob');
                 $window.Date.now.and.returnValue(1);
                 $httpBackend.whenGET(/proxy/).respond('abc');
 
