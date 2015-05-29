@@ -21,8 +21,25 @@
   config([
     '$mdIconProvider',
     function($mdIconProvider) {
-      $mdIconProvider.defaultIconSet('shared/components/icons/svgdefs.svg', 1024);
+      $mdIconProvider.defaultIconSet('shared/components/icons/svgdefs.svg', 1024)
+        .icon(
+          'language:python',
+          'shared/components/icons/icons-python.svg',
+          120
+        )
+        .icon(
+          'language:angularjs',
+          'shared/components/icons/icons-angularjs.svg',
+          120
+        )
+        .icon(
+          'language:javascript',
+          'shared/components/icons/icons-javascript.svg',
+          630
+        );
     }
-  ]);
+  ])
+
+  ;
 
 })();
