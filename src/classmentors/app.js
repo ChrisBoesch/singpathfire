@@ -303,9 +303,10 @@
     'spfAuthData',
     'spfCrypto',
     'clmService',
+    'clmServicesUrl',
     function clmDataStoreFactory(
       $window, $location, $q, $log, $http,
-      routes, spfFirebase, spfAuth, spfAuthData, spfCrypto, clmService
+      routes, spfFirebase, spfAuth, spfAuthData, spfCrypto, clmService, clmServicesUrl
     ) {
       var clmDataStore;
 
@@ -1068,7 +1069,7 @@
                 all[id] = {
                   id: id,
                   title: paths[id].title,
-                  url: '/singpath/#/paths/' + id + '/levels'
+                  url: clmServicesUrl.singPath + '#/paths/' + id + '/levels'
                 };
                 return all;
               }, {});
@@ -1088,7 +1089,7 @@
                 all[id] = {
                   id: id,
                   title: levels[id].title,
-                  url: '/singpath/#/paths/' + pathId + '/levels/' + id + '/problems'
+                  url: clmServicesUrl.singPath + '#/paths/' + pathId + '/levels/' + id + '/problems'
                 };
                 return all;
               }, {});
@@ -1109,7 +1110,7 @@
                 all[id] = {
                   id: id,
                   title: problems[id].title,
-                  url: '/singpath/#/paths/' + pathId + '/levels/' + levelId + '/problems/' + id + '/play'
+                  url: clmServicesUrl.singPath + '#/paths/' + pathId + '/levels/' + levelId + '/problems/' + id + '/play'
                 };
                 return all;
               }, {});

@@ -618,7 +618,7 @@
                 someId: {
                   id: 'someId',
                   title: 'some title',
-                  url: '/singpath/#/paths/someId/levels'
+                  url: 'http://www.singpath.com/#/paths/someId/levels'
                 }
               };
               var actual;
@@ -656,7 +656,7 @@
                 someId: {
                   id: 'someId',
                   title: 'some title',
-                  url: '/singpath/#/paths/someId/levels'
+                  url: 'http://www.singpath.com/#/paths/someId/levels'
                 }
               };
               var actual;
@@ -688,7 +688,7 @@
                 someOtherId: {
                   id: 'someOtherId',
                   title: 'some title',
-                  url: '/singpath/#/paths/someId/levels/someOtherId/problems'
+                  url: 'http://www.singpath.com/#/paths/someId/levels/someOtherId/problems'
                 }
               };
               var actual;
@@ -726,7 +726,7 @@
                 someOtherId: {
                   id: 'someOtherId',
                   title: 'some title',
-                  url: '/singpath/#/paths/someId/levels/someOtherId/problems'
+                  url: 'http://www.singpath.com/#/paths/someId/levels/someOtherId/problems'
                 }
               };
               var actual;
@@ -758,7 +758,7 @@
                 lastId: {
                   id: 'lastId',
                   title: 'some title',
-                  url: '/singpath/#/paths/someId/levels/someOtherId/problems/lastId/play'
+                  url: 'http://www.singpath.com/#/paths/someId/levels/someOtherId/problems/lastId/play'
                 }
               };
               var actual;
@@ -798,7 +798,7 @@
                 lastId: {
                   id: 'lastId',
                   title: 'some title',
-                  url: '/singpath/#/paths/someId/levels/someOtherId/problems/lastId/play'
+                  url: 'http://www.singpath.com/#/paths/someId/levels/someOtherId/problems/lastId/play'
                 }
               };
               var actual;
