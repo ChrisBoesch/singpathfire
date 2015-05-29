@@ -420,9 +420,22 @@
         errTransactionFailed: new Error('Transaction failed'),
         errTransactionAborted: new Error('Transaction aborted'),
 
-        transaction: function(path, fn) {
+        /**
+         * Promise based transaction helper.
+         *
+         * `path` is the firebase path the transaction will work on.
+         *
+         * `call` will be called with the current value at the path. It should return
+         * a new value to update the path with or undefined to abort the transaction.
+         *
+         * The returned promise will resolve to the new value or will reject
+         * with a spfFirebase.errTransactionFailed or spfFirebase.errTransactionAborted
+         * error.
+         *
+         */
+        transaction: function(path, callback) {
           return $q(function(ok, fails) {
-            spfFirebase.ref(path).transaction(fn, function(error, committed, snapshot) {
+            spfFirebase.ref(path).transaction(callback, function(error, committed, snapshot) {
               if (error) {
                 $log.error(error);
                 fails(spfFirebase.errTransactionFailed);
@@ -432,6 +445,21 @@
                 ok(snapshot);
               }
             }, false);
+          });
+        },
+
+        /**
+         * Return a promise resolving to the record at the firebase path.
+         *
+         * An alternative to using an AngularFire object whenyou don't need
+         * the update.
+         *
+         */
+        valueAt: function(path) {
+          return $q(function(ok, fails) {
+            spfFirebase.ref(path).once('value', function(snapshot) {
+              ok(snapshot.val());
+            }, fails);
           });
         }
       };

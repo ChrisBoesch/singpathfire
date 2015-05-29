@@ -563,6 +563,79 @@
 
         });
 
+        describe('valueAt', function() {
+          var $q, $rootScope, spfFirebase;
+
+          beforeEach(inject(function(_$q_, _$rootScope_, _spfFirebase_) {
+            $q = _$q_;
+            $rootScope = _$rootScope_;
+            spfFirebase = _spfFirebase_;
+          }));
+
+          it('should call spfFirebase.ref with the given path', function() {
+            var path = ['foo'];
+
+            spfFirebase.ref = jasmine.createSpy('spfFirebase.ref');
+            spfFirebase.ref.and.returnValue(jasmine.createSpyObj('ref', ['once']));
+            spfFirebase.valueAt(path);
+
+            expect(spfFirebase.ref).toHaveBeenCalledWith(path);
+          });
+
+          it('should request the value at the given path', function() {
+            var ref = jasmine.createSpyObj('ref', ['once']);
+
+            spfFirebase.ref = jasmine.createSpy('spfFirebase.ref');
+            spfFirebase.ref.and.returnValue(ref);
+            spfFirebase.valueAt(['some/path']);
+
+            expect(ref.once.calls.count()).toBe(1);
+            expect(ref.once).toHaveBeenCalledWith(
+              'value',
+              jasmine.any(Function),
+              jasmine.any(Function)
+            );
+          });
+
+          it('should return a promise resolving to value at the firebase DB', function() {
+            var ref = jasmine.createSpyObj('ref', ['once']);
+            var snapshot = jasmine.createSpyObj('snapshot', ['val']);
+            var expected = {some: 'value'};
+            var onSuccess, actual;
+
+            spfFirebase.ref = jasmine.createSpy('spfFirebase.ref');
+            spfFirebase.ref.and.returnValue(ref);
+            snapshot.val.and.returnValue(expected);
+            spfFirebase.valueAt(['some/path']).then(function(resp) {
+              actual = resp;
+            });
+
+            onSuccess = ref.once.calls.argsFor(0)[1];
+            onSuccess(snapshot);
+
+            $rootScope.$apply();
+            expect(actual).toBe(expected);
+          });
+
+          it('should return a promise rejecting if the query fails', function() {
+            var ref = jasmine.createSpyObj('ref', ['once']);
+            var expected = new Error('query failed');
+            var onFailures, err;
+
+            spfFirebase.ref = jasmine.createSpy('spfFirebase.ref');
+            spfFirebase.ref.and.returnValue(ref);
+            spfFirebase.valueAt(['some/path']).catch(function(e) {
+              err = e;
+            });
+
+            onFailures = ref.once.calls.argsFor(0)[2];
+            onFailures(expected);
+
+            $rootScope.$apply();
+            expect(err).toBe(expected);
+          });
+        });
+
       });
 
       describe('spfAuth', function() {
