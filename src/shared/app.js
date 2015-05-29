@@ -810,6 +810,30 @@
         }).length;
       };
     }
-  ]);
+  ]).
+
+  filter('toArray', [
+    function toArrayFilterFactory() {
+      return function toArrayFilter(obj) {
+        if (!(obj instanceof Object)) {
+          return obj;
+        }
+        return Object.keys(obj).reduce(function(arr, key) {
+          if (!key || key[0] === '$') {
+            return arr;
+          }
+
+          arr.push(Object.defineProperty(
+            obj[key],
+            '$$hashKey',
+            {__proto__: null, value: key}
+          ));
+
+          return arr;
+        }, []);
+      };
+    }
+  ])
+  ;
 
 })();
