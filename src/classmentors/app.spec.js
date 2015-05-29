@@ -1,4 +1,5 @@
-/* eslint-env jasmine */ /* global module, inject, angular */
+/* eslint-env jasmine */
+/* global module, inject, angular */
 
 (function() {
   'use strict';
