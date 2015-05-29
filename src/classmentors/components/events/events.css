@@ -3,11 +3,21 @@
     padding: 0 10px 0;
 }
 
-.events tr th:first-child {
+.tasks tr th:first-child {
     text-align: left;
     padding-left: 0;
 }
 
 .events tr.index-0 th, .events tr.index-0 td {
     padding-top: 10px;
+}
+
+.reversed th.orderer .md-button:after {
+    content: " \25BC";
+    font-size: 12px;
+}
+
+th.orderer .md-button:after {
+    content: " \25B2";
+    font-size: 12px;
 }

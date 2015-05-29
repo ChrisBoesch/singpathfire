@@ -366,6 +366,37 @@
 
       });
 
+      describe('orderBy', function() {
+
+        it('should setup orderKey and reverseOrder', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+
+          expect(ctrl.orderKey).toBe('total');
+          expect(ctrl.reverseOrder).toBe(true);
+        });
+
+        it('should reverse order when the same key is selected again', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+
+          expect(ctrl.reverseOrder).toBe(true);
+          ctrl.orderBy(ctrl.orderKey);
+          expect(ctrl.reverseOrder).toBe(false);
+          ctrl.orderBy(ctrl.orderKey);
+          expect(ctrl.reverseOrder).toBe(true);
+        });
+
+        it('should set new key and reset reverseOrder', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+
+          ctrl.reverseOrder = false;
+          ctrl.orderBy('someOtherKey');
+
+          expect(ctrl.orderKey).toBe('someOtherKey');
+          expect(ctrl.reverseOrder).toBe(true);
+        });
+
+      });
+
     });
 
   });

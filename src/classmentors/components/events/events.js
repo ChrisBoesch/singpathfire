@@ -377,6 +377,17 @@
       this.currentUserRanking = initialData.currentUserStats.ranking;
       this.participants = initialData.participants;
       this.currentUserProgress = initialData.currentUserStats.progress;
+      this.orderKey = 'total';
+      this.reverseOrder = true;
+
+      this.orderBy = function(key) {
+        if (this.orderKey === key) {
+          this.reverseOrder = !this.reverseOrder;
+        } else {
+          this.orderKey = key;
+          this.reverseOrder = true;
+        }
+      };
 
       updateNavbar();
 

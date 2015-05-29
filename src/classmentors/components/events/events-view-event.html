@@ -9,7 +9,7 @@
             <md-content>
                 <h1>Tasks</h1>
 
-                <table class="events">
+                <table class="events tasks">
                     <thead>
                         <tr>
                             <th>
@@ -94,14 +94,24 @@
             <md-content>
                 <h1>Ranking</h1>
                 
-                <table class="events">
+                <table class="events rankink">
                     <thead>
-                        <tr>
-                            <th>Participants</th>
-                            <th>Total</th>
-                            <th>Code Combat Badges</th>
-                            <th>Code School Badges</th>
-                            <th>SingPath Problems</th>
+                        <tr ng-class="{'reversed': ctrl.reverseOrder}">
+                            <th ng-class="{orderer: ctrl.orderKey == 'user.displayName'}">
+                                <md-button ng-click="ctrl.orderBy('user.displayName')">Participants</md-button>
+                            </th>
+                            <th ng-class="{orderer: ctrl.orderKey == 'total'}">
+                                <md-button ng-click="ctrl.orderBy('total')">Total</md-button>
+                            </th>
+                            <th ng-class="{orderer: ctrl.orderKey == 'codeCombat'}">
+                                <md-button ng-click="ctrl.orderBy('codeCombat')">Code Combat Badges</md-button>
+                            </th>
+                            <th ng-class="{orderer: ctrl.orderKey == 'codeSchool'}">
+                                <md-button ng-click="ctrl.orderBy('codeSchool')">Code School Badges</md-button>
+                            </th>
+                            <th ng-class="{orderer: ctrl.orderKey == 'singPath'}">
+                                <md-button ng-click="ctrl.orderBy('singPath')">SingPath Problems</md-button>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -110,7 +120,7 @@
                                 No participants
                             </th> 
                         </tr>
-                        <tr ng-repeat="(publicId, participant) in (ctrl.ranking | toArray | orderBy: '-total')" ng-class="'index-' + $index">
+                        <tr ng-repeat="(publicId, participant) in (ctrl.ranking | toArray | orderBy:ctrl.orderKey:ctrl.reverseOrder)" ng-class="'index-' + $index">
                             <th>
                                 <md-button ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$id} }}">
                                     {{ participant.user.displayName }}
