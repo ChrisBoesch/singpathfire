@@ -1115,6 +1115,16 @@
                 return all;
               }, {});
             });
+          },
+
+          /**
+           * Return a promise resolving to all problems as as simple object
+           * (Not a firebase object).
+           *
+           * @return Promise
+           */
+          allProblems: function() {
+            return spfFirebase.valueAt(['singpath/problems']);
           }
         }
       };

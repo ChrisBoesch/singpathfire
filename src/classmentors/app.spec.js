@@ -382,7 +382,8 @@
             'ref',
             'remove',
             'set',
-            'setWithPriority'
+            'setWithPriority',
+            'valueAt'
           ]);
           spfCrypto = {
             password: jasmine.createSpyObj('spfCrypto.password', ['newHash', 'fromSalt']),
@@ -821,6 +822,50 @@
               expect(actual).toEqual(expected);
             }));
 
+          });
+
+          describe('allProblems', function() {
+            var clmDataStore, $q, $rootScope;
+
+            beforeEach(inject(function(_clmDataStore_, _$q_, _$rootScope_) {
+              clmDataStore = _clmDataStore_;
+              $q = _$q_;
+              $rootScope = _$rootScope_;
+            }));
+
+            it('should query the value at singpath/problems', function() {
+              clmDataStore.singPath.allProblems();
+              expect(spfFirebase.valueAt.calls.count()).toBe(1);
+              expect(spfFirebase.valueAt).toHaveBeenCalledWith(['singpath/problems']);
+            });
+
+            it('should return a promise resolving to the problem value', function() {
+              var expected = {some: 'value'};
+              var actual;
+
+              spfFirebase.valueAt.and.returnValue($q.when(expected));
+
+              clmDataStore.singPath.allProblems().then(function(resp) {
+                actual = resp;
+              });
+
+              $rootScope.$apply();
+              expect(actual).toBe(expected);
+            });
+
+            it('should return a promise rejecting if the query fails', function() {
+              var expected = new Error('Failed');
+              var err;
+
+              spfFirebase.valueAt.and.returnValue($q.reject(expected));
+
+              clmDataStore.singPath.allProblems().catch(function(e) {
+                err = e;
+              });
+
+              $rootScope.$apply();
+              expect(err).toBe(expected);
+            });
           });
 
         });
