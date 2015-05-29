@@ -58,7 +58,7 @@
     </md-sidenav>
 
     <div layout="column" role="main" flex>
-        <md-content ng-include="'shared/components/navbar/navbar-view.html'"></md-content>
+        <md-toolbar class="md-hue-2" layout="row" ng-include="'shared/components/navbar/navbar-view.html'"></md-toolbar>
 
         <md-content flex class="main-view" layout="column">
             <div ng-view="" layout="column" flex></div>
@@ -102,7 +102,6 @@
     <script src="shared/components/schools/schools.js"></script>
     <script src="shared/components/sign/sign.js"></script>
     <script src="singpath/components/ace/ace.js"></script>
-    <script src="singpath/components/icons/icons.js"></script>
     <script src="singpath/components/levels/levels.js"></script>
     <script src="singpath/components/paths/paths.js"></script>
     <script src="singpath/components/problems/problems.js"></script>

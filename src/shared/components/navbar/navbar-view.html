@@ -1,44 +1,42 @@
-<md-toolbar class="md-hue-2" layout="row" ng-controller="SpfSharedMaterialNavBarCtrl as navBar">
-    <div class="md-toolbar-tools">
-        <md-button ng-click="navBar.openSideMenu('left')" hide-gt-md class="open-menu" aria-label="open side menu">
-            <md-icon md-svg-icon="reorder" alt="open side menu"></md-icon>
-        </md-button>
+<div class="md-toolbar-tools" ng-controller="SpfSharedMaterialNavBarCtrl as navBar">
+    <md-button ng-click="navBar.openSideMenu('left')" hide-gt-md class="open-menu" aria-label="open side menu">
+        <md-icon md-svg-icon="reorder" alt="open side menu"></md-icon>
+    </md-button>
 
-        <div hide-sm layout="row" ng-repeat="parent in navBar.currentPage.parents" class="nav-parent">
-            <h2 ng-if="parent.title">
-                <a ng-href="{{parent.url || ''}}">
-                    {{parent.title}}
-                </a>
-            </h2>
+    <div hide-sm layout="row" ng-repeat="parent in navBar.currentPage.parents" class="nav-parent">
+        <h2 ng-if="parent.title">
+            <a ng-href="{{parent.url || ''}}">
+                {{parent.title}}
+            </a>
+        </h2>
 
-            <md-icon class="separator"
-                md-svg-icon="keyboard-arrow-right"
-                ng-if="navBar.currentPage.parent &amp;&amp; navBar.currentPage.section"
-            ></md-icon>
-        </div>
-
-        <h3 ng-bind="navBar.currentPage.section"></h3>
-
-        <span flex></span>
-
-        <md-button class="menu-item md-raised md-primary" ng-repeat="btn in navBar.currentPage.menuItems track by (btn.url || btn.onClick)" ng-href="{{btn.url}}" aria-label="{{btn.title}}" ng-click="btn.onClick()">
-            <md-icon md-svg-icon="{{btn.icon}}" ng-if="btn.icon"></md-icon>
-            <span ng-bind="btn.title" hide show-gt-sm></span>
-        </md-button>
-
-        <span ng-switch="navBar.auth.user.uid">
-            <span ng-switch-when="undefined">
-                <md-button ng-click="navBar.login()" class="md-raised md-accent">
-                    <md-icon md-svg-icon="launch"></md-icon>
-                    login
-                </md-button>
-            </span>
-            <span ng-switch-default>
-                <md-button ng-click="navBar.logout()" class="md-raised md-primary">
-                    <md-icon md-svg-icon="exit-to-app"></md-icon>
-                    logout
-                </md-button>
-            </span>
-        </span>
+        <md-icon class="separator"
+            md-svg-icon="keyboard-arrow-right"
+            ng-if="navBar.currentPage.parent &amp;&amp; navBar.currentPage.section"
+        ></md-icon>
     </div>
-</md-toolbar>
+
+    <h3 ng-bind="navBar.currentPage.section"></h3>
+
+    <span flex></span>
+
+    <md-button class="menu-item md-raised md-primary" ng-repeat="btn in navBar.currentPage.menuItems track by (btn.url || btn.onClick)" ng-href="{{btn.url}}" aria-label="{{btn.title}}" ng-click="btn.onClick()">
+        <md-icon md-svg-icon="{{btn.icon}}" ng-if="btn.icon"></md-icon>
+        <span ng-bind="btn.title" hide show-gt-sm></span>
+    </md-button>
+
+    <span ng-switch="navBar.auth.user.uid">
+        <span ng-switch-when="undefined">
+            <md-button ng-click="navBar.login()" class="md-raised md-accent">
+                <md-icon md-svg-icon="launch"></md-icon>
+                login
+            </md-button>
+        </span>
+        <span ng-switch-default>
+            <md-button ng-click="navBar.logout()" class="md-raised md-primary">
+                <md-icon md-svg-icon="exit-to-app"></md-icon>
+                logout
+            </md-button>
+        </span>
+    </span>
+</div>

@@ -27,6 +27,7 @@
             currentUserStats: {}
           },
           $document: {},
+          $route: jasmine.createSpyObj('$route', ['reload']),
           $mdDialog: jasmine.createSpyObj('$mdDialog', ['show', 'hide']),
           spfAlert: jasmine.createSpyObj('spfAlert', ['info', 'success', 'error', 'warning']),
           spfNavBarService: jasmine.createSpyObj('spfNavBarService', ['update']),
@@ -235,7 +236,7 @@
           };
 
           expect(ctrl.startLink(task)).toBe(
-            '/singpath/#/paths/pathId/levels/levelId/problems/problemId/play'
+            'http://www.singpath.com//#/paths/pathId/levels/levelId/problems/problemId/play'
           );
         });
 

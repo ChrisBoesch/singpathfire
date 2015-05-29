@@ -13,12 +13,12 @@
     display: inline-block;
 }
 
-.register-service, .service-card {
+.register-service, .service-card, .spf-card {
   padding: 8px 16px;
   margin: 16px 0;
 }
 
-.badges img, .courses img {
+.badges img, .courses img, .language svg {
     text-align: center;
     position: relative;
     -webkit-box-reflect: below 0 -webkit-gradient(linear, left top, left bottom, from(transparent), color-stop(70%, transparent), to(rgba(255,255,255,0.2)));
@@ -34,8 +34,18 @@
   box-shadow: none;
 }
 
-.badges img:hover {
+.badges img:hover{
   cursor:pointer;
   top: -5px;
   -webkit-box-reflect: below 10px -webkit-gradient(linear, left top, left bottom, from(transparent), color-stop(70%, transparent), to(rgba(255,255,255,0.2)));
+}
+
+.spf-card .language {
+  margin: 16px 0;
+
+}
+
+.spf-card md-icon {
+  height: 30px;
+  width: 55px;
 }

@@ -9,6 +9,20 @@
     function($routeProvider, routes) {
       $routeProvider.
 
+      when(routes.setProfileCodeCombatId, {
+        template: '<md-content flex class="md-padding" layout="row">Something went wrong...</md-content>',
+        controller: 'SetCodeCombatUserIdCtrl',
+        controllerAs: 'ctrl',
+        resolve: {
+          'initialData': [
+            'setCodeCombatUserIdCtrlInitialData',
+            function(setCodeCombatUserIdCtrlInitialData) {
+              return setCodeCombatUserIdCtrlInitialData();
+            }
+          ]
+        }
+      }).
+
       when(routes.editProfile, {
         templateUrl: 'classmentors/components/profiles/profiles-view-edit.html',
         controller: 'ClmProfileCtrl',
@@ -184,7 +198,7 @@
           id: undefined,
 
           save: function() {
-            return clmDataStore.services.codeSchool.saveDetails(self.profile, {
+            return clmDataStore.services.codeSchool.saveDetails(self.profile.$id, {
               id: self.lookUp.codeSchool.id,
               name: self.lookUp.codeSchool.id
             }).then(function() {
@@ -203,23 +217,11 @@
           find: function() {
             self.lookUp.codeCombat.errors.isLoggedToCodeCombat = undefined;
             self.lookUp.codeCombat.errors.hasACodeCombatName = undefined;
-
-            clmDataStore.services.codeCombat.auth().then(function(details) {
-              self.lookUp.codeCombat.id = details.id;
-              self.lookUp.codeCombat.name = details.name;
-            }).catch(function(err) {
-              if (err === clmDataStore.services.codeCombat.errLoggedOff) {
-                self.lookUp.codeCombat.errors.isLoggedToCodeCombat = true;
-              } else if (err === clmDataStore.services.codeCombat.errNoName) {
-                self.lookUp.codeCombat.errors.hasACodeCombatName = true;
-              } else {
-                spfAlert.error(err.toString());
-              }
-            });
+            clmDataStore.services.codeCombat.requestUserName();
           },
 
           save: function() {
-            return clmDataStore.services.codeCombat.saveDetails(self.profile, {
+            return clmDataStore.services.codeCombat.saveDetails(self.profile.$id, {
               id: self.lookUp.codeCombat.id,
               name: self.lookUp.codeCombat.name
             }).then(function() {
@@ -236,6 +238,44 @@
         }
       };
     }
+  ]).
+
+  /**
+   * Use to resolve `initialData` of `SetCodeCombatUserIdCtrl`.
+   *
+   */
+  factory('setCodeCombatUserIdCtrlInitialData', [
+    '$q',
+    '$location',
+    'routes',
+    'spfAlert',
+    'clmDataStore',
+    function setCodeCombatUserIdCtrlInitialDataFactory($q, $location, routes, spfAlert, clmDataStore) {
+      return function setCodeCombatUserIdCtrlInitialData() {
+        var search = $location.search();
+        var verificationKey = search.id;
+        var username = search.username;
+
+        return clmDataStore.services.codeCombat.setUser(username, verificationKey).then(function() {
+          spfAlert.success('Your Code School user name and id have been saved.');
+          $location.path(routes.editProfile);
+        }).catch(function(err) {
+          spfAlert.error('Failed to set user name and id: ' + err);
+          return {
+            initialData: {err: err}
+          };
+        });
+      };
+    }
+  ]).
+
+  /**
+   * SetCodeCombatUserIdCtrl
+   *
+   */
+  controller('SetCodeCombatUserIdCtrl', [
+    'initialData',
+    function SetCodeCombatUserIdCtrl() {}
   ]).
 
   directive('clmProfile', [
@@ -297,6 +337,110 @@
         controllerAs: 'ctrl',
         // arguments: scope, iElement, iAttrs, controller
         link: function clmProfilePostLink() {}
+      };
+    }
+  ]).
+
+  /**
+   * Controller for clmSpfProfile
+   *
+   * Expect publicId to be bound to ctrl using directive's `bindToController`
+   * property.
+   *
+   */
+  controller('ClmSpfProfileCtrl', [
+    '$q',
+    '$log',
+    'clmDataStore',
+    'clmServicesUrl',
+    function ClmSpfProfileCtrl($q, $log, clmDataStore, clmServicesUrl) {
+      var self = this;
+      var lookUpPromise;
+
+      this.loading = true;
+      this.stats = {
+        total: {},
+        user: {}
+      };
+      this.singpathUrl = clmServicesUrl.singPath;
+
+      // Count problems by language
+      // and resolve to a map of problemPath -> problem.
+      //
+      // TODO: each solution record in the user profile should include
+      // the problem language.
+      lookUpPromise = clmDataStore.singPath.allProblems().then(function(paths) {
+        return Object.keys(paths || {}).reduce(function(result, pathKey) {
+          var levels = paths[pathKey] || {};
+
+          Object.keys(levels).forEach(function(levelKey) {
+            var problems = levels[levelKey] || {};
+
+            Object.keys(problems).forEach(function(problemKey) {
+              var path = [pathKey, levelKey, problemKey].join('/');
+              var language = problems[problemKey].language;
+
+              result.lookUp[path] = language;
+              result.count[language] = (result.count[language] || 0) + 1;
+            });
+          });
+
+          return result;
+        }, {lookUp: {}, count: {}});
+      }).then(function(languageStats) {
+        self.stats.total = languageStats.count;
+        return languageStats.lookUp;
+      });
+
+      // Count the number of problem the user solved
+      // by language.
+      $q.all({
+        lookUp: lookUpPromise,
+        profile: clmDataStore.singPath.profile(self.publicId)
+      }).then(function(data) {
+        var paths = data.profile.solutions || {};
+
+        return Object.keys(paths).reduce(function(result, pathKey) {
+          var levels = paths[pathKey] || {};
+
+          Object.keys(levels).forEach(function(levelKey) {
+            var problems = levels[levelKey] || {};
+
+            Object.keys(problems).forEach(function(problemKey) {
+              var path = [pathKey, levelKey, problemKey].join('/');
+              var language = data.lookUp[path];
+
+              if (problems[problemKey].solved) {
+                result[language] = (result[language] || 0) + 1;
+              }
+            });
+          });
+
+          return result;
+        }, {});
+      }).then(function(languageStats) {
+        self.stats.user = languageStats;
+        return languageStats;
+      }).catch(function(err) {
+        $log.error(err);
+      }).finally(function() {
+        self.loading = false;
+      });
+    }
+  ]).
+
+  directive('clmSpfProfile', [
+
+    function() {
+      return {
+        templateUrl: 'classmentors/components/profiles/profiles-view-spf-profile.html',
+        restrict: 'A',
+        scope: {
+          publicId: '=clmSpfProfile'
+        },
+        bindToController: true,
+        controller: 'ClmSpfProfileCtrl',
+        controllerAs: 'ctrl'
       };
     }
   ]).

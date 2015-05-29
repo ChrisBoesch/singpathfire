@@ -415,6 +415,52 @@
             }
             return copy;
           }, {});
+        },
+
+        errTransactionFailed: new Error('Transaction failed'),
+        errTransactionAborted: new Error('Transaction aborted'),
+
+        /**
+         * Promise based transaction helper.
+         *
+         * `path` is the firebase path the transaction will work on.
+         *
+         * `call` will be called with the current value at the path. It should return
+         * a new value to update the path with or undefined to abort the transaction.
+         *
+         * The returned promise will resolve to the new value or will reject
+         * with a spfFirebase.errTransactionFailed or spfFirebase.errTransactionAborted
+         * error.
+         *
+         */
+        transaction: function(path, callback) {
+          return $q(function(ok, fails) {
+            spfFirebase.ref(path).transaction(callback, function(error, committed, snapshot) {
+              if (error) {
+                $log.error(error);
+                fails(spfFirebase.errTransactionFailed);
+              } else if (!committed) {
+                fails(spfFirebase.errTransactionAborted);
+              } else {
+                ok(snapshot);
+              }
+            }, false);
+          });
+        },
+
+        /**
+         * Return a promise resolving to the record at the firebase path.
+         *
+         * An alternative to using an AngularFire object whenyou don't need
+         * the update.
+         *
+         */
+        valueAt: function(path) {
+          return $q(function(ok, fails) {
+            spfFirebase.ref(path).once('value', function(snapshot) {
+              ok(snapshot.val());
+            }, fails);
+          });
         }
       };
 
@@ -712,6 +758,11 @@
                 });
                 return hex.stringify(hash);
               }
+            },
+
+            randomString: function(size) {
+              var random = CryptoJS.lib.WordArray.random(size);
+              return hex.stringify(random);
             }
           };
         }
