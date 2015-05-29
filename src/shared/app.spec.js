@@ -476,10 +476,9 @@
         });
 
         describe('transaction', function() {
-          var $q, $rootScope, spfFirebase, fn;
+          var $rootScope, spfFirebase, fn;
 
-          beforeEach(inject(function(_$q_, _$rootScope_, _spfFirebase_) {
-            $q = _$q_;
+          beforeEach(inject(function(_$rootScope_, _spfFirebase_) {
             $rootScope = _$rootScope_;
             spfFirebase = _spfFirebase_;
             fn = jasmine.createSpy('fn');
@@ -564,10 +563,9 @@
         });
 
         describe('valueAt', function() {
-          var $q, $rootScope, spfFirebase;
+          var $rootScope, spfFirebase;
 
-          beforeEach(inject(function(_$q_, _$rootScope_, _spfFirebase_) {
-            $q = _$q_;
+          beforeEach(inject(function(_$rootScope_, _spfFirebase_) {
             $rootScope = _$rootScope_;
             spfFirebase = _spfFirebase_;
           }));

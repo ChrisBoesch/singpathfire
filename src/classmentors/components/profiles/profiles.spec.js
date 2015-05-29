@@ -17,7 +17,6 @@
     //     scope = _$rootScope_;
     //   }));
 
-
     //   describe('someDirective', function() {
 
     //     beforeEach(function() {

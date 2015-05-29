@@ -1110,7 +1110,11 @@
                 all[id] = {
                   id: id,
                   title: problems[id].title,
-                  url: clmServicesUrl.singPath + '#/paths/' + pathId + '/levels/' + levelId + '/problems/' + id + '/play'
+                  url: (
+                    clmServicesUrl.singPath + '#/paths/' +
+                    pathId + '/levels/' +
+                    levelId + '/problems/' +
+                    id + '/play')
                 };
                 return all;
               }, {});
