@@ -73,7 +73,7 @@
 
         return {
           auth: spfAuth,
-          currentUser: userPromise,
+          currentUser: userPromise.catch(angular.noop),
           profile: spfDataStore.currentUserProfile(),
           path: spfDataStore.paths.get(pathId),
           level: spfDataStore.levels.get(pathId, levelId),
@@ -283,6 +283,7 @@
    *
    */
   factory('playProblemCtrlInitialData', [
+    '$log',
     '$q',
     '$location',
     '$route',
@@ -290,69 +291,84 @@
     'spfAuth',
     'spfAuthData',
     'spfDataStore',
-    function playProblemCtrlInitialDataFactory($q, $location, $route, urlFor, spfAuth, spfAuthData, spfDataStore) {
+    function playProblemCtrlInitialDataFactory(
+      $log, $q, $location, $route, urlFor, spfAuth, spfAuthData, spfDataStore
+    ) {
       return function playProblemCtrlInitialData() {
-        var userPromise, problemPromise, resolutionPromise;
         var pathId = $route.current.params.pathId;
         var levelId = $route.current.params.levelId;
         var problemId = $route.current.params.problemId;
-        var errLoggedOff = new Error('The user should be logged in to play.');
+        var errPublicIdMissing = new Error('No public ID');
+        var errProblemNotFound = new Error('Problem not found.');
 
         if (!spfAuth.user || !spfAuth.user.uid) {
-          return $q.reject(errLoggedOff);
+          return $q.when({});
         }
 
-        userPromise = spfAuthData.user();
-        problemPromise = spfDataStore.problems.get(pathId, levelId, problemId);
-        resolutionPromise = $q.all({
-          user: userPromise,
-          problem: problemPromise
-        }).then(function(result) {
-          if (!result.user || !result.user.publicId) {
-            $location.path(urlFor('profile'));
-            return $q.reject(new Error('You have no public id set yet.'));
+        // 1. Check the user has a public ID and load the profile.
+        return spfAuthData.user().then(function(authData) {
+          if (!authData || !authData.publicId) {
+            return $q.reject(errPublicIdMissing);
           }
 
-          return spfDataStore.resolutions.get(
-            pathId, levelId, problemId, result.user.publicId
+          return $q.all({
+            auth: spfAuth,
+            currentUser: authData,
+            profile: spfDataStore.profile(authData.publicId)
+          });
+
+        // 2. get problem and resolution.
+        }).then(function(data) {
+          if (data.profile.$value === null) {
+            data.profile = spfDataStore.initProfile();
+          }
+
+          data.path = spfDataStore.paths.get(pathId);
+          data.level = spfDataStore.levels.get(pathId, levelId);
+          data.problem = spfDataStore.problems.get(pathId, levelId, problemId);
+          data.resolution = spfDataStore.resolutions.get(
+            pathId, levelId, problemId, data.currentUser.publicId
           );
-        });
 
-        return $q.all({
-          auth: spfAuth,
-          currentUser: userPromise,
-          path: spfDataStore.paths.get(pathId),
-          level: spfDataStore.levels.get(pathId, levelId),
-          problem: problemPromise,
-          resolution: resolutionPromise,
-          profile: spfDataStore.currentUserProfile().then(function(profile) {
-            if (profile && profile.$value === null) {
-              return spfDataStore.initProfile();
-            }
+          return $q.all(data);
 
-            return profile;
-          }),
-          solution: $q.all({
-            user: userPromise,
-            problem: problemPromise,
-            resolution: resolutionPromise
-          }).then(function(result) {
-            if (!result.user || !result.user.publicId) {
-              return;
-            }
+        // 3. Check problem exist and if the resolution needs to be initialized.
+        }).then(function(data) {
+          if (!data.problem || data.problem.$value === null) {
+            return $q.reject(errProblemNotFound);
+          }
 
-            if (!result.resolution.startedAt) {
-              return result.resolution.$init().then(angular.noop);
-            }
+          if (data.resolution && data.resolution.startedAt) {
+            return data;
+          }
 
-            if (result.resolution.$solved()) {
-              return;
-            }
+          return data.resolution.$init().then(function() {
+            return data;
+          });
 
-            return spfDataStore.solutions.get(
-              pathId, levelId, problemId, result.user.publicId
-            );
-          })
+        // 4. return the solution is solution is not solved.
+        }).then(function(data) {
+          if (data.resolution.$solved()) {
+            return data;
+          }
+
+          data.solution = spfDataStore.solutions.get(
+            pathId, levelId, problemId, data.currentUser.publicId
+          );
+
+          return $q.all(data);
+
+        // 5. recover from public id missing.
+        }).catch(function(err) {
+          if (err !== errPublicIdMissing) {
+            $log.error(err);
+            return $q.reject(err);
+          }
+
+          return $q.all({
+            auth: spfAuth,
+            currentUser: spfAuthData.user()
+          });
         });
       };
     }
@@ -366,6 +382,7 @@
     '$q',
     '$location',
     'initialData',
+    '$route',
     'urlFor',
     'spfFirebase',
     'spfNavBarService',
@@ -373,7 +390,7 @@
     'spfAuthData',
     'spfDataStore',
     function PlayProblemCtrl(
-      $q, $location, initialData, urlFor, spfFirebase, spfNavBarService, spfAlert, spfAuthData, spfDataStore
+      $q, $location, initialData, $route, urlFor, spfFirebase, spfNavBarService, spfAlert, spfAuthData, spfDataStore
     ) {
       var self = this;
       var original = {};
@@ -390,7 +407,33 @@
       this.savingSolution = false;
       this.solutionSaved = false;
       original.solution = this.solution.solution;
-      this.profileNeedsUpdate = !self.currentUser.$completed();
+      this.profileNeedsUpdate = this.currentUser && !this.currentUser.$completed();
+
+      function cleanProfile() {
+        self.currentUser.country = spfFirebase.cleanObj(self.currentUser.country);
+        self.currentUser.school = spfFirebase.cleanObj(self.currentUser.school);
+      }
+
+      this.register = function(currentUser) {
+        cleanProfile();
+        spfAuthData.publicId(currentUser).then(function() {
+          spfAlert.success('Public id and display name saved');
+          return spfDataStore.initProfile();
+        }).then(function() {
+          $route.reload();
+        }).catch(function() {
+          spfAlert.error('Failed to save public id');
+        });
+      };
+
+      if (
+        !this.auth ||
+        !this.auth.user ||
+        !this.auth.user.uid ||
+        !this.profile
+      ) {
+        return;
+      }
 
       spfNavBarService.update(
         this.problem.title,
@@ -449,11 +492,6 @@
       this.solutionChanged = function(solution) {
         this.solutionSaved = this.solutionSaved && original.solution === solution.solution;
       };
-
-      function cleanProfile() {
-        self.currentUser.country = spfFirebase.cleanObj(self.currentUser.country);
-        self.currentUser.school = spfFirebase.cleanObj(self.currentUser.school);
-      }
     }
   ])
 
