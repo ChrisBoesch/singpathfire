@@ -425,7 +425,7 @@
          *
          * `path` is the firebase path the transaction will work on.
          *
-         * `call` will be called with the current value at the path. It should return
+         * `callback` will be called with the current value at the path. It should return
          * a new value to update the path with or undefined to abort the transaction.
          *
          * The returned promise will resolve to the new value or will reject

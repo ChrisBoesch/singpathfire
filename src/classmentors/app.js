@@ -508,8 +508,16 @@
             return spfFirebase.loadedObj(['classMentors/eventTasks', eventId, taskId]);
           },
 
-          addTask: function(eventId, task) {
+          addTask: function(eventId, task, isOpen) {
             var priority = task.priority || 0;
+
+            if (isOpen) {
+              task.openedAt = {'.sv': 'timestamp'};
+              task.closedAt = null;
+            } else {
+              task.closedAt = {'.sv': 'timestamp'};
+              task.openedAt = null;
+            }
 
             return spfFirebase.push(['classMentors/eventTasks', eventId], task).then(function(ref) {
               ref.setPriority(priority);
@@ -525,6 +533,38 @@
               task,
               priority
             );
+          },
+
+          openTask: function(eventId, taskId) {
+            var url = ['classMentors/eventTasks', eventId, taskId];
+
+            return spfFirebase.transaction(url, function(task) {
+              if (!task.closedAt) {
+                return;
+              }
+
+              task.history = task.history || {};
+              task.history[task.closedAt] = 'closed';
+              task.openedAt = {'.sv': 'timestamp'};
+              task.closedAt = null;
+              return task;
+            });
+          },
+
+          closeTask: function(eventId, taskId) {
+            var url = ['classMentors/eventTasks', eventId, taskId];
+
+            return spfFirebase.transaction(url, function(task) {
+              if (!task.openedAt) {
+                return;
+              }
+
+              task.history = task.history || {};
+              task.history[task.openedAt] = 'opened';
+              task.closedAt = {'.sv': 'timestamp'};
+              task.openedAt = null;
+              return task;
+            });
           },
 
           participants: function(eventId) {

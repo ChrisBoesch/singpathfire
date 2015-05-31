@@ -389,6 +389,12 @@
         }
       };
 
+      this.openedTasks = function() {
+        return Object.keys(self.tasks).filter(function(key) {
+          return self.tasks[key] && self.tasks[key].open === true;
+        }).length;
+      };
+
       updateNavbar();
 
       this.promptForLink = function(eventId, taskId, task, participant) {
@@ -713,7 +719,7 @@
     'urlFor',
     'spfAlert',
     'clmDataStore',
-    function EditCtrl(initialData, spfNavBarService, urlFor) {
+    function EditCtrl(initialData, spfNavBarService, urlFor, spfAlert, clmDataStore) {
 
       this.event = initialData.event;
       this.tasks = initialData.tasks;
@@ -731,6 +737,22 @@
           icon: 'create'
         }]
       );
+
+      this.openTask = function(eventId, taskId) {
+        clmDataStore.events.openTask(eventId, taskId).then(function() {
+          spfAlert.success('Task opened.');
+        }).catch(function() {
+          spfAlert.error('Failed to open task');
+        });
+      };
+
+      this.closeTask = function(eventId, taskId) {
+        clmDataStore.events.closeTask(eventId, taskId).then(function() {
+          spfAlert.success('Task closed.');
+        }).catch(function() {
+          spfAlert.error('Failed to close task.');
+        });
+      };
     }
   ]).
 
@@ -773,7 +795,7 @@
 
       this.event = initialData.event;
       this.badges = initialData.badges;
-      this.task = {};
+      this.isOpen = true;
       this.singPath = initialData.singPath;
       this.savingTask = false;
 
@@ -802,7 +824,7 @@
         });
       };
 
-      this.saveTask = function(event, _, task, taskType) {
+      this.saveTask = function(event, _, task, taskType, isOpen) {
         var copy = spfFirebase.cleanObj(task);
 
         if (taskType === 'linkPattern') {
@@ -827,7 +849,7 @@
         }
 
         self.creatingTask = true;
-        clmDataStore.events.addTask(event.$id, copy).then(function() {
+        clmDataStore.events.addTask(event.$id, copy, isOpen).then(function() {
           spfAlert.success('Task created');
           $location.path(urlFor('editEvent', {eventId: self.event.$id}));
         }).catch(function(err) {
@@ -915,6 +937,7 @@
       this.badges = initialData.badges;
       this.taskId = initialData.taskId;
       this.task = initialData.task;
+      this.isOpen = !!this.task.openedAt;
       this.savingTask = false;
       this.taskType = this.task.serviceId == null ? 'linkPattern' : 'service';
 
@@ -942,10 +965,14 @@
         }]
       );
 
-      this.saveTask = function(event, taskId, task) {
+      this.saveTask = function(event, taskId, task, taskType, isOpen) {
         var copy = spfFirebase.cleanObj(task);
 
-        if (copy.serviceId === 'singPath') {
+        if (taskType === 'linkPattern') {
+          delete copy.badge;
+          delete copy.serviceId;
+          delete copy.singPathProblem;
+        } else if (copy.serviceId === 'singPath') {
           delete copy.badge;
           if (copy.singPathProblem) {
             copy.singPathProblem.path = spfFirebase.cleanObj(task.singPathProblem.path);
@@ -957,11 +984,27 @@
           copy.badge = spfFirebase.cleanObj(task.badge);
         }
 
+        if (!copy.link) {
+          // delete empty link. Can't be empty string
+          delete copy.link;
+        }
+
         self.savingTask = true;
         clmDataStore.events.updateTask(event.$id, taskId, copy).then(function() {
+          if (
+            (isOpen && task.openedAt) ||
+            (!isOpen && task.closedAt)
+          ) {
+            return;
+          } else if (isOpen) {
+            return clmDataStore.events.openTask(event.$id, taskId);
+          } else {
+            return clmDataStore.events.closeTask(event.$id, taskId);
+          }
+        }).then(function() {
           spfAlert.success('Task saved');
-        }).catch(function(err) {
-          spfAlert.error(err);
+        }).catch(function() {
+          spfAlert.error('Failed to save the task.');
         }).finally(function() {
           self.savingTask = false;
         });

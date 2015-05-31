@@ -7,15 +7,35 @@
         <md-subheader class="md-no-sticky">{{ ctrl.tasks | spfLength }} challenges</md-subheader>
         <md-list-item class="md-3-line" ng-repeat="(taskId, task) in ctrl.tasks">
             <div class="md-list-item-text">
-                <h3>{{ task.title }}</h3>
+                <h3>
+                    {{ task.title }}
+                    <span ng-if="task.closedAt">(closed)</span>
+                    <span ng-if="task.openedAt">(opened)</span>
+                </h3>
                 <h4>{{ task.description }}</h4>
                 <p ng-if="task.badge.id">{{ task.badge.name}}</p>
             </div>
 
-            <div layout="column" layout-align="center center">
+            <div layout="row">
                 <md-button ng-href="#{{ 'editEventTask'|urlFor: {eventId: ctrl.event.$id, taskId: taskId} }}" layout layout-align="center center" class="md-raised md-primary" aria-label="Edit">
                     <md-icon md-svg-icon="create"></md-icon>
                     Edit
+                </md-button>
+                <md-button ng-click="ctrl.openTask(ctrl.event.$id, taskId)"
+                    ng-if="task.closedAt"
+                    layout layout-align="center center" class="md-raised md-primary"
+                    aria-label="open"
+                >
+                    <md-icon md-svg-icon="done"></md-icon>
+                    Open
+                </md-button>
+                <md-button ng-click="ctrl.closeTask(ctrl.event.$id, taskId)"
+                    ng-if="task.openedAt"
+                    layout layout-align="center center" class="md-raised md-primary"
+                    aria-label="open"
+                >
+                    <md-icon md-svg-icon="clear"></md-icon>
+                    Close
                 </md-button>
             </div>
 
