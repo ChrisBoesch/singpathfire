@@ -1,5 +1,5 @@
 <md-content flex class="md-padding">
-    <form name="editTask" ng-submit="ctrl.saveTask(ctrl.event, ctrl.taskId, ctrl.task, editTask)">
+    <form name="editTask" ng-submit="ctrl.saveTask(ctrl.event, ctrl.taskId, ctrl.task, ctrl.taskType, ctrl.isOpen, editTask)">
         <div>
             <div layout="row">
                 <md-input-container flex>
@@ -60,14 +60,15 @@
         </div>
 
         <div>
-            <p>
-                Task type:
-                <em ng-switch on="ctrl.taskType">
-                    <span ng-switch-when="service">Service</span>
-                    <span ng-switch-when="linkPattern">Link pattern</span>
-                    <span ng-switch-default>Required</span>
-                </em>
-            </p>
+            <h3>options</h3>
+            <p><md-switch class="md-primary" ng-model="ctrl.isOpen" aria-label="closed?">
+                <span ng-if="ctrl.isOpen">Open (currently closed)</span>
+                <span ng-if="!ctrl.isOpen">Close (currently opened)</span>
+            </md-switch></p>
+        </div>
+
+        <div>
+            <h3>Task type <small ng-if="!ctrl.taskType">(Required)</small></h3>
             <md-radio-group ng-model="ctrl.taskType">
                 <md-radio-button value="service" class="md-primary">Service / Badge / Problem</md-radio-button>
                 <md-radio-button value="linkPattern" class="md-primary">Link pattern</md-radio-button>

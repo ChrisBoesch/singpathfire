@@ -23,6 +23,7 @@
           initialData: {
             currentUser: {},
             event: {},
+            tasks: {},
             participants: {},
             currentUserStats: {}
           },
@@ -395,6 +396,42 @@
           expect(ctrl.reverseOrder).toBe(true);
         });
 
+      });
+
+      describe('openedTasks', function() {
+        it('should return 0 when there is no tasks ', function() {
+          var ctrl;
+
+          deps.initialData.tasks = {$id: 'someEventId'};
+
+          ctrl = $controller('ViewEventCtrl', deps);
+          expect(ctrl.openedTasks()).toBe(0);
+        });
+
+        it('should return 0 when there is no open tasks', function() {
+          var ctrl;
+
+          deps.initialData.tasks = {
+            $id: 'someEventId',
+            someTaskId: {description: 'some desc.'}
+          };
+
+          ctrl = $controller('ViewEventCtrl', deps);
+          expect(ctrl.openedTasks()).toBe(0);
+        });
+
+        it('should return the number of opened tasks', function() {
+          var ctrl;
+
+          deps.initialData.tasks = {
+            $id: 'someEventId',
+            someTaskId: {description: 'some desc.', open: true},
+            someOtherTaskId: {description: 'some desc.'}
+          };
+
+          ctrl = $controller('ViewEventCtrl', deps);
+          expect(ctrl.openedTasks()).toBe(1);
+        });
       });
 
     });
