@@ -1194,7 +1194,7 @@
         scope: false,
         require: 'ngModel',
         link: function cmContainsPostLink(scope, e, attr, model) {
-          var pattern;
+          var pattern = scope.$eval(attr.cmContains);
 
           scope.$watch(attr.cmContains, function(value) {
             pattern = value;
