@@ -628,11 +628,17 @@
                 return authData;
               });
             }).then(function(authData) {
-              return spfFirebase.remove([
+              var urls = [
                 'classMentors/eventParticipants',
-                eventId,
-                authData.publicId
-              ]);
+                'classMentors/eventRankings'
+              ];
+
+              return $q.all(urls.map(function(url) {
+                return spfFirebase.remove([url, eventId, authData.publicId]);
+              }));
+            }).catch(function(err) {
+              $log.error(err);
+              return err;
             });
           },
 

@@ -1327,6 +1327,62 @@
             });
           });
 
+          describe('leave', function() {
+            var $q, $rootScope, clmDataStore;
+
+            beforeEach(inject(function(_$q_, _$rootScope_, _clmDataStore_) {
+              $q = _$q_;
+              $rootScope = _$rootScope_;
+              clmDataStore = _clmDataStore_;
+            }));
+
+            it('should query the current user authData', function() {
+              spfAuthData.user.and.returnValue($q.when());
+
+              clmDataStore.events.leave('eventId');
+
+              expect(spfAuthData.user).toHaveBeenCalled();
+            });
+
+            it('should remove the event from the current user list of joined event', function() {
+              spfAuthData.user.and.returnValue($q.when({publicId: 'bob'}));
+              spfFirebase.remove.and.returnValue($q.reject()); // stop chain after 1st call to remove
+
+              clmDataStore.events.leave('eventId');
+
+              $rootScope.$apply();
+              expect(spfFirebase.remove.calls.count()).toBeGreaterThan(0);
+              expect(spfFirebase.remove.calls.argsFor(0).length).toBe(1);
+              expect(
+                spfFirebase.remove.calls.argsFor(0)[0].join('/')
+              ).toBe(
+                'classMentors/userProfiles/bob/joinedEvents/eventId'
+              );
+            });
+
+            it('should remove the user form the particpant and ranking list', function() {
+              var paths = [];
+
+              spfAuthData.user.and.returnValue($q.when({publicId: 'bob'}));
+              spfFirebase.remove.and.returnValue($q.when());
+
+              clmDataStore.events.leave('eventId');
+
+              $rootScope.$apply();
+              expect(spfFirebase.remove.calls.count()).toBe(3);
+              expect(spfFirebase.remove.calls.argsFor(1).length).toBe(1);
+              expect(spfFirebase.remove.calls.argsFor(2).length).toBe(1);
+
+              paths.push(spfFirebase.remove.calls.argsFor(1)[0].join('/'));
+              paths.push(spfFirebase.remove.calls.argsFor(2)[0].join('/'));
+              paths.sort();
+
+              expect(paths[0]).toBe('classMentors/eventParticipants/eventId/bob');
+              expect(paths[1]).toBe('classMentors/eventRankings/eventId/bob');
+            });
+
+          });
+
           describe('updateTask', function() {
             var clmDataStore;
 
