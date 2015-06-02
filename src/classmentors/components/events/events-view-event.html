@@ -66,20 +66,47 @@
                                 </span>
                             </th>
                             <td ng-repeat="(taskId, task) in ctrl.tasks" ng-if="task.openedAt">
-                                <span ng-if="participant.tasks[taskId].completed">Completed</span>
-                                <span ng-if="!participant.tasks[taskId].completed &amp;&amp; ctrl.currentUser.publicId == participant.$id">
-                                    <span ng-if="ctrl.currentUserProgress[taskId].completed">
-                                        Completed*
+                                <div ng-if="task.serviceId">
+                                    <span ng-if="participant.tasks[taskId].completed">
+                                        Completed
                                     </span>
-                                    <span ng-if="!ctrl.currentUserProgress[taskId].completed">
-                                        <md-button class="md-raised md-primary" ng-if="task.serviceId" ng-href="{{ctrl.startLink(task)}}" target="_blank">
-                                            Start challenge
-                                        </md-button>
+                                    <span ng-if="!participant.tasks[taskId].completed">
+                                        <span ng-if="participant.$id == ctrl.currentUser.publicId">
+                                            <span ng-if="ctrl.currentUserProgress[taskId].completed">
+                                                Completed*
+                                            </span>
+                                            <span ng-if="!ctrl.currentUserProgress[taskId].completed">
+                                                <md-button class="md-raised md-primary" ng-if="task.serviceId" ng-href="{{ctrl.startLink(task)}}" target="_blank">
+                                                    Start challenge
+                                                </md-button>
+                                            </span>
+                                        </span>
+                                    </span>
+                                </div>
+
+                                <div ng-if="task.linkPattern">
+                                    <span ng-if="participant.$id == ctrl.currentUser.publicId">
                                         <md-button class="md-raised md-primary" ng-if="task.linkPattern" ng-click="ctrl.promptForLink(ctrl.event.$id, taskId, task, participant)">
-                                            Submit link
+                                            <span ng-if="participant.tasks[taskId].completed">
+                                                Edit Link
+                                            </span>
+                                            <span ng-if="!participant.tasks[taskId].completed &amp;&amp; ctrl.currentUserProgress[taskId].completed">
+                                                Edit Link*
+                                            </span>
+                                            <span ng-if="!participant.tasks[taskId].completed &amp;&amp; !ctrl.currentUserProgress[taskId].completed">
+                                                Submit Link
+                                            </span>
                                         </md-button>
                                     </span>
-                                </span>
+                                    <span ng-if="participant.tasks[taskId].completed &amp;&amp; participant.$id != ctrl.currentUser.publicId">
+                                        <span ng-if="ctrl.currentUser.publicId == ctrl.event.owner.publicId">
+                                            <a ng-href="{{participant.tasks[taskId].solution}}">Solution</a>
+                                        </span>
+                                        <span ng-if="ctrl.currentUser.publicId != ctrl.event.owner.publicId">
+                                            Completed
+                                        </span>
+                                    </span>
+                                </div>
                             </td>
                         </tr>
                         <tr ng-if="ctrl.participants | spfEmpty">
