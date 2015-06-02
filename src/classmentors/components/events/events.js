@@ -390,9 +390,11 @@
       };
 
       this.openedTasks = function() {
-        return Object.keys(self.tasks).filter(function(key) {
-          return self.tasks[key] && self.tasks[key].open === true;
+        var count = Object.keys(self.tasks).filter(function(key) {
+          return self.tasks[key] && self.tasks[key].openedAt;
         }).length;
+
+        return count;
       };
 
       updateNavbar();

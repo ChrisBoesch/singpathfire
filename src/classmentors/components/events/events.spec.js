@@ -425,7 +425,7 @@
 
           deps.initialData.tasks = {
             $id: 'someEventId',
-            someTaskId: {description: 'some desc.', open: true},
+            someTaskId: {description: 'some desc.', openedAt: true},
             someOtherTaskId: {description: 'some desc.'}
           };
 

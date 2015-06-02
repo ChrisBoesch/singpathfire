@@ -18,7 +18,7 @@
                             <th ng-if="ctrl.openedTasks() == 0">
                                 <em>No challenge</em>
                             </th>
-                            <th ng-repeat="task in ctrl.tasks" ng-if="task.open">
+                            <th ng-repeat="task in ctrl.tasks" ng-if="task.openedAt">
                                 {{ task.title }}
                             </th>
                         </tr>
@@ -26,7 +26,7 @@
                             <th>
                                Details
                             </th>
-                            <td ng-repeat="task in ctrl.tasks" ng-if="task.open">
+                            <td ng-repeat="task in ctrl.tasks" ng-if="task.openedAt">
                                 {{ task.description }}
                             </td>
                         </tr>
@@ -34,7 +34,7 @@
                             <th>
                                 Help
                             </th>
-                            <td ng-repeat="task in ctrl.tasks" ng-if="task.open">
+                            <td ng-repeat="task in ctrl.tasks" ng-if="task.openedAt">
                                 <a ng-href="{{task.link}}" ng-if="task.link">More details</a>
                             </td>
                         </tr>
@@ -42,7 +42,7 @@
                             <th>
                                 Completed
                             </th>
-                            <td ng-repeat="(taskId, task) in ctrl.tasks" ng-if="task.open">
+                            <td ng-repeat="(taskId, task) in ctrl.tasks" ng-if="task.openedAt">
                                 {{ctrl.completed(taskId) | number: 0}} %
                             </td>
                         </tr>
@@ -50,7 +50,7 @@
                             <th>
                                Participants
                             </th>
-                            <td ng-repeat="task in ctrl.tasks" ng-if="task.open"></td>
+                            <td ng-repeat="task in ctrl.tasks" ng-if="task.openedAt"></td>
                         </tr>
                     </thead>
                     <tbody>
@@ -65,7 +65,7 @@
                                     </md-button>
                                 </span>
                             </th>
-                            <td ng-repeat="(taskId, task) in ctrl.tasks" ng-if="task.open">
+                            <td ng-repeat="(taskId, task) in ctrl.tasks" ng-if="task.openedAt">
                                 <span ng-if="participant.tasks[taskId].completed">Completed</span>
                                 <span ng-if="!participant.tasks[taskId].completed &amp;&amp; ctrl.currentUser.publicId == participant.$id">
                                     <span ng-if="ctrl.currentUserProgress[taskId].completed">
