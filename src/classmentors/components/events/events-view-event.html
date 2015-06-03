@@ -9,7 +9,7 @@
             <md-content>
                 <h1>Tasks</h1>
 
-                <table class="events tasks">
+                <table class="events tasks" ng-if="ctrl.participants">
                     <thead>
                         <tr>
                             <th>
@@ -61,7 +61,7 @@
                                 </md-button>
                                 <span ng-if="ctrl.currentUser.publicId == participant.$id">
                                     <md-button class="md-icon-button md-primary" aria-label="Update">
-                                        <md-icon md-svg-icon="loop" ng-click="ctrl.update(ctrl.event, ctrl.tasks, ctrl.profile)"></md-icon>
+                                        <md-icon md-svg-icon="loop" ng-click="ctrl.update(ctrl.event, ctrl.tasks, ctrl.currentUserSolutions, ctrl.profile)"></md-icon>
                                     </md-button>
                                 </span>
                             </th>
@@ -86,7 +86,7 @@
 
                                 <div ng-if="task.linkPattern">
                                     <span ng-if="participant.$id == ctrl.currentUser.publicId">
-                                        <md-button class="md-raised md-primary" ng-if="task.linkPattern" ng-click="ctrl.promptForLink(ctrl.event.$id, taskId, task, participant)">
+                                        <md-button class="md-raised md-primary" ng-if="task.linkPattern" ng-click="ctrl.promptForLink(ctrl.event.$id, taskId, task, participant, ctrl.currentUserSolutions)">
                                             <span ng-if="participant.tasks[taskId].completed">
                                                 Edit Link
                                             </span>
@@ -100,7 +100,7 @@
                                     </span>
                                     <span ng-if="participant.tasks[taskId].completed &amp;&amp; participant.$id != ctrl.currentUser.publicId">
                                         <span ng-if="ctrl.currentUser.publicId == ctrl.event.owner.publicId">
-                                            <a ng-href="{{participant.tasks[taskId].solution}}">Solution</a>
+                                            <a ng-href="{{ctrl.currentUserSolutions[taskId]}}">Solution</a>
                                         </span>
                                         <span ng-if="ctrl.currentUser.publicId != ctrl.event.owner.publicId">
                                             Completed

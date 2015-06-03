@@ -22,9 +22,13 @@
         deps = {
           initialData: {
             currentUser: {},
+            profile: {},
             event: {},
             tasks: {},
             participants: {},
+            ranking: {},
+            solution: {},
+            currentUserSolutions: {},
             currentUserStats: {}
           },
           $document: {},
@@ -277,14 +281,15 @@
           var ctrl = $controller('ViewEventCtrl', deps);
           var event = {};
           var tasks = {};
+          var solutions = {};
           var profile = {};
 
           deps.clmDataStore.events.updateCurrentUserProfile.and.returnValue($q.when());
 
-          ctrl.update(event, tasks, profile);
+          ctrl.update(event, tasks, solutions, profile);
 
           expect(deps.clmDataStore.events.updateCurrentUserProfile).toHaveBeenCalledWith(
-            event, tasks, profile
+            event, tasks, solutions, profile
           );
         }));
 
@@ -356,12 +361,12 @@
           expect(
             deps.clmDataStore.events.updateProgress
           ).toHaveBeenCalledWith(
-            deps.initialData.event, deps.initialData.tasks, 'somePublicId'
+            deps.initialData.event, deps.initialData.tasks, deps.initialData.solutions, 'somePublicId'
           );
           expect(
             deps.clmDataStore.events.updateProgress
           ).toHaveBeenCalledWith(
-            deps.initialData.event, deps.initialData.tasks, 'someOtherPublicId'
+            deps.initialData.event, deps.initialData.tasks, deps.initialData.solutions, 'someOtherPublicId'
           );
         });
 

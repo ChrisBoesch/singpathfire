@@ -316,6 +316,19 @@
           return $q.when(data.profile && data.profile.canView(data.event));
         });
 
+        var canViewAllSolutionsPromise = $q.all({
+          event: eventPromise,
+          profile: profilePromise
+        }).then(function(data) {
+          return (
+            data.profile &&
+            data.profile.$id &&
+            data.event &&
+            data.event.owner &&
+            data.event.owner.publicId === data.profile.$id
+          );
+        });
+
         var tasksPromise = canviewPromise.then(function(canView) {
           if (canView) {
             return clmDataStore.events.getTasks(eventId);
@@ -328,6 +341,14 @@
           }
         });
 
+        var userSolutionsPromise = profilePromise.then(function(profile) {
+          if (!profile || !profile.$id) {
+            return;
+          }
+
+          return clmDataStore.events.getUserSolutions(eventId, profile.$id);
+        });
+
         return $q.all({
           currentUser: spfAuthData.user().catch(rescue),
           profile: profilePromise,
@@ -335,8 +356,16 @@
           tasks: tasksPromise,
           participants: participantsPromise,
           ranking: clmDataStore.events.getRanking(eventId),
-          currentUserStats: $q.all([eventPromise, tasksPromise, profilePromise]).then(function(data) {
-            if (!data || !data.profile) {
+          solutions: canViewAllSolutionsPromise.then(function(canView) {
+            if (canView) {
+              return clmDataStore.events.getSolutions(eventId);
+            }
+          }),
+          currentUserSolutions: userSolutionsPromise,
+          currentUserStats: $q.all([
+            eventPromise, tasksPromise, userSolutionsPromise, profilePromise
+          ]).then(function(data) {
+            if (!data || !data[2] || !data[3]) {
               return {};
             }
             return clmDataStore.events.updateCurrentUserProfile.apply(clmDataStore.events, data);
@@ -377,6 +406,8 @@
       this.currentUserRanking = initialData.currentUserStats.ranking;
       this.participants = initialData.participants;
       this.currentUserProgress = initialData.currentUserStats.progress;
+      this.solutions = initialData.solutions;
+      this.currentUserSolutions = initialData.currentUserSolutions;
       this.orderKey = 'total';
       this.reverseOrder = true;
 
@@ -399,7 +430,7 @@
 
       updateNavbar();
 
-      this.promptForLink = function(eventId, taskId, task, participant) {
+      this.promptForLink = function(eventId, taskId, task, participant, userSolution) {
         $mdDialog.show({
           parent: $document.body,
           templateUrl: 'classmentors/components/events/events-view-provide-link.html',
@@ -410,12 +441,10 @@
         function DialogController() {
           this.task = task;
           if (
-            participant &&
-            participant.tasks &&
-            participant.tasks[taskId] &&
-            participant.tasks[taskId].solution
+            userSolution &&
+            userSolution[taskId]
           ) {
-            this.solution = participant.tasks[taskId].solution;
+            this.solution = userSolution[taskId];
           }
 
           this.save = function(link) {
@@ -506,13 +535,7 @@
           this.join = function(pw) {
             clmDataStore.events.join(self.event, pw).then(function() {
               spfAlert.success('You joined this event');
-              return clmDataStore.events.participants(self.event.$id);
-            }).then(function(participants) {
-              self.participants = participants;
-              updateNavbar();
               $mdDialog.hide();
-              return clmDataStore.events.updateProgress(self.event, self.tasks, self.currentUser.publicId);
-            }).then(function() {
               $route.reload();
             }).catch(function(err) {
               spfAlert.error('Failed to add you: ' + err);
@@ -525,9 +548,9 @@
         }
       }
 
-      this.update = function(event, tasks, profile) {
+      this.update = function(event, tasks, userSolutions, profile) {
         return clmDataStore.events.updateCurrentUserProfile(
-          event, tasks, profile
+          event, tasks, userSolutions, profile
         ).then(function(stats) {
           self.currentUserProgress = stats.progress;
           self.currentUserRanking = stats.ranking;
@@ -544,7 +567,9 @@
         }).map(function(index) {
           return self.participants[index];
         }).reduce(function(all, participant) {
-          all[participant.$id] = clmDataStore.events.updateProgress(self.event, self.tasks, participant.$id);
+          all[participant.$id] = clmDataStore.events.updateProgress(
+            self.event, self.tasks, self.solutions, participant.$id
+          );
           return all;
         }, {}));
       };
