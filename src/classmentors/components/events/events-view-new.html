@@ -20,6 +20,16 @@
             </div>
         </md-input-container>
 
+        <div>
+            <h3>options</h3>
+            <p><md-switch class="md-primary" ng-model="ctrl.newEvent.data.options.showProgress" aria-label="show progress?">
+                Show all participant progress.
+            </md-switch></p>
+            <p><md-switch class="md-primary" ng-model="ctrl.newEvent.data.options.showLinks" aria-label="closed?">
+                Show all participant links.
+            </md-switch></p>
+        </div>
+
         <md-progress-circular ng-show="ctrl.creatingEvent" md-mode="indeterminate" style="margin: 16px auto"></md-progress-circular>
 
         <div layout="row" layout-align="center center">

@@ -269,7 +269,12 @@
 
       this.reset = function(eventForm) {
         this.newEvent = {
-          data: {},
+          data: {
+            options: {
+              showProgress: true,
+              showLinks: false
+            }
+          },
           password: ''
         };
 
@@ -321,6 +326,27 @@
           profile: profilePromise
         }).then(function(data) {
           return (
+            data.event &&
+            data.event.options &&
+            data.event.options.showProgress
+          ) || (
+            data.profile &&
+            data.profile.$id &&
+            data.event &&
+            data.event.owner &&
+            data.event.owner.publicId === data.profile.$id
+          );
+        });
+
+        var canViewAllLinks = $q.all({
+          event: eventPromise,
+          profile: profilePromise
+        }).then(function(data) {
+          return (
+            data.event &&
+            data.event.options &&
+            data.event.options.showLinks
+          ) || (
             data.profile &&
             data.profile.$id &&
             data.event &&
@@ -359,7 +385,7 @@
               return clmDataStore.events.getProgress(eventId);
             }
           }),
-          solutions: canViewAllProgress.then(function(canView) {
+          solutions: canViewAllLinks.then(function(canView) {
             if (canView) {
               return clmDataStore.events.getSolutions(eventId);
             }

@@ -58,8 +58,8 @@
                                     {{ participant.user.displayName }}
                                 </md-button>
                                 <span ng-if="ctrl.currentUser.publicId == participant.$id">
-                                    <md-button class="md-icon-button md-primary" aria-label="Update">
-                                        <md-icon md-svg-icon="loop" ng-click="ctrl.update(ctrl.event, ctrl.tasks, ctrl.currentUserSolutions, ctrl.profile)"></md-icon>
+                                    <md-button class="md-icon-button md-primary" aria-label="Update" ng-click="ctrl.update(ctrl.event, ctrl.tasks, ctrl.currentUserSolutions, ctrl.profile)">
+                                        <md-icon md-svg-icon="loop"></md-icon>
                                     </md-button>
                                 </span>
                             </th>
@@ -87,22 +87,34 @@
 
                                 <div ng-if="task.linkPattern">
                                     <span ng-if="participant.$id == ctrl.currentUser.publicId">
-                                        <md-button class="md-raised md-primary" 
-                                            ng-click="ctrl.promptForLink(ctrl.event.$id, taskId, task, participant, ctrl.currentUserSolutions)"
-                                        >
-                                            <span ng-if="ctrl.currentUserProgress[taskId].completed">
-                                                Edit Link
-                                            </span>
-                                            <span ng-if="!ctrl.currentUserProgress[taskId].completed &amp;&amp; ctrl.currentUserStats.progress[taskId].completed">
-                                                Edit Link*
-                                            </span>
-                                            <span ng-if="!ctrl.currentUserProgress[taskId].completed &amp;&amp; !ctrl.currentUserStats.progress[taskId].completed">
+                                        <span ng-if="ctrl.currentUserProgress[taskId].completed">
+                                            <a ng-href="{{ctrl.currentUserSolutions[taskId]}}">Solution</a>
+                                            <md-button class="md-icon-button md-primary small-icon" aria-label="Update link"
+                                                ng-click="ctrl.promptForLink(ctrl.event.$id, taskId, task, participant, ctrl.currentUserSolutions)"
+                                            >
+                                                <md-icon md-svg-icon="create"></md-icon>
+                                            </md-button>
+                                        </span>
+                                        <span ng-if="!ctrl.currentUserProgress[taskId].completed &amp;&amp; ctrl.currentUserStats.progress[taskId].completed">
+                                            <a ng-href="{{ctrl.currentUserSolutions[taskId]}}">Solution*</a>
+                                            <md-button class="md-icon-button md-primary small-icon" aria-label="Update link"
+                                                ng-click="ctrl.promptForLink(ctrl.event.$id, taskId, task, participant, ctrl.currentUserSolutions)"
+                                            >
+                                                <md-icon md-svg-icon="create"></md-icon>
+                                            </md-button>
+                                        </span>
+                                        <span ng-if="!ctrl.currentUserProgress[taskId].completed &amp;&amp; !ctrl.currentUserStats.progress[taskId].completed">
+                                            <md-button class="md-raised md-primary" 
+                                                ng-click="ctrl.promptForLink(ctrl.event.$id, taskId, task, participant, ctrl.currentUserSolutions)"
+                                            >
                                                 Submit Link
-                                            </span>
+                                            </md-button>
+                                        </span>
                                         </md-button>
                                     </span>
                                     <span ng-if="ctrl.progress[participant.$id][taskId].completed &amp;&amp; participant.$id != ctrl.currentUser.publicId">
-                                        <a ng-href="{{ctrl.solutions[participant.$id][taskId]}}">Solution</a>
+                                        <span ng-if="!ctrl.solutions[participant.$id][taskId]">completed</span>
+                                        <a ng-if="ctrl.solutions[participant.$id][taskId]" ng-href="{{ctrl.solutions[participant.$id][taskId]}}">Solution</a>
                                     </span>
                                 </div>
                             </td>
