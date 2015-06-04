@@ -1037,6 +1037,73 @@
 
           });
 
+          describe('updateEvent', function() {
+            var $q, $rootScope, clmDataStore;
+
+            beforeEach(inject(function(_$q_, _$rootScope_, _clmDataStore_) {
+              $q = _$q_;
+              $rootScope = _$rootScope_;
+              clmDataStore = _clmDataStore_;
+            }));
+
+            it('should reject if event is not an angularfire object ', function() {
+              var err;
+
+              clmDataStore.events.updateEvent({}).catch(function(e) {
+                err = e;
+              });
+
+              $rootScope.$apply();
+
+              expect(err).toEqual(jasmine.any(Error));
+            });
+
+            it('should save the event object', function() {
+              var event = jasmine.createSpyObj('anEvent', ['$save']);
+
+              event.$id = 'someEventId';
+              event.$save.and.returnValue($q.reject()); // stop chain here
+
+              clmDataStore.events.updateEvent(event);
+
+              expect(event.$save).toHaveBeenCalled();
+            });
+
+            it('should not set a new passord new password is falsy', function() {
+              var event = jasmine.createSpyObj('anEvent', ['$save']);
+
+              event.$id = 'someEventId';
+              event.$save.and.returnValue($q.when());
+              spfCrypto.password.newHash.and.returnValue({});
+
+              clmDataStore.events.updateEvent(event, '');
+
+              $rootScope.$apply();
+
+              expect(spfCrypto.password.newHash).not.toHaveBeenCalled();
+              expect(spfFirebase.set).not.toHaveBeenCalled();
+            });
+
+            it('should set a new passord if it receives a password', function() {
+              var event = jasmine.createSpyObj('anEvent', ['$save']);
+              var hash = {value: '1234', options: {}};
+
+              event.$id = 'someEventId';
+              event.$save.and.returnValue($q.when());
+              spfCrypto.password.newHash.and.returnValue(hash);
+
+              clmDataStore.events.updateEvent(event, 'foo');
+
+              $rootScope.$apply();
+
+              expect(spfCrypto.password.newHash).toHaveBeenCalledWith('foo');
+              expect(spfFirebase.set).toHaveBeenCalledWith(jasmine.any(Array), jasmine.any(Object));
+              expect(spfFirebase.set.calls.argsFor(0)[0].join('/')).toBe('classMentors/eventPasswords/someEventId');
+              expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({hash: '1234', options: hash.options});
+            });
+
+          });
+
           describe('get', function() {
             var clmDataStore;
 

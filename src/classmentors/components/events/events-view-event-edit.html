@@ -2,7 +2,45 @@
     <h2 hide show-sm>
         {{ ctrl.event.title }}
     </h2>
+
+    <form name="editEventForm" ng-submit="ctrl.save(ctrl.currentUser, ctrl.event, ctrl.newPassword, editEventForm)">
+        <md-input-container>
+            <label for="event-title">Event Name</label>
+            <input name="eventTitle" type="text" id="event-title" ng-model="ctrl.event.title" ng-minlength="3" ng-maxlength="60" required="true"/>
+            <div ng-messages="editEventForm.eventTitle.$error">
+                <div ng-message="required">An event should have a name.</div>
+                <div ng-message="minlength">An event name shouldn't be shorten than 3 characters.</div>
+                <div ng-message="maxlength">An event name shouldn't be longer than 60 characters.</div>
+            </div>
+        </md-input-container>
+
+        <md-input-container>
+            <label for="event-pw">New Password</label>
+            <input name="eventPw" type="text" id="event-pw" ng-model="ctrl.newPassword" />
+            <div ng-messages="editEventForm.eventPw.$error">
+            </div>
+        </md-input-container>
+
+        <div>
+            <h3>options</h3>
+            <p><md-switch class="md-primary" ng-model="ctrl.event.options.showProgress" aria-label="show progress?">
+                Show all participant progress.
+            </md-switch></p>
+            <p><md-switch class="md-primary" ng-model="ctrl.event.options.showLinks" aria-label="closed?">
+                Show all participant links.
+            </md-switch></p>
+        </div>
+
+        <md-progress-circular ng-show="ctrl.savingEvent" md-mode="indeterminate" style="margin: 16px auto"></md-progress-circular>
+
+        <div layout="row" layout-align="center center">
+            <md-button type="submit" class="md-raised md-primary" ng-disabled="editEventForm.$pristine || editEventForm.$invalid || ctrl.savingEvent">Save</md-button>
+            <md-button type="reset" class="md-raised" ng-click="ctrl.reset(editEventForm)" ng-disabled="ctrl.savingEvent || editEventForm.$pristine">Reset</md-button>
+        </div>
+    </form>
         
+    <md-divider></md-divider>
+
     <md-list>
         <md-subheader class="md-no-sticky">{{ ctrl.tasks | spfLength }} challenges</md-subheader>
         <md-list-item class="md-3-line" ng-repeat="(taskId, task) in ctrl.tasks">

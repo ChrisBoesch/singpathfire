@@ -805,9 +805,13 @@
     'spfAlert',
     'clmDataStore',
     function EditCtrl(initialData, spfNavBarService, urlFor, spfAlert, clmDataStore) {
+      var self = this;
 
+      this.currentUser = initialData.currentUser;
       this.event = initialData.event;
       this.tasks = initialData.tasks;
+      this.newPassword = '';
+      this.savingEvent = false;
 
       spfNavBarService.update(
         'Edit', [{
@@ -822,6 +826,22 @@
           icon: 'create'
         }]
       );
+
+      this.save = function(currentUser, event, newPassword, editEventForm) {
+        self.savingEvent = true;
+        event.owner.publicId = currentUser.publicId;
+        event.owner.displayName = currentUser.displayName;
+        event.owner.gravatar = currentUser.gravatar;
+        return clmDataStore.events.updateEvent(event, newPassword).then(function() {
+          spfAlert.success('Event saved.');
+          self.newPassword = '';
+          editEventForm.$setPristine(true);
+        }).catch(function() {
+          spfAlert.error('Failed to save event.');
+        }).finally(function() {
+          self.savingEvent = false;
+        });
+      };
 
       this.openTask = function(eventId, taskId) {
         clmDataStore.events.openTask(eventId, taskId).then(function() {
