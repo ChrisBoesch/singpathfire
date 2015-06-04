@@ -55,3 +55,11 @@ md-toolbar .separator {
 md-icon:focus {
   outline: none;
 }
+
+.even {
+  background-color: #eee;
+}
+
+table .md-button {
+  margin: 0;
+}

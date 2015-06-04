@@ -52,13 +52,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr ng-repeat="(publicId, participant) in ctrl.participants" ng-class="'index-' + $index">
+                        <tr ng-repeat="(publicId, participant) in ctrl.participants" ng-class="'index-' + $index + ' ' + ($index % 2 == 0? 'even' : 'odd')">
                             <th layout="row" layout-align="start center">
                                 <md-button ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$id} }}">
                                     {{ participant.user.displayName }}
                                 </md-button>
                                 <span ng-if="ctrl.currentUser.publicId == participant.$id">
-                                    <md-button class="md-icon-button md-primary" aria-label="Update" ng-click="ctrl.update(ctrl.event, ctrl.tasks, ctrl.currentUserSolutions, ctrl.profile)">
+                                    <md-button class="md-icon-button md-primary small-icon" aria-label="Update" ng-click="ctrl.update(ctrl.event, ctrl.tasks, ctrl.currentUserSolutions, ctrl.profile)">
                                         <md-icon md-svg-icon="loop"></md-icon>
                                     </md-button>
                                 </span>
@@ -155,7 +155,7 @@
                                 No participants
                             </th> 
                         </tr>
-                        <tr ng-repeat="(publicId, participant) in (ctrl.ranking | toArray | orderBy:ctrl.orderKey:ctrl.reverseOrder)" ng-class="'index-' + $index">
+                        <tr ng-repeat="(publicId, participant) in (ctrl.ranking | toArray | orderBy:ctrl.orderKey:ctrl.reverseOrder)" ng-class="'index-' + $index + ' ' + ($index % 2 == 0? 'even' : 'odd')">
                             <th>
                                 <md-button ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$id} }}">
                                     {{ participant.user.displayName }}
