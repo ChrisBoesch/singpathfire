@@ -35,8 +35,11 @@
           $route: jasmine.createSpyObj('$route', ['reload']),
           $mdDialog: jasmine.createSpyObj('$mdDialog', ['show', 'hide']),
           spfAlert: jasmine.createSpyObj('spfAlert', ['info', 'success', 'error', 'warning']),
+          spfFirebase: jasmine.createSpyObj('spfFirebase', ['cleanObj']),
+          spfAuthData: jasmine.createSpyObj('spfAuthData', ['publicId']),
           spfNavBarService: jasmine.createSpyObj('spfNavBarService', ['update']),
           clmDataStore: {
+            initProfile: jasmine.createSpy('initProfile'),
             events: jasmine.createSpyObj('events', ['leave', 'join', 'updateProgress', 'updateCurrentUserProfile'])
           }
         };
@@ -198,6 +201,64 @@
           jasmine.any(Object),
           {title: 'Update', onClick: jasmine.any(Function), icon: 'loop'}
         ]);
+      });
+
+      describe('register', function() {
+        var $q, $rootScope;
+
+        beforeEach(inject(function(_$q_, _$rootScope_) {
+          $rootScope = _$rootScope_;
+          $q = _$q_;
+        }));
+
+        it('should save the public id', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+          var currentUser = {};
+
+          deps.spfAuthData.publicId.and.returnValue($q.when());
+
+          ctrl.register(currentUser);
+
+          expect(deps.spfAuthData.publicId).toHaveBeenCalledWith(currentUser);
+        });
+
+        it('should initiate profile', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+          var currentUser = {};
+
+          deps.spfAuthData.publicId.and.returnValue($q.when());
+
+          ctrl.register(currentUser);
+
+          $rootScope.$apply();
+          expect(deps.clmDataStore.initProfile).toHaveBeenCalledWith();
+        });
+
+        it('should reload the page on success', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+          var currentUser = {};
+
+          deps.spfAuthData.publicId.and.returnValue($q.when());
+
+          ctrl.register(currentUser);
+
+          $rootScope.$apply();
+          expect(deps.$route.reload).toHaveBeenCalled();
+        });
+
+        it('should notify error', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+          var currentUser = {};
+
+          deps.spfAuthData.publicId.and.returnValue($q.reject());
+
+          ctrl.register(currentUser);
+
+          $rootScope.$apply();
+          expect(deps.$route.reload).not.toHaveBeenCalled();
+          expect(deps.spfAlert.error).toHaveBeenCalled();
+        });
+
       });
 
       describe('completed', function() {

@@ -322,10 +322,12 @@
         });
 
         var canViewAllProgress = $q.all({
+          canview: canviewPromise,
           event: eventPromise,
           profile: profilePromise
         }).then(function(data) {
           return (
+            data.canview &&
             data.event &&
             data.event.options &&
             data.event.options.showProgress
@@ -339,10 +341,12 @@
         });
 
         var canViewAllLinks = $q.all({
+          canview: canviewPromise,
           event: eventPromise,
           profile: profilePromise
         }).then(function(data) {
           return (
+            data.canview &&
             data.event &&
             data.event.options &&
             data.event.options.showLinks
@@ -422,12 +426,14 @@
     '$route',
     'spfAlert',
     'urlFor',
+    'spfFirebase',
+    'spfAuthData',
     'spfNavBarService',
     'clmDataStore',
     'clmServicesUrl',
     function ViewEventCtrl(
       initialData, $q, $log, $document, $mdDialog, $route,
-      spfAlert, urlFor, spfNavBarService, clmDataStore, clmServicesUrl
+      spfAlert, urlFor, spfFirebase, spfAuthData, spfNavBarService, clmDataStore, clmServicesUrl
     ) {
       var self = this;
       var linkers;
@@ -464,40 +470,6 @@
       };
 
       updateNavbar();
-
-      this.promptForLink = function(eventId, taskId, task, participant, userSolution) {
-        $mdDialog.show({
-          parent: $document.body,
-          templateUrl: 'classmentors/components/events/events-view-provide-link.html',
-          controller: DialogController,
-          controllerAs: 'ctrl'
-        });
-
-        function DialogController() {
-          this.task = task;
-          if (
-            userSolution &&
-            userSolution[taskId]
-          ) {
-            this.solution = userSolution[taskId];
-          }
-
-          this.save = function(link) {
-            clmDataStore.events.submitLink(eventId, taskId, participant.$id, link).then(function() {
-              $mdDialog.hide();
-              spfAlert.success('Link is saved and the the task is completed');
-            }).catch(function(err) {
-              $log.error(err);
-              spfAlert.error('Failed to save the link');
-              return err;
-            });
-          };
-
-          this.cancel = function() {
-            $mdDialog.hide();
-          };
-        }
-      };
 
       function updateNavbar() {
         spfNavBarService.update(
@@ -582,6 +554,58 @@
           };
         }
       }
+
+      function cleanProfile(currentUser) {
+        currentUser.country = spfFirebase.cleanObj(currentUser.country);
+        currentUser.school = spfFirebase.cleanObj(currentUser.school);
+      }
+
+      this.register = function(currentUser) {
+        cleanProfile(currentUser);
+        spfAuthData.publicId(currentUser).then(function() {
+          spfAlert.success('Public id and display name saved');
+          return clmDataStore.initProfile();
+        }).then(function() {
+          $route.reload();
+        }).catch(function(err) {
+          spfAlert.error('Failed to save public id');
+          return err;
+        });
+      };
+
+      this.promptForLink = function(eventId, taskId, task, participant, userSolution) {
+        $mdDialog.show({
+          parent: $document.body,
+          templateUrl: 'classmentors/components/events/events-view-provide-link.html',
+          controller: DialogController,
+          controllerAs: 'ctrl'
+        });
+
+        function DialogController() {
+          this.task = task;
+          if (
+            userSolution &&
+            userSolution[taskId]
+          ) {
+            this.solution = userSolution[taskId];
+          }
+
+          this.save = function(link) {
+            clmDataStore.events.submitLink(eventId, taskId, participant.$id, link).then(function() {
+              $mdDialog.hide();
+              spfAlert.success('Link is saved and the the task is completed');
+            }).catch(function(err) {
+              $log.error(err);
+              spfAlert.error('Failed to save the link');
+              return err;
+            });
+          };
+
+          this.cancel = function() {
+            $mdDialog.hide();
+          };
+        }
+      };
 
       this.update = function(event, tasks, userSolutions, profile) {
         return clmDataStore.events.updateCurrentUserProfile(

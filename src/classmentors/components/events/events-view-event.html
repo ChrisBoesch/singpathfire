@@ -6,7 +6,7 @@
 
     <md-tabs md-dynamic-height="true" md-border-bottom="true">
         <md-tab label="Challenges" ng-disabled="!ctrl.participants">
-            <md-content>
+            <md-content layout-padding>
                 <table class="events tasks" ng-if="ctrl.participants">
                     <thead>
                         <tr>
@@ -128,7 +128,7 @@
         </md-tab>
 
         <md-tab label="Ranking">
-            <md-content>
+            <md-content layout-padding>
                 <table class="events rankink">
                     <thead>
                         <tr ng-class="{'reversed': ctrl.reverseOrder}">
@@ -172,4 +172,19 @@
             </md-content>
         </md-tab>
     </md-tabs>
+
+    <md-content ng-if="ctrl.currentUser &amp;&amp; !ctrl.profile" layout-padding>
+        <md-divider></md-divider>
+        <p>To join this event, you first need to register:</p>
+
+        <form name="registerForm" ng-submit="ctrl.register(ctrl.currentUser, registerForm)">
+            <spf-sign-form current-user="ctrl.currentUser"></spf-sign-form>
+
+            <div layout="row" layout-align="center center">
+                <md-button type="submit" class="md-raised md-primary" ng-disabled="registerForm.$invalid">
+                    Save
+                </md-button>
+            </div>
+        </form>
+    </md-content>
 </md-content>
