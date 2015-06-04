@@ -304,32 +304,18 @@
           expect(deps.spfAlert.success).toHaveBeenCalled();
         }));
 
-        it('should should set currentUserProgress on success', inject(function($q, $rootScope) {
+        it('should should set currentUserStats on success', inject(function($q, $rootScope) {
           var ctrl = $controller('ViewEventCtrl', deps);
           var expected = {};
 
           deps.clmDataStore.events.updateCurrentUserProfile.and.returnValue(
-            $q.when({progress: expected})
+            $q.when(expected)
           );
 
           ctrl.update({}, {}, {});
           $rootScope.$apply();
 
-          expect(ctrl.currentUserProgress).toBe(expected);
-        }));
-
-        it('should should set currentUserRanking on success', inject(function($q, $rootScope) {
-          var ctrl = $controller('ViewEventCtrl', deps);
-          var expected = {};
-
-          deps.clmDataStore.events.updateCurrentUserProfile.and.returnValue(
-            $q.when({ranking: expected})
-          );
-
-          ctrl.update({}, {}, {});
-          $rootScope.$apply();
-
-          expect(ctrl.currentUserRanking).toBe(expected);
+          expect(ctrl.currentUserStats).toBe(expected);
         }));
 
         it('should show error message on failure', inject(function($q, $rootScope) {

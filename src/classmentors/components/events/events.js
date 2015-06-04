@@ -316,7 +316,7 @@
           return $q.when(data.profile && data.profile.canView(data.event));
         });
 
-        var canViewAllSolutionsPromise = $q.all({
+        var canViewAllProgress = $q.all({
           event: eventPromise,
           profile: profilePromise
         }).then(function(data) {
@@ -342,11 +342,9 @@
         });
 
         var userSolutionsPromise = profilePromise.then(function(profile) {
-          if (!profile || !profile.$id) {
-            return;
+          if (profile && profile.$id) {
+            return clmDataStore.events.getUserSolutions(eventId, profile.$id);
           }
-
-          return clmDataStore.events.getUserSolutions(eventId, profile.$id);
         });
 
         return $q.all({
@@ -356,9 +354,19 @@
           tasks: tasksPromise,
           participants: participantsPromise,
           ranking: clmDataStore.events.getRanking(eventId),
-          solutions: canViewAllSolutionsPromise.then(function(canView) {
+          progress: canViewAllProgress.then(function(canView) {
+            if (canView) {
+              return clmDataStore.events.getProgress(eventId);
+            }
+          }),
+          solutions: canViewAllProgress.then(function(canView) {
             if (canView) {
               return clmDataStore.events.getSolutions(eventId);
+            }
+          }),
+          currentUserProgress: profilePromise.then(function(profile) {
+            if (profile && profile.$id) {
+              return clmDataStore.events.getUserProgress(eventId, profile.$id);
             }
           }),
           currentUserSolutions: userSolutionsPromise,
@@ -403,10 +411,11 @@
       this.event = initialData.event;
       this.tasks = initialData.tasks;
       this.ranking = initialData.ranking;
-      this.currentUserRanking = initialData.currentUserStats.ranking;
+      this.currentUserStats = initialData.currentUserStats;
       this.participants = initialData.participants;
-      this.currentUserProgress = initialData.currentUserStats.progress;
+      this.progress = initialData.progress;
       this.solutions = initialData.solutions;
+      this.currentUserProgress = initialData.currentUserProgress;
       this.currentUserSolutions = initialData.currentUserSolutions;
       this.orderKey = 'total';
       this.reverseOrder = true;
@@ -552,8 +561,7 @@
         return clmDataStore.events.updateCurrentUserProfile(
           event, tasks, userSolutions, profile
         ).then(function(stats) {
-          self.currentUserProgress = stats.progress;
-          self.currentUserRanking = stats.ranking;
+          self.currentUserStats = stats;
           spfAlert.success('Profile updated');
         }).catch(function(err) {
           $log.error(err);

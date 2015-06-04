@@ -1127,6 +1127,46 @@
             });
           });
 
+          describe('getProgress', function() {
+            var clmDataStore;
+
+            beforeEach(inject(function(_clmDataStore_) {
+              clmDataStore = _clmDataStore_;
+            }));
+
+            it('should retrieve each user progress for an event', function() {
+              clmDataStore.events.getProgress('someEventId');
+
+              expect(spfFirebase.loadedObj.calls.count()).toBe(1);
+              expect(spfFirebase.loadedObj.calls.argsFor(0).length).toBe(1);
+              expect(
+                spfFirebase.loadedObj.calls.argsFor(0)[0].join('/')
+              ).toBe(
+                'classMentors/eventProgress/someEventId'
+              );
+            });
+          });
+
+          describe('getUserProgress', function() {
+            var clmDataStore;
+
+            beforeEach(inject(function(_clmDataStore_) {
+              clmDataStore = _clmDataStore_;
+            }));
+
+            it('should retrieve a user progress', function() {
+              clmDataStore.events.getUserProgress('someEventId', 'bob');
+
+              expect(spfFirebase.loadedObj.calls.count()).toBe(1);
+              expect(spfFirebase.loadedObj.calls.argsFor(0).length).toBe(1);
+              expect(
+                spfFirebase.loadedObj.calls.argsFor(0)[0].join('/')
+              ).toBe(
+                'classMentors/eventProgress/someEventId/bob'
+              );
+            });
+          });
+
           describe('getSolutions', function() {
             var clmDataStore;
 
@@ -1555,7 +1595,7 @@
               expect(
                 spfFirebase.set.calls.argsFor(0)[0].join('/')
               ).toBe(
-                'classMentors/eventParticipants/someEventId/bob/tasks'
+                'classMentors/eventProgress/someEventId/bob'
               );
               expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({});
 

@@ -500,6 +500,14 @@
             return spfFirebase.loadedObj(['classMentors/eventRankings', eventId]);
           },
 
+          getProgress: function(eventId) {
+            return spfFirebase.loadedObj(['classMentors/eventProgress', eventId]);
+          },
+
+          getUserProgress: function(eventId, publicId) {
+            return spfFirebase.loadedObj(['classMentors/eventProgress', eventId, publicId]);
+          },
+
           getSolutions: function(eventId) {
             return spfFirebase.loadedObj(['classMentors/eventSolutions', eventId]);
           },
@@ -811,7 +819,7 @@
               // 4. save data
               return $q.all([
                 spfFirebase.set(
-                  ['classMentors/eventParticipants', event.$id, data.classMentors.$id, 'tasks'],
+                  ['classMentors/eventProgress', event.$id, data.classMentors.$id],
                   // 2. check completness
                   clmDataStore.events._getProgress(tasks, data)
                 ),
