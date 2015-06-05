@@ -22,6 +22,10 @@
                 <h2>
                     {{ctrl.profile.user.displayName}}
                 </h2>
+                <h3 ng-if="ctrl.profile.user.school" layout="row" layout-align="center center">
+                    <span flex="33"><img ng-src="{{ctrl.profile.user.school.iconUrl}}" alt="user school crest"></span>
+                    <span flex="67">{{ctrl.profile.user.school.name}}</span>
+                </h3>
             </div>
         </div>
 
