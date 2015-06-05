@@ -492,12 +492,51 @@
             });
           },
 
+          updateEvent: function(event, password) {
+            if (!event || !event.$id || !event.$save) {
+              return $q.reject(new Error('Event is not a firebase object'));
+            }
+
+            return event.$save().then(function() {
+              if (!password) {
+                return;
+              }
+
+              var eventId = event.$id;
+              var hash = spfCrypto.password.newHash(password);
+              var opts = {
+                hash: hash.value,
+                options: hash.options
+              };
+              return spfFirebase.set(['classMentors/eventPasswords', eventId], opts);
+            }).catch(function(err) {
+              $log.error(err);
+              return err;
+            });
+          },
+
           get: function(eventId) {
             return spfFirebase.loadedObj(['classMentors/events', eventId]);
           },
 
           getRanking: function(eventId) {
             return spfFirebase.loadedObj(['classMentors/eventRankings', eventId]);
+          },
+
+          getProgress: function(eventId) {
+            return spfFirebase.loadedObj(['classMentors/eventProgress', eventId]);
+          },
+
+          getUserProgress: function(eventId, publicId) {
+            return spfFirebase.loadedObj(['classMentors/eventProgress', eventId, publicId]);
+          },
+
+          getSolutions: function(eventId) {
+            return spfFirebase.loadedObj(['classMentors/eventSolutions', eventId]);
+          },
+
+          getUserSolutions: function(eventId, publicId) {
+            return spfFirebase.loadedObj(['classMentors/eventSolutions', eventId, publicId]);
           },
 
           getTasks: function(eventId) {
@@ -569,10 +608,6 @@
 
           participants: function(eventId) {
             return spfFirebase.loadedArray(['classMentors/eventParticipants', eventId]);
-          },
-
-          progress: function(eventId, publicId) {
-            return spfFirebase.loadedObj(['classMentors/eventParticipants', eventId, publicId]);
           },
 
           join: function(event, pw) {
@@ -718,18 +753,16 @@
               return k && k[0] !== '$';
             }).reduce(function(results, taskId) {
               var task = tasks[taskId];
+              var match;
 
               if (task.linkPattern) {
                 if (
-                  data.progress &&
-                  data.progress.tasks &&
-                  data.progress.tasks[taskId] &&
-                  data.progress.tasks[taskId].solution
+                  data.solutions &&
+                  data.solutions[taskId] &&
+                  angular.isFunction(data.solutions[taskId].match) &&
+                  data.solutions[taskId].match(task.linkPattern)
                 ) {
-                  results[taskId] = {
-                    solution: data.progress.tasks[taskId].solution,
-                    completed: data.progress.tasks[taskId].solution.match(task.linkPattern)
-                  };
+                  results[taskId] = {completed: true};
                 }
                 return results;
               }
@@ -782,9 +815,13 @@
             return ranking;
           },
 
-          updateProgress: function(event, tasks, publicId) {
+          updateProgress: function(event, tasks, solutions, publicId) {
             if (!publicId) {
               return $q.reject('User public id is missing missing.');
+            }
+
+            if (!solutions || !solutions.$id || solutions.$id !== event.$id) {
+              return $q.reject('User solutions are missing');
             }
 
             var cmProfilePromise = clmDataStore.profile(publicId);
@@ -800,12 +837,12 @@
               singPath: clmDataStore.singPath.profile(publicId),
               classMentors: cmProfilePromise,
               badges: badgesPromise,
-              progress: clmDataStore.events.progress(event.$id, publicId)
+              solutions: solutions[publicId] || {}
             }).then(function(data) {
               // 4. save data
               return $q.all([
                 spfFirebase.set(
-                  ['classMentors/eventParticipants', event.$id, data.classMentors.$id, 'tasks'],
+                  ['classMentors/eventProgress', event.$id, data.classMentors.$id],
                   // 2. check completness
                   clmDataStore.events._getProgress(tasks, data)
                 ),
@@ -827,9 +864,9 @@
            * Only admin and event onwer can save the progress and ranking.
            *
            */
-          updateCurrentUserProfile: function(event, tasks, profile) {
-            if (!event || !event.$id || !profile || !profile.$id) {
-              return $q.reject(new Error('Event or profile are not valid firebase object'));
+          updateCurrentUserProfile: function(event, tasks, userSolutions, profile) {
+            if (!event || !event.$id || !userSolutions || !userSolutions.$id || !profile || !profile.$id) {
+              return $q.reject(new Error('Event, userSolutions or profile are not valid firebase object'));
             }
 
             return $q.all({
@@ -837,7 +874,7 @@
               codeCombat: clmDataStore.services.codeCombat.updateProfile(profile),
               codeSchool: clmDataStore.services.codeSchool.updateProfile(profile),
               singPath: clmDataStore.singPath.profile(profile.$id),
-              progress: clmDataStore.events.progress(event.$id, profile.$id)
+              solutions: userSolutions
             }).then(function(data) {
               return $q.all({
                 singPath: data.singPath,
@@ -846,7 +883,7 @@
                   codeCombat: objToArray(clmDataStore.services.codeCombat.badges(profile)),
                   codeSchool: objToArray(clmDataStore.services.codeSchool.badges(profile))
                 },
-                progress: data.progress
+                solutions: data.solutions
               });
             }).then(function(data) {
               return {
@@ -872,8 +909,8 @@
             }
 
             return spfFirebase.set([
-              'classMentors/eventParticipants', eventId, publicId, 'tasks', taskId
-            ], {solution: link, completed: true});
+              'classMentors/eventSolutions', eventId, publicId, taskId
+            ], link);
           }
         },
 
@@ -1200,7 +1237,7 @@
         scope: false,
         require: 'ngModel',
         link: function cmContainsPostLink(scope, e, attr, model) {
-          var pattern;
+          var pattern = scope.$eval(attr.cmContains);
 
           scope.$watch(attr.cmContains, function(value) {
             pattern = value;

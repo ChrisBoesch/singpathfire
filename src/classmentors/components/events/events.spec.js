@@ -22,17 +22,24 @@
         deps = {
           initialData: {
             currentUser: {},
+            profile: {},
             event: {},
             tasks: {},
             participants: {},
+            ranking: {},
+            solution: {},
+            currentUserSolutions: {},
             currentUserStats: {}
           },
           $document: {},
           $route: jasmine.createSpyObj('$route', ['reload']),
           $mdDialog: jasmine.createSpyObj('$mdDialog', ['show', 'hide']),
           spfAlert: jasmine.createSpyObj('spfAlert', ['info', 'success', 'error', 'warning']),
+          spfFirebase: jasmine.createSpyObj('spfFirebase', ['cleanObj']),
+          spfAuthData: jasmine.createSpyObj('spfAuthData', ['publicId']),
           spfNavBarService: jasmine.createSpyObj('spfNavBarService', ['update']),
           clmDataStore: {
+            initProfile: jasmine.createSpy('initProfile'),
             events: jasmine.createSpyObj('events', ['leave', 'join', 'updateProgress', 'updateCurrentUserProfile'])
           }
         };
@@ -196,6 +203,64 @@
         ]);
       });
 
+      describe('register', function() {
+        var $q, $rootScope;
+
+        beforeEach(inject(function(_$q_, _$rootScope_) {
+          $rootScope = _$rootScope_;
+          $q = _$q_;
+        }));
+
+        it('should save the public id', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+          var currentUser = {};
+
+          deps.spfAuthData.publicId.and.returnValue($q.when());
+
+          ctrl.register(currentUser);
+
+          expect(deps.spfAuthData.publicId).toHaveBeenCalledWith(currentUser);
+        });
+
+        it('should initiate profile', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+          var currentUser = {};
+
+          deps.spfAuthData.publicId.and.returnValue($q.when());
+
+          ctrl.register(currentUser);
+
+          $rootScope.$apply();
+          expect(deps.clmDataStore.initProfile).toHaveBeenCalledWith();
+        });
+
+        it('should reload the page on success', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+          var currentUser = {};
+
+          deps.spfAuthData.publicId.and.returnValue($q.when());
+
+          ctrl.register(currentUser);
+
+          $rootScope.$apply();
+          expect(deps.$route.reload).toHaveBeenCalled();
+        });
+
+        it('should notify error', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+          var currentUser = {};
+
+          deps.spfAuthData.publicId.and.returnValue($q.reject());
+
+          ctrl.register(currentUser);
+
+          $rootScope.$apply();
+          expect(deps.$route.reload).not.toHaveBeenCalled();
+          expect(deps.spfAlert.error).toHaveBeenCalled();
+        });
+
+      });
+
       describe('completed', function() {
 
         it('should return 100 if there is no participants', function() {
@@ -277,14 +342,15 @@
           var ctrl = $controller('ViewEventCtrl', deps);
           var event = {};
           var tasks = {};
+          var solutions = {};
           var profile = {};
 
           deps.clmDataStore.events.updateCurrentUserProfile.and.returnValue($q.when());
 
-          ctrl.update(event, tasks, profile);
+          ctrl.update(event, tasks, solutions, profile);
 
           expect(deps.clmDataStore.events.updateCurrentUserProfile).toHaveBeenCalledWith(
-            event, tasks, profile
+            event, tasks, solutions, profile
           );
         }));
 
@@ -299,32 +365,18 @@
           expect(deps.spfAlert.success).toHaveBeenCalled();
         }));
 
-        it('should should set currentUserProgress on success', inject(function($q, $rootScope) {
+        it('should should set currentUserStats on success', inject(function($q, $rootScope) {
           var ctrl = $controller('ViewEventCtrl', deps);
           var expected = {};
 
           deps.clmDataStore.events.updateCurrentUserProfile.and.returnValue(
-            $q.when({progress: expected})
+            $q.when(expected)
           );
 
           ctrl.update({}, {}, {});
           $rootScope.$apply();
 
-          expect(ctrl.currentUserProgress).toBe(expected);
-        }));
-
-        it('should should set currentUserRanking on success', inject(function($q, $rootScope) {
-          var ctrl = $controller('ViewEventCtrl', deps);
-          var expected = {};
-
-          deps.clmDataStore.events.updateCurrentUserProfile.and.returnValue(
-            $q.when({ranking: expected})
-          );
-
-          ctrl.update({}, {}, {});
-          $rootScope.$apply();
-
-          expect(ctrl.currentUserRanking).toBe(expected);
+          expect(ctrl.currentUserStats).toBe(expected);
         }));
 
         it('should show error message on failure', inject(function($q, $rootScope) {
@@ -356,12 +408,12 @@
           expect(
             deps.clmDataStore.events.updateProgress
           ).toHaveBeenCalledWith(
-            deps.initialData.event, deps.initialData.tasks, 'somePublicId'
+            deps.initialData.event, deps.initialData.tasks, deps.initialData.solutions, 'somePublicId'
           );
           expect(
             deps.clmDataStore.events.updateProgress
           ).toHaveBeenCalledWith(
-            deps.initialData.event, deps.initialData.tasks, 'someOtherPublicId'
+            deps.initialData.event, deps.initialData.tasks, deps.initialData.solutions, 'someOtherPublicId'
           );
         });
 

@@ -269,7 +269,12 @@
 
       this.reset = function(eventForm) {
         this.newEvent = {
-          data: {},
+          data: {
+            options: {
+              showProgress: true,
+              showLinks: false
+            }
+          },
           password: ''
         };
 
@@ -316,6 +321,44 @@
           return $q.when(data.profile && data.profile.canView(data.event));
         });
 
+        var canViewAllProgress = $q.all({
+          canview: canviewPromise,
+          event: eventPromise,
+          profile: profilePromise
+        }).then(function(data) {
+          return (
+            data.canview &&
+            data.event &&
+            data.event.options &&
+            data.event.options.showProgress
+          ) || (
+            data.profile &&
+            data.profile.$id &&
+            data.event &&
+            data.event.owner &&
+            data.event.owner.publicId === data.profile.$id
+          );
+        });
+
+        var canViewAllLinks = $q.all({
+          canview: canviewPromise,
+          event: eventPromise,
+          profile: profilePromise
+        }).then(function(data) {
+          return (
+            data.canview &&
+            data.event &&
+            data.event.options &&
+            data.event.options.showLinks
+          ) || (
+            data.profile &&
+            data.profile.$id &&
+            data.event &&
+            data.event.owner &&
+            data.event.owner.publicId === data.profile.$id
+          );
+        });
+
         var tasksPromise = canviewPromise.then(function(canView) {
           if (canView) {
             return clmDataStore.events.getTasks(eventId);
@@ -328,6 +371,12 @@
           }
         });
 
+        var userSolutionsPromise = profilePromise.then(function(profile) {
+          if (profile && profile.$id) {
+            return clmDataStore.events.getUserSolutions(eventId, profile.$id);
+          }
+        });
+
         return $q.all({
           currentUser: spfAuthData.user().catch(rescue),
           profile: profilePromise,
@@ -335,8 +384,26 @@
           tasks: tasksPromise,
           participants: participantsPromise,
           ranking: clmDataStore.events.getRanking(eventId),
-          currentUserStats: $q.all([eventPromise, tasksPromise, profilePromise]).then(function(data) {
-            if (!data || !data.profile) {
+          progress: canViewAllProgress.then(function(canView) {
+            if (canView) {
+              return clmDataStore.events.getProgress(eventId);
+            }
+          }),
+          solutions: canViewAllLinks.then(function(canView) {
+            if (canView) {
+              return clmDataStore.events.getSolutions(eventId);
+            }
+          }),
+          currentUserProgress: profilePromise.then(function(profile) {
+            if (profile && profile.$id) {
+              return clmDataStore.events.getUserProgress(eventId, profile.$id);
+            }
+          }),
+          currentUserSolutions: userSolutionsPromise,
+          currentUserStats: $q.all([
+            eventPromise, tasksPromise, userSolutionsPromise, profilePromise
+          ]).then(function(data) {
+            if (!data || !data[2] || !data[3]) {
               return {};
             }
             return clmDataStore.events.updateCurrentUserProfile.apply(clmDataStore.events, data);
@@ -359,12 +426,14 @@
     '$route',
     'spfAlert',
     'urlFor',
+    'spfFirebase',
+    'spfAuthData',
     'spfNavBarService',
     'clmDataStore',
     'clmServicesUrl',
     function ViewEventCtrl(
       initialData, $q, $log, $document, $mdDialog, $route,
-      spfAlert, urlFor, spfNavBarService, clmDataStore, clmServicesUrl
+      spfAlert, urlFor, spfFirebase, spfAuthData, spfNavBarService, clmDataStore, clmServicesUrl
     ) {
       var self = this;
       var linkers;
@@ -374,9 +443,12 @@
       this.event = initialData.event;
       this.tasks = initialData.tasks;
       this.ranking = initialData.ranking;
-      this.currentUserRanking = initialData.currentUserStats.ranking;
+      this.currentUserStats = initialData.currentUserStats;
       this.participants = initialData.participants;
-      this.currentUserProgress = initialData.currentUserStats.progress;
+      this.progress = initialData.progress;
+      this.solutions = initialData.solutions;
+      this.currentUserProgress = initialData.currentUserProgress;
+      this.currentUserSolutions = initialData.currentUserSolutions;
       this.orderKey = 'total';
       this.reverseOrder = true;
 
@@ -398,42 +470,6 @@
       };
 
       updateNavbar();
-
-      this.promptForLink = function(eventId, taskId, task, participant) {
-        $mdDialog.show({
-          parent: $document.body,
-          templateUrl: 'classmentors/components/events/events-view-provide-link.html',
-          controller: DialogController,
-          controllerAs: 'ctrl'
-        });
-
-        function DialogController() {
-          this.task = task;
-          if (
-            participant &&
-            participant.tasks &&
-            participant.tasks[taskId] &&
-            participant.tasks[taskId].solution
-          ) {
-            this.solution = participant.tasks[taskId].solution;
-          }
-
-          this.save = function(link) {
-            clmDataStore.events.submitLink(eventId, taskId, participant.$id, link).then(function() {
-              $mdDialog.hide();
-              spfAlert.success('Link is saved and the the task is completed');
-            }).catch(function(err) {
-              $log.error(err);
-              spfAlert.error('Failed to save the link');
-              return err;
-            });
-          };
-
-          this.cancel = function() {
-            $mdDialog.hide();
-          };
-        }
-      };
 
       function updateNavbar() {
         spfNavBarService.update(
@@ -506,13 +542,7 @@
           this.join = function(pw) {
             clmDataStore.events.join(self.event, pw).then(function() {
               spfAlert.success('You joined this event');
-              return clmDataStore.events.participants(self.event.$id);
-            }).then(function(participants) {
-              self.participants = participants;
-              updateNavbar();
               $mdDialog.hide();
-              return clmDataStore.events.updateProgress(self.event, self.tasks, self.currentUser.publicId);
-            }).then(function() {
               $route.reload();
             }).catch(function(err) {
               spfAlert.error('Failed to add you: ' + err);
@@ -525,12 +555,63 @@
         }
       }
 
-      this.update = function(event, tasks, profile) {
+      function cleanProfile(currentUser) {
+        currentUser.country = spfFirebase.cleanObj(currentUser.country);
+        currentUser.school = spfFirebase.cleanObj(currentUser.school);
+      }
+
+      this.register = function(currentUser) {
+        cleanProfile(currentUser);
+        spfAuthData.publicId(currentUser).then(function() {
+          spfAlert.success('Public id and display name saved');
+          return clmDataStore.initProfile();
+        }).then(function() {
+          $route.reload();
+        }).catch(function(err) {
+          spfAlert.error('Failed to save public id');
+          return err;
+        });
+      };
+
+      this.promptForLink = function(eventId, taskId, task, participant, userSolution) {
+        $mdDialog.show({
+          parent: $document.body,
+          templateUrl: 'classmentors/components/events/events-view-provide-link.html',
+          controller: DialogController,
+          controllerAs: 'ctrl'
+        });
+
+        function DialogController() {
+          this.task = task;
+          if (
+            userSolution &&
+            userSolution[taskId]
+          ) {
+            this.solution = userSolution[taskId];
+          }
+
+          this.save = function(link) {
+            clmDataStore.events.submitLink(eventId, taskId, participant.$id, link).then(function() {
+              $mdDialog.hide();
+              spfAlert.success('Link is saved and the the task is completed');
+            }).catch(function(err) {
+              $log.error(err);
+              spfAlert.error('Failed to save the link');
+              return err;
+            });
+          };
+
+          this.cancel = function() {
+            $mdDialog.hide();
+          };
+        }
+      };
+
+      this.update = function(event, tasks, userSolutions, profile) {
         return clmDataStore.events.updateCurrentUserProfile(
-          event, tasks, profile
+          event, tasks, userSolutions, profile
         ).then(function(stats) {
-          self.currentUserProgress = stats.progress;
-          self.currentUserRanking = stats.ranking;
+          self.currentUserStats = stats;
           spfAlert.success('Profile updated');
         }).catch(function(err) {
           $log.error(err);
@@ -544,7 +625,9 @@
         }).map(function(index) {
           return self.participants[index];
         }).reduce(function(all, participant) {
-          all[participant.$id] = clmDataStore.events.updateProgress(self.event, self.tasks, participant.$id);
+          all[participant.$id] = clmDataStore.events.updateProgress(
+            self.event, self.tasks, self.solutions, participant.$id
+          );
           return all;
         }, {}));
       };
@@ -722,9 +805,13 @@
     'spfAlert',
     'clmDataStore',
     function EditCtrl(initialData, spfNavBarService, urlFor, spfAlert, clmDataStore) {
+      var self = this;
 
+      this.currentUser = initialData.currentUser;
       this.event = initialData.event;
       this.tasks = initialData.tasks;
+      this.newPassword = '';
+      this.savingEvent = false;
 
       spfNavBarService.update(
         'Edit', [{
@@ -739,6 +826,22 @@
           icon: 'create'
         }]
       );
+
+      this.save = function(currentUser, event, newPassword, editEventForm) {
+        self.savingEvent = true;
+        event.owner.publicId = currentUser.publicId;
+        event.owner.displayName = currentUser.displayName;
+        event.owner.gravatar = currentUser.gravatar;
+        return clmDataStore.events.updateEvent(event, newPassword).then(function() {
+          spfAlert.success('Event saved.');
+          self.newPassword = '';
+          editEventForm.$setPristine(true);
+        }).catch(function() {
+          spfAlert.error('Failed to save event.');
+        }).finally(function() {
+          self.savingEvent = false;
+        });
+      };
 
       this.openTask = function(eventId, taskId) {
         clmDataStore.events.openTask(eventId, taskId).then(function() {

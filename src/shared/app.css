@@ -24,6 +24,19 @@ html p, body p {
   line-height: 36px;
 }
 
+.md-button.md-icon-button.small-icon {
+  height: 36px;
+  width: 36px;
+  line-height: 36px;
+  margin: 0;
+}
+
+.small-icon md-icon {
+  line-height: 18px;
+  height: 18px;
+  width: 18px;
+}
+
 md-sidenav md-list .md-button {
   color: inherit;
   font-weight: 500;
@@ -41,4 +54,12 @@ md-toolbar .separator {
 
 md-icon:focus {
   outline: none;
+}
+
+.even {
+  background-color: #eee;
+}
+
+table .md-button {
+  margin: 0;
 }
