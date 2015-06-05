@@ -1194,6 +1194,44 @@
             });
           });
 
+          describe('showTask', function() {
+            var clmDataStore;
+
+            beforeEach(inject(function(_clmDataStore_) {
+              clmDataStore = _clmDataStore_;
+            }));
+
+            it('should set the hidden prop. to false', function() {
+              clmDataStore.events.showTask('eventId', 'taskId');
+
+              expect(spfFirebase.set).toHaveBeenCalledWith(jasmine.any(Array), false);
+              expect(
+                spfFirebase.set.calls.argsFor(0)[0].join('/')
+              ).toBe(
+                'classMentors/eventTasks/eventId/taskId/hidden'
+              );
+            });
+          });
+
+          describe('hideTask', function() {
+            var clmDataStore;
+
+            beforeEach(inject(function(_clmDataStore_) {
+              clmDataStore = _clmDataStore_;
+            }));
+
+            it('should set the hidden prop. to false', function() {
+              clmDataStore.events.hideTask('eventId', 'taskId');
+
+              expect(spfFirebase.set).toHaveBeenCalledWith(jasmine.any(Array), true);
+              expect(
+                spfFirebase.set.calls.argsFor(0)[0].join('/')
+              ).toBe(
+                'classMentors/eventTasks/eventId/taskId/hidden'
+              );
+            });
+          });
+
           describe('getProgress', function() {
             var clmDataStore;
 
@@ -1727,25 +1765,15 @@
               var event = {$id: 'someEventId'};
               var solutions = {$id: 'someEventId'};
               var tasks = {
-                someTaskId: {
-                  serviceId: 'codeSchool'
-                },
-                someOtherId: {
-                  serviceId: 'codeSchool',
-                  badge: {
-                    id: 'someBadgeId'
-                  }
-                }
+                someTaskId: {serviceId: 'codeSchool'},
+                someOtherId: {serviceId: 'codeSchool', badge: {id: 'someBadgeId'}},
+                lastId: {serviceId: 'codeSchool', badge: {id: 'someOtherBadgeId'}}
               };
               var profile = {
                 $id: 'bob',
                 user: {},
                 services: {
-                  codeSchool: {
-                    details: {
-                      id: 'bob'
-                    }
-                  }
+                  codeSchool: {details: {id: 'bob'}}
                 }
               };
               var csBadges = [{
@@ -1777,6 +1805,74 @@
               ).toEqual(
                 {codeSchool: 1, codeCombat: 0, singPath: 0, total: 1, user: {}}
               );
+            });
+
+            it('should not update task progress when the task is closed', function() {
+              var event = {$id: 'someEventId'};
+              var solutions = {$id: 'someEventId'};
+              var tasks = {
+                someTaskId: {serviceId: 'codeSchool'},
+                someOtherId: {serviceId: 'codeSchool', badge: {id: 'someBadgeId'}, closedAt: 12345},
+                lastId: {serviceId: 'codeSchool', badge: {id: 'someOtherBadgeId'}}
+              };
+              var profile = {
+                $id: 'bob',
+                user: {},
+                services: {
+                  codeSchool: {details: {id: 'bob'}}
+                }
+              };
+              var csBadges = [{id: 'someBadgeId'}];
+
+              clmDataStore.profile.and.returnValue($q.when(profile));
+              clmDataStore.services.codeSchool.fetchBadges.and.returnValue($q.when(csBadges));
+
+              clmDataStore.events.updateProgress(event, tasks, solutions, 'bob');
+
+              $rootScope.$apply();
+
+              expect(spfFirebase.set.calls.count()).toBe(2);
+
+              expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
+              expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
+                someTaskId: {completed: true}
+              });
+            });
+
+            it('should keep task progress when the task is closed', function() {
+              var event = {$id: 'someEventId'};
+              var solutions = {$id: 'someEventId'};
+              var tasks = {
+                someTaskId: {serviceId: 'codeSchool'},
+                someOtherId: {serviceId: 'codeSchool', badge: {id: 'someBadgeId'}, closedAt: 12345},
+                lastId: {serviceId: 'codeSchool', badge: {id: 'someOtherBadgeId'}}
+              };
+              var profile = {
+                $id: 'bob',
+                user: {},
+                services: {
+                  codeSchool: {details: {id: 'bob'}}
+                }
+              };
+              var csBadges = [{id: 'someBadgeId'}];
+
+              clmDataStore.profile.and.returnValue($q.when(profile));
+              clmDataStore.services.codeSchool.fetchBadges.and.returnValue($q.when(csBadges));
+
+              clmDataStore.events.updateProgress(event, tasks, solutions, 'bob', {
+                someTaskId: {completed: true},
+                someOtherId: {completed: true}
+              });
+
+              $rootScope.$apply();
+
+              expect(spfFirebase.set.calls.count()).toBe(2);
+
+              expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
+              expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
+                someTaskId: {completed: true},
+                someOtherId: {completed: true}
+              });
             });
 
             it('should update progress when user solves a required problem', function() {

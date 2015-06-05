@@ -461,9 +461,9 @@
         }
       };
 
-      this.openedTasks = function() {
+      this.visibleTasks = function() {
         var count = Object.keys(self.tasks).filter(function(key) {
-          return self.tasks[key] && self.tasks[key].openedAt;
+          return key && key[0] !== '$' && self.tasks[key] && !self.tasks[key].hidden;
         }).length;
 
         return count;
@@ -607,9 +607,9 @@
         }
       };
 
-      this.update = function(event, tasks, userSolutions, profile) {
+      this.update = function(event, tasks, userSolutions, profile, userProgress) {
         return clmDataStore.events.updateCurrentUserProfile(
-          event, tasks, userSolutions, profile
+          event, tasks, userSolutions, profile, userProgress
         ).then(function(stats) {
           self.currentUserStats = stats;
           spfAlert.success('Profile updated');
@@ -626,7 +626,7 @@
           return self.participants[index];
         }).reduce(function(all, participant) {
           all[participant.$id] = clmDataStore.events.updateProgress(
-            self.event, self.tasks, self.solutions, participant.$id
+            self.event, self.tasks, self.solutions, participant.$id, self.progress[participant.$id]
           );
           return all;
         }, {}));
@@ -856,6 +856,22 @@
           spfAlert.success('Task closed.');
         }).catch(function() {
           spfAlert.error('Failed to close task.');
+        });
+      };
+
+      this.showTask = function(eventId, taskId) {
+        clmDataStore.events.showTask(eventId, taskId).then(function() {
+          spfAlert.success('Task visible.');
+        }).catch(function() {
+          spfAlert.error('Failed to make task visible.');
+        });
+      };
+
+      this.hideTask = function(eventId, taskId) {
+        clmDataStore.events.hideTask(eventId, taskId).then(function() {
+          spfAlert.success('Task hidden.');
+        }).catch(function() {
+          spfAlert.error('Failed to make task hidden.');
         });
       };
     }
