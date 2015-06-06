@@ -78,11 +78,14 @@
                                             </span>
                                             <span ng-if="!ctrl.currentUserProgress[taskId].completed &amp;&amp; !ctrl.currentUserStats.progress[taskId].completed">
                                                 <md-button class="md-raised md-primary" 
-                                                    ng-href="{{ctrl.startLink(task)}}" 
+                                                    ng-href="{{ctrl.startLink(task, ctrl.profile)}}" 
                                                     target="_blank"
                                                     ng-disabled="task.closedAt"
                                                 >
-                                                    Start challenge
+                                                    <span ng-switch on="ctrl.mustRegister(task, ctrl.profile)">
+                                                        <span ng-switch-when="true">Register</span>
+                                                        <span ng-switch-default>Start challenge</span>
+                                                    </span>
                                                 </md-button>
                                             </span>
                                         </span>

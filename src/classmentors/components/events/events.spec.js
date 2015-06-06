@@ -1,5 +1,5 @@
-/* eslint camelcase: false*/
-/* global describe, beforeEach, module, inject,  jasmine, it, expect */
+/* eslint-env jasmine */
+/* global module, inject, angular */
 
 (function() {
   'use strict';
@@ -291,33 +291,73 @@
       });
 
       describe('startLink', function() {
+        var routes;
+
+        beforeEach(inject(function(_routes_) {
+          routes = _routes_;
+        }));
+
+        it('should return an empty string if the task does not involve a service', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+          var task = {linkPattern: 'foo'};
+          var profile = {};
+
+          expect(ctrl.startLink(task, profile)).toBe('');
+        });
+
+        it('should return an empty string if the task involved an unknown service', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+          var task = {serviceId: 'foo'};
+          var profile = {};
+
+          expect(ctrl.startLink(task, profile)).toBe('');
+        });
 
         it('should return a link to a singpath problem', function() {
           var ctrl = $controller('ViewEventCtrl', deps);
           var task = {
             serviceId: 'singPath',
-            singPathProblem: {
-              path: {id: 'pathId'},
-              level: {id: 'levelId'},
-              problem: {id: 'problemId'}
-            }
+            singPathProblem: {path: {id: 'pathId'}, level: {id: 'levelId'}, problem: {id: 'problemId'}}
           };
+          var profile = {};
 
-          expect(ctrl.startLink(task)).toBe(
+          expect(ctrl.startLink(task, profile)).toBe(
             'http://www.singpath.com//#/paths/pathId/levels/levelId/problems/problemId/play'
           );
         });
+
+        it('should return an url to the profile view if the task involve registering', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+          var task = {serviceId: 'codeSchool'};
+          var profile = {};
+
+          expect(ctrl.startLink(task, profile)).toBe('#' + routes.editProfile);
+        });
+
+        it('should return an url to the profile view if the task involve badge but the user is not registered',
+          function() {
+            var ctrl = $controller('ViewEventCtrl', deps);
+            var task = {
+              serviceId: 'codeSchool',
+              badge: {url: 'https://www.codeschool.com/courses/some-level-name'}
+            };
+            var profile = {};
+
+            expect(ctrl.startLink(task, profile)).toBe('#' + routes.editProfile);
+          }
+        );
 
         it('should return a link to a code school course', function() {
           var ctrl = $controller('ViewEventCtrl', deps);
           var task = {
             serviceId: 'codeSchool',
-            badge: {
-              url: 'https://www.codeschool.com/courses/some-level-name'
-            }
+            badge: {url: 'https://www.codeschool.com/courses/some-level-name'}
+          };
+          var profile = {
+            services: {codeSchool: {details: {id: 'bob'}}}
           };
 
-          expect(ctrl.startLink(task)).toBe(
+          expect(ctrl.startLink(task, profile)).toBe(
             'https://www.codeschool.com/courses/some-level-name'
           );
         });
@@ -326,14 +366,55 @@
           var ctrl = $controller('ViewEventCtrl', deps);
           var task = {
             serviceId: 'codeCombat',
-            badge: {
-              url: 'https://www.codescombat.com/level/some-level-name'
-            }
+            badge: {url: 'https://www.codescombat.com/level/some-level-name'}
+          };
+          var profile = {
+            services: {codeCombat: {details: {id: 'bob'}}}
           };
 
-          expect(ctrl.startLink(task)).toBe(
+          expect(ctrl.startLink(task, profile)).toBe(
             'https://www.codescombat.com/level/some-level-name'
           );
+        });
+
+      });
+
+      describe('mustRegister', function() {
+
+        it('should return false if the task does not involve a service', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+          var task = {linkPattern: 'foo'};
+          var profile = {};
+
+          expect(ctrl.mustRegister(task, profile)).toBe(false);
+        });
+
+        it('should return false if the task service involved is not tracked', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+          var task = {serviceId: 'singPath'};
+          var profile = {};
+
+          expect(ctrl.mustRegister(task, profile)).toBe(false);
+        });
+
+        it('should return false if the user is already registered', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+          var task = {serviceId: 'codeSchool'};
+          var profile = {services: {
+            codeSchool: {details: {id: 'bob'}}
+          }};
+
+          expect(ctrl.mustRegister(task, profile)).toBe(false);
+        });
+
+        it('should return true if the user is not already registered', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+          var task = {serviceId: 'codeSchool'};
+          var profile = {services: {
+            codeCombat: {details: {id: 'bob'}}
+          }};
+
+          expect(ctrl.mustRegister(task, profile)).toBe(true);
         });
 
       });
