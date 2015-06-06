@@ -146,13 +146,24 @@
       $q, spfFirebase, spfAuthData, spfNavBarService, initialData, clmDataStore, spfAlert
     ) {
       var self = this;
+      var menu = [];
 
       this.auth = initialData.auth;
       this.currentUser = initialData.currentUser;
       this.currentUserProfile = initialData.currentUserProfile;
       this.profile = initialData.profile;
 
-      spfNavBarService.update('Profile');
+      if (this.currentUser.publicId === this.profile.$id) {
+        menu = [{
+          title: 'Edit',
+          onClick: function() {
+            self.profileNeedsUpdate = true;
+          },
+          icon: 'create'
+        }];
+      }
+
+      spfNavBarService.update('Profile', undefined, menu);
 
       this.settingPublicId = false;
       this.profileNeedsUpdate = !this.currentUser.$completed();

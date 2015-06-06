@@ -28,6 +28,8 @@
             participants: {},
             ranking: {},
             solution: {},
+            progress: {},
+            currentUserProgress: {},
             currentUserSolutions: {},
             currentUserStats: {}
           },
@@ -344,13 +346,14 @@
           var tasks = {};
           var solutions = {};
           var profile = {};
+          var userProgress = {};
 
           deps.clmDataStore.events.updateCurrentUserProfile.and.returnValue($q.when());
 
-          ctrl.update(event, tasks, solutions, profile);
+          ctrl.update(event, tasks, solutions, profile, userProgress);
 
           expect(deps.clmDataStore.events.updateCurrentUserProfile).toHaveBeenCalledWith(
-            event, tasks, solutions, profile
+            event, tasks, solutions, profile, userProgress
           );
         }));
 
@@ -402,18 +405,26 @@
             1: {$id: 'someOtherPublicId'}
           };
 
+          ctrl.progress = {
+            'somePublicId': {}
+          };
+
           ctrl.updateAll();
 
           expect(deps.clmDataStore.events.updateProgress.calls.count()).toBe(2);
           expect(
             deps.clmDataStore.events.updateProgress
           ).toHaveBeenCalledWith(
-            deps.initialData.event, deps.initialData.tasks, deps.initialData.solutions, 'somePublicId'
+            deps.initialData.event,
+            deps.initialData.tasks,
+            deps.initialData.solutions,
+            'somePublicId',
+            ctrl.progress.somePublicId
           );
           expect(
             deps.clmDataStore.events.updateProgress
           ).toHaveBeenCalledWith(
-            deps.initialData.event, deps.initialData.tasks, deps.initialData.solutions, 'someOtherPublicId'
+            deps.initialData.event, deps.initialData.tasks, deps.initialData.solutions, 'someOtherPublicId', undefined
           );
         });
 
@@ -450,39 +461,39 @@
 
       });
 
-      describe('openedTasks', function() {
+      describe('visibleTasks', function() {
         it('should return 0 when there is no tasks ', function() {
           var ctrl;
 
           deps.initialData.tasks = {$id: 'someEventId'};
 
           ctrl = $controller('ViewEventCtrl', deps);
-          expect(ctrl.openedTasks()).toBe(0);
+          expect(ctrl.visibleTasks()).toBe(0);
         });
 
-        it('should return 0 when there is no open tasks', function() {
+        it('should return 0 when all tasks are hidden', function() {
           var ctrl;
 
           deps.initialData.tasks = {
             $id: 'someEventId',
-            someTaskId: {description: 'some desc.'}
+            someTaskId: {description: 'some desc.', hidden: true}
           };
 
           ctrl = $controller('ViewEventCtrl', deps);
-          expect(ctrl.openedTasks()).toBe(0);
+          expect(ctrl.visibleTasks()).toBe(0);
         });
 
-        it('should return the number of opened tasks', function() {
+        it('should return the number of tasks which are not hidden', function() {
           var ctrl;
 
           deps.initialData.tasks = {
             $id: 'someEventId',
-            someTaskId: {description: 'some desc.', openedAt: true},
-            someOtherTaskId: {description: 'some desc.'}
+            someTaskId: {description: 'some desc.'},
+            someOtherTaskId: {description: 'some desc.', hidden: true}
           };
 
           ctrl = $controller('ViewEventCtrl', deps);
-          expect(ctrl.openedTasks()).toBe(1);
+          expect(ctrl.visibleTasks()).toBe(1);
         });
       });
 

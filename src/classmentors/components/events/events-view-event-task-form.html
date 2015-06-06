@@ -61,10 +61,17 @@
 
         <div>
             <h3>options</h3>
-            <p><md-switch class="md-primary" ng-model="ctrl.isOpen" aria-label="closed?">
-                <span ng-if="ctrl.isOpen">Open (currently closed)</span>
-                <span ng-if="!ctrl.isOpen">Close (currently opened)</span>
-            </md-switch></p>
+            <p>
+                <md-switch class="md-primary" ng-model="ctrl.isOpen" aria-label="closed?">
+                    Open
+                </md-switch>
+            </p>
+            <p>
+                <md-switch class="md-primary" ng-model="ctrl.task.hidden" aria-label="closed?">
+                    Hide
+                </md-switch>
+            </p>
+
         </div>
 
         <div>

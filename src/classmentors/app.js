@@ -606,6 +606,16 @@
             });
           },
 
+          showTask: function(eventId, taskId) {
+            var url = ['classMentors/eventTasks', eventId, taskId, 'hidden'];
+            return spfFirebase.set(url, false);
+          },
+
+          hideTask: function(eventId, taskId) {
+            var url = ['classMentors/eventTasks', eventId, taskId, 'hidden'];
+            return spfFirebase.set(url, true);
+          },
+
           participants: function(eventId) {
             return spfFirebase.loadedArray(['classMentors/eventParticipants', eventId]);
           },
@@ -755,6 +765,20 @@
               var task = tasks[taskId];
               var match;
 
+              // If the task is closed it cannot be completed unless it was already completed.
+              //
+              // Note that if was already completed we still test from completeness
+              // in case the requirement changed
+              if (
+                task.closedAt && (
+                  !data.progress ||
+                  !data.progress[taskId] ||
+                  !data.progress[taskId].completed
+                )
+              ) {
+                return results;
+              }
+
               if (task.linkPattern) {
                 if (
                   data.solutions &&
@@ -815,7 +839,7 @@
             return ranking;
           },
 
-          updateProgress: function(event, tasks, solutions, publicId) {
+          updateProgress: function(event, tasks, solutions, publicId, userProgress) {
             if (!publicId) {
               return $q.reject('User public id is missing missing.');
             }
@@ -837,7 +861,8 @@
               singPath: clmDataStore.singPath.profile(publicId),
               classMentors: cmProfilePromise,
               badges: badgesPromise,
-              solutions: solutions[publicId] || {}
+              solutions: solutions[publicId] || {},
+              progress: userProgress
             }).then(function(data) {
               // 4. save data
               return $q.all([
@@ -864,7 +889,7 @@
            * Only admin and event onwer can save the progress and ranking.
            *
            */
-          updateCurrentUserProfile: function(event, tasks, userSolutions, profile) {
+          updateCurrentUserProfile: function(event, tasks, userSolutions, profile, userProgress) {
             if (!event || !event.$id || !userSolutions || !userSolutions.$id || !profile || !profile.$id) {
               return $q.reject(new Error('Event, userSolutions or profile are not valid firebase object'));
             }
@@ -883,7 +908,8 @@
                   codeCombat: objToArray(clmDataStore.services.codeCombat.badges(profile)),
                   codeSchool: objToArray(clmDataStore.services.codeSchool.badges(profile))
                 },
-                solutions: data.solutions
+                solutions: data.solutions,
+                progress: userProgress
               });
             }).then(function(data) {
               return {

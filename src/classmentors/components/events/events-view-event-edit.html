@@ -75,6 +75,22 @@
                     <md-icon md-svg-icon="clear"></md-icon>
                     Close
                 </md-button>
+                <md-button ng-click="ctrl.showTask(ctrl.event.$id, taskId)"
+                    ng-if="task.hidden"
+                    layout layout-align="center center" class="md-raised md-primary"
+                    aria-label="open"
+                >
+                    <md-icon md-svg-icon="done"></md-icon>
+                    Show
+                </md-button>
+                <md-button ng-click="ctrl.hideTask(ctrl.event.$id, taskId)"
+                    ng-if="!task.hidden"
+                    layout layout-align="center center" class="md-raised md-primary"
+                    aria-label="open"
+                >
+                    <md-icon md-svg-icon="clear"></md-icon>
+                    Hide
+                </md-button>
             </div>
 
             <md-divider ng-if="!$last"></md-divider>
