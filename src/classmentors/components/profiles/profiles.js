@@ -136,6 +136,7 @@
    */
   controller('ClmProfileCtrl', [
     '$q',
+    '$route',
     'spfFirebase',
     'spfAuthData',
     'spfNavBarService',
@@ -143,7 +144,7 @@
     'clmDataStore',
     'spfAlert',
     function ClmProfileCtrl(
-      $q, spfFirebase, spfAuthData, spfNavBarService, initialData, clmDataStore, spfAlert
+      $q, $route, spfFirebase, spfAuthData, spfNavBarService, initialData, clmDataStore, spfAlert
     ) {
       var self = this;
       var menu = [];
@@ -153,7 +154,12 @@
       this.currentUserProfile = initialData.currentUserProfile;
       this.profile = initialData.profile;
 
-      if (this.currentUser.publicId === this.profile.$id) {
+      if (
+        this.profile &&
+        this.profile.$id &&
+        this.currentUser &&
+        this.currentUser.publicId === this.profile.$id
+      ) {
         menu = [{
           title: 'Edit',
           onClick: function() {
@@ -168,37 +174,34 @@
       this.settingPublicId = false;
       this.profileNeedsUpdate = !this.currentUser.$completed();
 
-      function cleanProfile() {
-        self.currentUser.country = spfFirebase.cleanObj(self.currentUser.country);
-        self.currentUser.school = spfFirebase.cleanObj(self.currentUser.school);
+      function cleanProfile(currentUser) {
+        currentUser.country = spfFirebase.cleanObj(currentUser.country);
+        currentUser.school = spfFirebase.cleanObj(currentUser.school);
       }
 
       this.setPublicId = function(currentUser) {
         var saved;
+
         this.settingPublicId = true;
+        cleanProfile(currentUser);
 
         if (!self.profile) {
-          cleanProfile();
           saved = spfAuthData.publicId(currentUser).then(function() {
             spfAlert.success('Public id and display name saved');
             return clmDataStore.initProfile();
           });
-        } else if (self.profileNeedsUpdate) {
-          cleanProfile();
-          saved = self.currentUser.$save().then(function() {
-            return clmDataStore.currentUserProfile();
-          });
         } else {
-          spfAlert.error('The profile does not need to be saved.');
-          return $q.when(self.profile);
+          saved = currentUser.$save().then(function() {
+            return clmDataStore.updateProfile(currentUser);
+          });
         }
 
-        return saved.then(function(profile) {
+        return saved.then(function() {
           spfAlert.success('Profile setup.');
-          self.profile = profile;
-          self.profileNeedsUpdate = !self.currentUser.$completed();
-        }).catch(function(e) {
-          spfAlert.error(e.toString());
+          return $route.reload();
+        }).catch(function(err) {
+          spfAlert.error('Failed to ');
+          return $q.reject(err);
         }).finally(function() {
           self.settingPublicId = false;
         });
@@ -214,37 +217,24 @@
               name: self.lookUp.codeSchool.id
             }).then(function() {
               spfAlert.success('Code School user name saved.');
+              return clmDataStore.currentUserProfile();
             }).catch(function(err) {
-              spfAlert.error(err.toString());
+              spfAlert.error('Failed to save Code School user name.');
+              return $q.reject(err);
+            }).then(function(profile) {
+              self.profile = profile;
+              return clmDataStore.services.codeSchool.updateProfile(profile);
             });
           }
         },
 
         codeCombat: {
-          errors: {},
-          id: undefined,
-          name: undefined,
-
           find: function() {
-            self.lookUp.codeCombat.errors.isLoggedToCodeCombat = undefined;
-            self.lookUp.codeCombat.errors.hasACodeCombatName = undefined;
             clmDataStore.services.codeCombat.requestUserName();
           },
 
           save: function() {
-            return clmDataStore.services.codeCombat.saveDetails(self.profile.$id, {
-              id: self.lookUp.codeCombat.id,
-              name: self.lookUp.codeCombat.name
-            }).then(function() {
-              spfAlert.success('Code Combat user name saved.');
-            }).catch(function(err) {
-              spfAlert.error(err.toString());
-            });
-          },
-
-          reset: function() {
-            self.lookUp.codeCombat.id = undefined;
-            self.lookUp.codeCombat.name = undefined;
+            return $q.reject(new Error('Not implemented'));
           }
         }
       };
@@ -269,11 +259,17 @@
 
         return clmDataStore.services.codeCombat.setUser(username, verificationKey).then(function() {
           spfAlert.success('Your Code School user name and id have been saved.');
+          return clmDataStore.currentUserProfile();
+        }, function(err) {
+          spfAlert.error('Failed to set user name and id');
+          return $q.reject(err);
+        }).then(function(profile) {
+          clmDataStore.services.codeCombat.updateProfile(profile);
+        }).then(function() {
           $location.path(routes.editProfile);
         }).catch(function(err) {
-          spfAlert.error('Failed to set user name and id: ' + err);
           return {
-            initialData: {err: err}
+            err: err
           };
         });
       };

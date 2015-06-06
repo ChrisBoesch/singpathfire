@@ -385,7 +385,7 @@
               return resp.profile;
             }
 
-            return clmDataStore._initProfile(resp.currentUser);
+            return clmDataStore.updateProfile(resp.currentUser);
           });
         },
 
@@ -395,7 +395,7 @@
           });
         },
 
-        _initProfile: function(userData) {
+        updateProfile: function(userData) {
           return spfFirebase.patch(
             ['classMentors/userProfiles', userData.publicId, 'user'], {
               displayName: userData.displayName,
@@ -416,7 +416,7 @@
               return $q.reject(new Error('The user has not set a user public id.'));
             }
 
-            return clmDataStore._initProfile(currentUser);
+            return clmDataStore.updateProfile(currentUser);
           });
         },
 

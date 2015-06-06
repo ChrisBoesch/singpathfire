@@ -49,30 +49,6 @@
                         Look up my Code Combat details
                     </a>
                 </p>
-
-                <div ng-if="ctrl.lookUp.codeCombat.id" layout="row" layout-align="center center">
-                    <p flex>You are logged in as "{{ctrl.lookUp.codeCombat.name}}".</p>
-                    <md-button ng-click="ctrl.lookUp.codeCombat.save()" class="md-raised md-primary">
-                        Save
-                    </md-button>
-                    <md-button ng-click="ctrl.lookUp.codeCombat.reset()" class="md-raised">
-                        This is not me
-                    </md-button>
-                </div>
-
-
-                <div ng-messages="ctrl.lookUp.codeCombat.errors">
-                    <div ng-message="isLoggedToCodeCombat">
-                        You're not logged on
-                        <a href="http://codecombat.com/" target="_blank">Code Combat</a>.
-                    </div>
-                    <div ng-message="hasACodeCombatName">
-                        You're Code Combat account doesn't have a user name. Head to your
-                        <a href="http://codecombat.com/account/settings" target="_blank">
-                            profile setting page
-                        </a>, add a user name and save your profile.
-                    </div>
-                </div>
             </div>
 
             <div id="register-codeschool" ng-if="!ctrl.profile.services.codeSchool.details.id" class="register-service md-whiteframe-z1">
