@@ -426,6 +426,7 @@
     '$route',
     'spfAlert',
     'urlFor',
+    'routes',
     'spfFirebase',
     'spfAuthData',
     'spfNavBarService',
@@ -433,7 +434,7 @@
     'clmServicesUrl',
     function ViewEventCtrl(
       initialData, $q, $log, $document, $mdDialog, $route,
-      spfAlert, urlFor, spfFirebase, spfAuthData, spfNavBarService, clmDataStore, clmServicesUrl
+      spfAlert, urlFor, routes, spfFirebase, spfAuthData, spfNavBarService, clmDataStore, clmServicesUrl
     ) {
       var self = this;
       var linkers;
@@ -664,7 +665,9 @@
         }, 0) / count * 100;
       };
 
-      this.startLink = function(task) {
+      this.startLink = function(task, profile) {
+        var serviceProfile;
+
         if (
           !task ||
           !task.serviceId ||
@@ -673,16 +676,37 @@
           return '';
         }
 
-        return linkers[task.serviceId](task);
+        serviceProfile = profile && profile.services && profile.services[task.serviceId];
+        return linkers[task.serviceId](task, serviceProfile);
       };
 
-      function defaultLinker(task) {
+      var trackedServices = {
+        codeSchool: true,
+        codeCombat: true
+      };
+
+      this.mustRegister = function(task, profile) {
+        return (
+          task &&
+          task.serviceId &&
+          trackedServices[task.serviceId] && (
+            !profile.services[task.serviceId] ||
+            !profile.services[task.serviceId].details ||
+            !profile.services[task.serviceId].details.id
+          ) || false
+        );
+      };
+
+      function defaultLinker(task, serviceProfile) {
         if (
+          !serviceProfile ||
+          !serviceProfile.details ||
+          !serviceProfile.details.id ||
           !task ||
           !task.badge ||
           !task.badge.url
         ) {
-          return '#/profile';
+          return '#' + routes.editProfile;
         }
 
         return task.badge.url;
