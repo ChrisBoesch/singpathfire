@@ -94,10 +94,14 @@
 
         beforeEach(function() {
           firebaseSpy = jasmine.createSpy('Firebase');
-          ref = jasmine.createSpyObj('ref', ['child', 'orderByPriority', 'startAt', 'limitToLast']);
+          ref = jasmine.createSpyObj('ref', [
+            'child', 'orderByPriority', 'orderByChild', 'equalTo', 'startAt', 'limitToLast'
+          ]);
           ref.child.and.returnValue(ref);
           ref.orderByPriority.and.returnValue(ref);
           ref.startAt.and.returnValue(ref);
+          ref.orderByChild.and.returnValue(ref);
+          ref.equalTo.and.returnValue(ref);
           ref.limitToLast.and.returnValue(ref);
           ref.path = {};
           Firebase = function(url) {
@@ -146,6 +150,17 @@
           expect(ref.limitToLast).toHaveBeenCalledWith(50);
           expect(ref.startAt).toHaveBeenCalledWith(null, 'someKey');
           // TODO test order
+        });
+
+        it('should allow equalTo value to be false', function() {
+          spfFirebaseRef = factory();
+          spfFirebaseRef(['eventsTasks/someEvent'], {
+            orderByChild: 'someKey',
+            equalTo: false
+          });
+
+          expect(ref.orderByChild).toHaveBeenCalledWith('someKey');
+          expect(ref.equalTo).toHaveBeenCalledWith(false);
         });
 
       });
