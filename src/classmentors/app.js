@@ -787,7 +787,7 @@
                 return results;
               }
 
-              // If the task is archived pass it.
+              // If the task is archived skip it.
               // Keep the task as completed if the user did complete it in the past.
               if (task.archived) {
                 if (data.progress && data.progress[taskId] && data.progress[taskId].completed) {
