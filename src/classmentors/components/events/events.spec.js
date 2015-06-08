@@ -5,14 +5,14 @@
   'use strict';
 
   describe('clm class mentors home components', function() {
-    var $controller;//, $rootScope, $q;
+    var $controller, $rootScope, $q;
 
     beforeEach(module('clm'));
 
     beforeEach(inject(function(_$rootScope_, _$q_, _$controller_) {
       $controller = _$controller_;
-      // $rootScope = _$rootScope_;
-      // $q = _$q_;
+      $rootScope = _$rootScope_;
+      $q = _$q_;
     }));
 
     describe('ViewEventCtrl', function() {
@@ -206,12 +206,6 @@
       });
 
       describe('register', function() {
-        var $q, $rootScope;
-
-        beforeEach(inject(function(_$q_, _$rootScope_) {
-          $rootScope = _$rootScope_;
-          $q = _$q_;
-        }));
 
         it('should save the public id', function() {
           var ctrl = $controller('ViewEventCtrl', deps);
@@ -421,7 +415,7 @@
 
       describe('update', function() {
 
-        it('should update the current user task completeness', inject(function($q) {
+        it('should update the current user task completeness', function() {
           var ctrl = $controller('ViewEventCtrl', deps);
           var event = {};
           var tasks = {};
@@ -436,9 +430,9 @@
           expect(deps.clmDataStore.events.updateCurrentUserProfile).toHaveBeenCalledWith(
             event, tasks, solutions, profile, userProgress
           );
-        }));
+        });
 
-        it('should show success message on success', inject(function($q, $rootScope) {
+        it('should show success message on success', function() {
           var ctrl = $controller('ViewEventCtrl', deps);
 
           deps.clmDataStore.events.updateCurrentUserProfile.and.returnValue($q.when({}));
@@ -447,9 +441,9 @@
           $rootScope.$apply();
 
           expect(deps.spfAlert.success).toHaveBeenCalled();
-        }));
+        });
 
-        it('should should set currentUserStats on success', inject(function($q, $rootScope) {
+        it('should should set currentUserStats on success', function() {
           var ctrl = $controller('ViewEventCtrl', deps);
           var expected = {};
 
@@ -461,9 +455,9 @@
           $rootScope.$apply();
 
           expect(ctrl.currentUserStats).toBe(expected);
-        }));
+        });
 
-        it('should show error message on failure', inject(function($q, $rootScope) {
+        it('should show error message on failure', function() {
           var ctrl = $controller('ViewEventCtrl', deps);
 
           deps.clmDataStore.events.updateCurrentUserProfile.and.returnValue($q.reject());
@@ -472,7 +466,7 @@
           $rootScope.$apply();
 
           expect(deps.spfAlert.error).toHaveBeenCalled();
-        }));
+        });
 
       });
 
@@ -575,6 +569,254 @@
 
           ctrl = $controller('ViewEventCtrl', deps);
           expect(ctrl.visibleTasks()).toBe(1);
+        });
+      });
+
+    });
+
+    describe('EditEventCtrl', function() {
+      var deps;
+
+      beforeEach(function() {
+        deps = {
+          initialData: {
+            currentUser: {},
+            event: {owner: {}},
+            tasks: {}
+          },
+          $document: {},
+          spfAlert: jasmine.createSpyObj('spfAlert', ['info', 'success', 'error', 'warning']),
+          spfNavBarService: jasmine.createSpyObj('spfNavBarService', ['update']),
+          urlFor: jasmine.createSpy('urlFor'),
+          clmDataStore: {
+            events: jasmine.createSpyObj('events', [
+              'updateEvent', 'openTask', 'closeTask', 'showTask', 'hideTask', 'archiveTask'
+            ])
+          }
+        };
+      });
+
+      it('should set currentUser, event and tasks property', function() {
+        var ctrl = $controller('EditEventCtrl', deps);
+
+        expect(ctrl.currentUser).toBe(deps.initialData.currentUser);
+        expect(ctrl.event).toBe(deps.initialData.event);
+        expect(ctrl.tasks).toBe(deps.initialData.tasks);
+      });
+
+      describe('save', function() {
+        var ctrl, form;
+
+        beforeEach(function() {
+          ctrl = $controller('EditEventCtrl', deps);
+          form = jasmine.createSpyObj('FormModelInstance', ['$setPristine']);
+        });
+
+        it('should set the savingEvent property to true', function() {
+          deps.clmDataStore.events.updateEvent.and.returnValue($q.reject());
+
+          ctrl.save(ctrl.currentUser, ctrl.event, 'pass', form);
+
+          expect(ctrl.savingEvent).toBe(true);
+        });
+
+        it('should set the savingEvent false once the async task reject', function() {
+          deps.clmDataStore.events.updateEvent.and.returnValue($q.reject());
+
+          ctrl.save(ctrl.currentUser, ctrl.event, 'pass', form);
+          $rootScope.$apply();
+
+          expect(ctrl.savingEvent).toBe(false);
+        });
+
+        it('should set the savingEvent false once the async task succeed', function() {
+          deps.clmDataStore.events.updateEvent.and.returnValue($q.when());
+
+          ctrl.save(ctrl.currentUser, ctrl.event, 'pass', form);
+          $rootScope.$apply();
+
+          expect(ctrl.savingEvent).toBe(false);
+        });
+
+        it('should update the event owner property', function() {
+          deps.clmDataStore.events.updateEvent.and.returnValue($q.reject());
+          ctrl.currentUser.publicId = 'bob';
+          ctrl.currentUser.displayName = 'Bob';
+          ctrl.currentUser.gravatar = 'someUrl';
+          ctrl.save(ctrl.currentUser, ctrl.event, 'pass', form);
+
+          expect(ctrl.event.owner.publicId).toBe('bob');
+          expect(ctrl.event.owner.displayName).toBe('Bob');
+          expect(ctrl.event.owner.gravatar).toBe('someUrl');
+        });
+
+        it('should update the event details', function() {
+          deps.clmDataStore.events.updateEvent.and.returnValue($q.reject());
+
+          ctrl.save(ctrl.currentUser, ctrl.event, 'pass', form);
+
+          expect(deps.clmDataStore.events.updateEvent).toHaveBeenCalledWith(ctrl.event, 'pass');
+        });
+
+        it('should reset the event detail form', function() {
+          deps.clmDataStore.events.updateEvent.and.returnValue($q.when());
+
+          ctrl.save(ctrl.currentUser, ctrl.event, 'pass', form);
+          $rootScope.$apply();
+
+          expect(form.$setPristine).toHaveBeenCalledWith(true);
+          expect(ctrl.newPassword).toBe('');
+        });
+
+      });
+
+      describe('openTask', function() {
+        var ctrl;
+
+        beforeEach(function() {
+          ctrl = $controller('EditEventCtrl', deps);
+        });
+
+        it('should open the task', function() {
+          deps.clmDataStore.events.openTask.and.returnValue($q.when());
+          ctrl.openTask('someEventId', 'someTaskId');
+          expect(deps.clmDataStore.events.openTask).toHaveBeenCalledWith('someEventId', 'someTaskId');
+        });
+
+        it('should alert on success', function() {
+          deps.clmDataStore.events.openTask.and.returnValue($q.when());
+          ctrl.openTask('someEventId', 'someTaskId');
+
+          $rootScope.$apply();
+          expect(deps.spfAlert.success).toHaveBeenCalledWith(jasmine.any(String));
+        });
+
+        it('should alert on failure', function() {
+          deps.clmDataStore.events.openTask.and.returnValue($q.reject());
+          ctrl.openTask('someEventId', 'someTaskId');
+
+          $rootScope.$apply();
+          expect(deps.spfAlert.error).toHaveBeenCalledWith(jasmine.any(String));
+        });
+      });
+
+      describe('closeTask', function() {
+        var ctrl;
+
+        beforeEach(function() {
+          ctrl = $controller('EditEventCtrl', deps);
+        });
+
+        it('should open the task', function() {
+          deps.clmDataStore.events.closeTask.and.returnValue($q.when());
+          ctrl.closeTask('someEventId', 'someTaskId');
+          expect(deps.clmDataStore.events.closeTask).toHaveBeenCalledWith('someEventId', 'someTaskId');
+        });
+
+        it('should alert on success', function() {
+          deps.clmDataStore.events.closeTask.and.returnValue($q.when());
+          ctrl.closeTask('someEventId', 'someTaskId');
+
+          $rootScope.$apply();
+          expect(deps.spfAlert.success).toHaveBeenCalledWith(jasmine.any(String));
+        });
+
+        it('should alert on failure', function() {
+          deps.clmDataStore.events.closeTask.and.returnValue($q.reject());
+          ctrl.closeTask('someEventId', 'someTaskId');
+
+          $rootScope.$apply();
+          expect(deps.spfAlert.error).toHaveBeenCalledWith(jasmine.any(String));
+        });
+      });
+
+      describe('showTask', function() {
+        var ctrl;
+
+        beforeEach(function() {
+          ctrl = $controller('EditEventCtrl', deps);
+        });
+
+        it('should open the task', function() {
+          deps.clmDataStore.events.showTask.and.returnValue($q.when());
+          ctrl.showTask('someEventId', 'someTaskId');
+          expect(deps.clmDataStore.events.showTask).toHaveBeenCalledWith('someEventId', 'someTaskId');
+        });
+
+        it('should alert on success', function() {
+          deps.clmDataStore.events.showTask.and.returnValue($q.when());
+          ctrl.showTask('someEventId', 'someTaskId');
+
+          $rootScope.$apply();
+          expect(deps.spfAlert.success).toHaveBeenCalledWith(jasmine.any(String));
+        });
+
+        it('should alert on failure', function() {
+          deps.clmDataStore.events.showTask.and.returnValue($q.reject());
+          ctrl.showTask('someEventId', 'someTaskId');
+
+          $rootScope.$apply();
+          expect(deps.spfAlert.error).toHaveBeenCalledWith(jasmine.any(String));
+        });
+      });
+
+      describe('hideTask', function() {
+        var ctrl;
+
+        beforeEach(function() {
+          ctrl = $controller('EditEventCtrl', deps);
+        });
+
+        it('should open the task', function() {
+          deps.clmDataStore.events.hideTask.and.returnValue($q.when());
+          ctrl.hideTask('someEventId', 'someTaskId');
+          expect(deps.clmDataStore.events.hideTask).toHaveBeenCalledWith('someEventId', 'someTaskId');
+        });
+
+        it('should alert on success', function() {
+          deps.clmDataStore.events.hideTask.and.returnValue($q.when());
+          ctrl.hideTask('someEventId', 'someTaskId');
+
+          $rootScope.$apply();
+          expect(deps.spfAlert.success).toHaveBeenCalledWith(jasmine.any(String));
+        });
+
+        it('should alert on failure', function() {
+          deps.clmDataStore.events.hideTask.and.returnValue($q.reject());
+          ctrl.hideTask('someEventId', 'someTaskId');
+
+          $rootScope.$apply();
+          expect(deps.spfAlert.error).toHaveBeenCalledWith(jasmine.any(String));
+        });
+      });
+
+      describe('archiveTask', function() {
+        var ctrl;
+
+        beforeEach(function() {
+          ctrl = $controller('EditEventCtrl', deps);
+        });
+
+        it('should open the task', function() {
+          deps.clmDataStore.events.archiveTask.and.returnValue($q.when());
+          ctrl.archiveTask('someEventId', 'someTaskId');
+          expect(deps.clmDataStore.events.archiveTask).toHaveBeenCalledWith('someEventId', 'someTaskId');
+        });
+
+        it('should alert on success', function() {
+          deps.clmDataStore.events.archiveTask.and.returnValue($q.when());
+          ctrl.archiveTask('someEventId', 'someTaskId');
+
+          $rootScope.$apply();
+          expect(deps.spfAlert.success).toHaveBeenCalledWith(jasmine.any(String));
+        });
+
+        it('should alert on failure', function() {
+          deps.clmDataStore.events.archiveTask.and.returnValue($q.reject());
+          ctrl.archiveTask('someEventId', 'someTaskId');
+
+          $rootScope.$apply();
+          expect(deps.spfAlert.error).toHaveBeenCalledWith(jasmine.any(String));
         });
       });
 

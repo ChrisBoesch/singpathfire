@@ -540,7 +540,10 @@
           },
 
           getTasks: function(eventId) {
-            return spfFirebase.loadedObj(['classMentors/eventTasks', eventId]);
+            return spfFirebase.loadedObj(['classMentors/eventTasks', eventId], {
+              orderByChild: 'archived',
+              equalTo: false
+            });
           },
 
           getTask: function(eventId, taskId) {
@@ -613,6 +616,11 @@
 
           hideTask: function(eventId, taskId) {
             var url = ['classMentors/eventTasks', eventId, taskId, 'hidden'];
+            return spfFirebase.set(url, true);
+          },
+
+          archiveTask: function(eventId, taskId) {
+            var url = ['classMentors/eventTasks', eventId, taskId, 'archived'];
             return spfFirebase.set(url, true);
           },
 
@@ -776,6 +784,15 @@
                   !data.progress[taskId].completed
                 )
               ) {
+                return results;
+              }
+
+              // If the task is archived pass it.
+              // Keep the task as completed if the user did complete it in the past.
+              if (task.archived) {
+                if (data.progress && data.progress[taskId] && data.progress[taskId].completed) {
+                  results[taskId] = {completed: true};
+                }
                 return results;
               }
 

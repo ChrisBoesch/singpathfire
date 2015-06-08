@@ -51,11 +51,11 @@
 
       when(routes.editEvent, {
         templateUrl: 'classmentors/components/events/events-view-event-edit.html',
-        controller: 'EditCtrl',
+        controller: 'EditEventCtrl',
         controllerAs: 'ctrl',
         resolve: {
           'initialData': [
-            'editCtrlInitialData',
+            'editEventCtrllInitialData',
             function(editCtrlInitialData) {
               return editCtrlInitialData();
             }
@@ -801,12 +801,12 @@
    * Used to resolve `initialData` for `EditCtrl`
    *
    */
-  factory('editCtrlInitialData', [
+  factory('editEventCtrllInitialData', [
     '$q',
     'baseEditCtrlInitialData',
     'clmDataStore',
     function($q, baseEditCtrlInitialData, clmDataStore) {
-      return function editCtrlInitialData() {
+      return function editEventCtrllInitialData() {
         var data = baseEditCtrlInitialData();
 
         data.tasks = data.event.then(function(event) {
@@ -819,16 +819,16 @@
   ]).
 
   /**
-   * EditCtrl
+   * EditEventCtrl
    *
    */
-  controller('EditCtrl', [
+  controller('EditEventCtrl', [
     'initialData',
     'spfNavBarService',
     'urlFor',
     'spfAlert',
     'clmDataStore',
-    function EditCtrl(initialData, spfNavBarService, urlFor, spfAlert, clmDataStore) {
+    function EditEventCtrl(initialData, spfNavBarService, urlFor, spfAlert, clmDataStore) {
       var self = this;
 
       this.currentUser = initialData.currentUser;
@@ -898,6 +898,14 @@
           spfAlert.error('Failed to make task hidden.');
         });
       };
+
+      this.archiveTask = function(eventId, taskId) {
+        clmDataStore.events.archiveTask(eventId, taskId).then(function() {
+          spfAlert.success('Task archived.');
+        }).catch(function() {
+          spfAlert.error('Failed to archive task.');
+        });
+      };
     }
   ]).
 
@@ -943,6 +951,7 @@
       this.isOpen = true;
       this.singPath = initialData.singPath;
       this.savingTask = false;
+      this.task = {archived: false};
 
       spfNavBarService.update(
         'New Challenge', [{
