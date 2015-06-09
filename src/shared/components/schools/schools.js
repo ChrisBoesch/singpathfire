@@ -5,6 +5,11 @@
 
   constant('SPF_SINGAPORE_SCHOOLS', [
     {
+      'type': 'Other',
+      'id': '0',
+      'name': 'Other'
+    },
+    {
       'iconUrl': '/assets/schools/Anderson_Junior_College_iconUrl.jpg',
       'type': 'Junior College',
       'id': '14',
