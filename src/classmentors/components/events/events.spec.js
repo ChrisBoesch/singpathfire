@@ -5,15 +5,248 @@
   'use strict';
 
   describe('clm class mentors home components', function() {
-    var $controller, $rootScope, $q;
+    var $controller, $rootScope, $q, spfAuth, spfAuthData, clmDataStore;
 
     beforeEach(module('clm'));
+
+    beforeEach(function() {
+      spfAuth = jasmine.createSpyObj('spfAuth', ['login']);
+      spfAuthData = jasmine.createSpyObj('spfAuthData', ['user']);
+      clmDataStore = jasmine.createSpyObj('clmDataStore', ['currentUserProfile', 'initProfile']);
+      clmDataStore.events = jasmine.createSpyObj(
+        'clmDataStore.events', ['list', 'listCreatedEvents', 'listJoinedEvents']
+      );
+
+      module(function($provide) {
+        $provide.value('spfAuth', spfAuth);
+        $provide.value('spfAuthData', spfAuthData);
+        $provide.value('clmDataStore', clmDataStore);
+      });
+    });
 
     beforeEach(inject(function(_$rootScope_, _$q_, _$controller_) {
       $controller = _$controller_;
       $rootScope = _$rootScope_;
       $q = _$q_;
     }));
+
+    describe('ClmListEvent', function() {
+      var deps;
+
+      beforeEach(function() {
+        deps = {
+          initialData: {
+            events: {},
+            auth: {},
+            currentUser: null,
+            profile: null,
+            createdEvents: {},
+            joinedEvents: {}
+          },
+          spfNavBarService: jasmine.createSpyObj('spfNavBarService', ['update']),
+          urlFor: jasmine.createSpy('urlFor')
+        };
+      });
+
+      it('should have no menu option if the user is not premium', function() {
+        var opts;
+
+        $controller('ClmListEvent', deps);
+
+        expect(
+          deps.spfNavBarService.update
+        ).toHaveBeenCalledWith(
+          jasmine.any(String), undefined, jasmine.any(Array)
+        );
+
+        opts = deps.spfNavBarService.update.calls.argsFor(0)[2];
+        expect(opts.length).toBe(0);
+      });
+
+      it('should have new event option if the user is premium', function() {
+        var opts;
+
+        deps.initialData.currentUser = {publicId: 'bob'};
+        deps.initialData.profile = {
+          $id: 'bob',
+          user: {isPremium: true}
+        };
+
+        $controller('ClmListEvent', deps);
+
+        expect(
+          deps.spfNavBarService.update
+        ).toHaveBeenCalledWith(
+          jasmine.any(String), undefined, jasmine.any(Array)
+        );
+
+        opts = deps.spfNavBarService.update.calls.argsFor(0)[2];
+        expect(opts.length).toBe(1);
+        expect(opts[0].title).toBe('New event');
+        expect(deps.urlFor).toHaveBeenCalledWith('newEvent');
+      });
+
+      describe('clmListEventResolver', function() {
+        var init;
+
+        beforeEach(inject(function(clmListEventResolver) {
+          init = clmListEventResolver;
+        }));
+
+        it('should return list of events', function() {
+          var initialData;
+          var events = {};
+          var joinedEvents = {};
+          var createdEvents = {};
+
+          spfAuthData.user.and.returnValue($q.when());
+          clmDataStore.events.list.and.returnValue($q.when(events));
+          clmDataStore.events.listJoinedEvents.and.returnValue($q.when(joinedEvents));
+          clmDataStore.events.listCreatedEvents.and.returnValue($q.when(createdEvents));
+
+          init().then(function(results) {
+            initialData = results;
+          });
+          $rootScope.$apply();
+
+          expect(initialData.events).toBe(events);
+          expect(initialData.createdEvents).toBe(createdEvents);
+          expect(initialData.joinedEvents).toBe(joinedEvents);
+        });
+
+        it('should return the current user profile', function() {
+          var initialData;
+          var authData = {};
+          var profile = {};
+
+          spfAuthData.user.and.returnValue($q.when(authData));
+          clmDataStore.currentUserProfile.and.returnValue($q.when(profile));
+
+          init().then(function(results) {
+            initialData = results;
+          });
+          $rootScope.$apply();
+
+          expect(initialData.auth).toBe(spfAuth);
+          expect(initialData.currentUser).toBe(authData);
+          expect(initialData.profile).toBe(profile);
+        });
+
+        it('should resolve successfully if the current user call reject', function() {
+          var err;
+
+          spfAuthData.user.and.returnValue($q.reject());
+
+          init().catch(function(e) {
+            err = e;
+          });
+
+          $rootScope.$apply();
+          expect(err).toBeUndefined();
+        });
+      });
+    });
+
+    describe('NewEventCtrl', function() {
+
+      describe('newEventCtrlInitialData', function() {
+        var init;
+
+        beforeEach(inject(function(newEventCtrlInitialData) {
+          init = newEventCtrlInitialData;
+        }));
+
+        it('should reject if the user is logged off', function() {
+          var err;
+
+          spfAuth.user = null;
+          init().catch(function(e) {
+            err = e;
+          });
+
+          $rootScope.$apply();
+          expect(err).toBeDefined();
+          expect(spfAuthData.user).not.toHaveBeenCalled();
+          expect(clmDataStore.currentUserProfile).not.toHaveBeenCalled();
+        });
+
+        it('should reject if the user not premium', function() {
+          var err;
+
+          spfAuth.user = {uid: 'google:1234'};
+          clmDataStore.currentUserProfile.and.returnValue($q.when({
+            $id: 'bob',
+            user: {isPremium: false}
+          }));
+          init().catch(function(e) {
+            err = e;
+          });
+
+          $rootScope.$apply();
+          expect(err).toBeDefined();
+          expect(spfAuthData.user).toHaveBeenCalled();
+          expect(clmDataStore.currentUserProfile).toHaveBeenCalled();
+        });
+
+        it('should set the user profile', function() {
+          var initialData;
+          var authData = {publicId: 'bob'};
+          var profile = {$id: 'bob', user: {isPremium: true}};
+
+          spfAuth.user = {uid: 'google:1234'};
+          clmDataStore.currentUserProfile.and.returnValue($q.when(profile));
+          spfAuthData.user.and.returnValue(authData);
+          init().then(function(resp) {
+            initialData = resp;
+          });
+
+          $rootScope.$apply();
+          expect(initialData).toBeDefined();
+          expect(initialData.auth).toBe(spfAuth);
+          expect(initialData.currentUser).toBe(authData);
+          expect(initialData.profile).toBe(profile);
+        });
+
+        it('should init user profile if the profile does not exists', function() {
+          var initialData;
+          var authData = {publicId: 'bob'};
+          var profile = {$id: 'bob', user: {isPremium: true}};
+
+          spfAuth.user = {uid: 'google:1234'};
+          clmDataStore.currentUserProfile.and.returnValue($q.when({$value: null}));
+          clmDataStore.initProfile.and.returnValue($q.when(profile));
+          spfAuthData.user.and.returnValue(authData);
+          init().then(function(resp) {
+            initialData = resp;
+          });
+
+          $rootScope.$apply();
+          expect(initialData).toBeDefined();
+          expect(initialData.auth).toBe(spfAuth);
+          expect(initialData.currentUser).toBe(authData);
+          expect(initialData.profile).toBe(profile);
+        });
+
+        it('should reject if the initiated profile is not premium', function() {
+          var err;
+          var authData = {publicId: 'bob'};
+          var profile = {$id: 'bob', user: {}};
+
+          spfAuth.user = {uid: 'google:1234'};
+          clmDataStore.currentUserProfile.and.returnValue($q.when({$value: null}));
+          clmDataStore.initProfile.and.returnValue($q.when(profile));
+          spfAuthData.user.and.returnValue(authData);
+          init().catch(function(e) {
+            err = e;
+          });
+
+          $rootScope.$apply();
+          expect(err).toBeDefined();
+        });
+
+      });
+
+    });
 
     describe('ViewEventCtrl', function() {
       var deps;

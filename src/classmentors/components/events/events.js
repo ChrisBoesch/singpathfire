@@ -9,13 +9,13 @@
     function($routeProvider, routes) {
       $routeProvider.when(routes.events, {
         templateUrl: 'classmentors/components/events/events-view-list.html',
-        controller: 'ClassMentorsEventList',
+        controller: 'ClmListEvent',
         controllerAs: 'ctrl',
         resolve: {
           'initialData': [
-            'classMentorsEventListRsolver',
-            function(classMentorsEventListRsolver) {
-              return classMentorsEventListRsolver();
+            'clmListEventResolver',
+            function(clmListEventResolver) {
+              return clmListEventResolver();
             }
           ]
         }
@@ -96,15 +96,15 @@
   ]).
 
   /**
-   * Used to resolve `initialData` of `SomeCtrl`.
+   * Used to resolve `initialData` of `ClmListEvent`.
    *
    */
-  factory('classMentorsEventListRsolver', [
+  factory('clmListEventResolver', [
     '$q',
     'spfAuth',
     'spfAuthData',
     'clmDataStore',
-    function classMentorsEventListRsolverFactory($q, spfAuth, spfAuthData, clmDataStore) {
+    function clmListEventResolverFactory($q, spfAuth, spfAuthData, clmDataStore) {
       return function classMentorsEventRsolver() {
         return $q.all({
           events: clmDataStore.events.list(),
@@ -112,6 +112,7 @@
           currentUser: spfAuthData.user().catch(function() {
             return;
           }),
+          profile: clmDataStore.currentUserProfile(),
           createdEvents: clmDataStore.events.listCreatedEvents(),
           joinedEvents: clmDataStore.events.listJoinedEvents()
         });
@@ -120,28 +121,36 @@
   ]).
 
   /**
-   * SomeCtrl
+   * ClmListEvent
    *
    */
-  controller('ClassMentorsEventList', [
+  controller('ClmListEvent', [
     'initialData',
     'spfNavBarService',
     'urlFor',
-    function ClassMentorsEventList(initialData, spfNavBarService, urlFor) {
+    function ClmListEvent(initialData, spfNavBarService, urlFor) {
+      var opts = [];
+
       this.currentUser = initialData.currentUser;
+      this.profile = initialData.profile;
       this.events = initialData.events;
       this.createdEvents = initialData.createdEvents;
       this.joinedEvents = initialData.joinedEvents;
       this.auth = initialData.auth;
 
-      spfNavBarService.update(
-        'Events',
-        undefined, [{
+      if (
+        this.profile &&
+        this.profile.user &&
+        this.profile.user.isPremium
+      ) {
+        opts.push({
           title: 'New event',
           url: '#' + urlFor('newEvent'),
           icon: 'add-circle-outline'
-        }]
-      );
+        });
+      }
+
+      spfNavBarService.update('Events', undefined, opts);
     }
   ]).
 
@@ -158,6 +167,7 @@
       return function newEventCtrlInitialData() {
         var profilePromise;
         var errLoggedOff = new Error('The user should be logged in to create an event.');
+        var errNotPremium = new Error('Only premium users can create events.');
 
         if (!spfAuth.user || !spfAuth.user.uid) {
           return $q.reject(errLoggedOff);
@@ -166,6 +176,16 @@
         profilePromise = clmDataStore.currentUserProfile().then(function(profile) {
           if (profile && profile.$value === null) {
             return clmDataStore.initProfile();
+          }
+
+          return profile;
+        }).then(function(profile) {
+          if (
+            !profile ||
+            !profile.user ||
+            !profile.user.isPremium
+          ) {
+            return $q.reject(errNotPremium);
           }
 
           return profile;
