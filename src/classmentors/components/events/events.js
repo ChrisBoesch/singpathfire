@@ -710,6 +710,8 @@
           task &&
           task.serviceId &&
           trackedServices[task.serviceId] && (
+            !profile ||
+            !profile.services ||
             !profile.services[task.serviceId] ||
             !profile.services[task.serviceId].details ||
             !profile.services[task.serviceId].details.id

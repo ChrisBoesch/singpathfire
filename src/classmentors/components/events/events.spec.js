@@ -644,6 +644,14 @@
           expect(ctrl.mustRegister(task, profile)).toBe(true);
         });
 
+        it('should return true if the user is not registered to any services', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+          var task = {serviceId: 'codeSchool'};
+          var profile = {$id: 'bob'};
+
+          expect(ctrl.mustRegister(task, profile)).toBe(true);
+        });
+
       });
 
       describe('update', function() {
