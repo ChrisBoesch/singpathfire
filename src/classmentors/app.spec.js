@@ -1135,12 +1135,18 @@
               clmDataStore.events.getTasks('someEventId');
 
               expect(spfFirebase.loadedObj.calls.count()).toBe(1);
-              expect(spfFirebase.loadedObj.calls.argsFor(0).length).toBe(1);
+              expect(spfFirebase.loadedObj.calls.argsFor(0).length).toBe(2);
               expect(
                 spfFirebase.loadedObj.calls.argsFor(0)[0].join('/')
               ).toBe(
                 'classMentors/eventTasks/someEventId'
               );
+              expect(
+                spfFirebase.loadedObj.calls.argsFor(0)[1]
+              ).toEqual({
+                orderByChild: 'archived',
+                equalTo: false
+              });
             });
           });
 
@@ -1228,6 +1234,25 @@
                 spfFirebase.set.calls.argsFor(0)[0].join('/')
               ).toBe(
                 'classMentors/eventTasks/eventId/taskId/hidden'
+              );
+            });
+          });
+
+          describe('archiveTask', function() {
+            var clmDataStore;
+
+            beforeEach(inject(function(_clmDataStore_) {
+              clmDataStore = _clmDataStore_;
+            }));
+
+            it('should set the archived prop. to true', function() {
+              clmDataStore.events.archiveTask('eventId', 'taskId');
+
+              expect(spfFirebase.set).toHaveBeenCalledWith(jasmine.any(Array), true);
+              expect(
+                spfFirebase.set.calls.argsFor(0)[0].join('/')
+              ).toBe(
+                'classMentors/eventTasks/eventId/taskId/archived'
               );
             });
           });
@@ -1839,12 +1864,80 @@
               });
             });
 
+            it('should not update task progress when the task is archived', function() {
+              var event = {$id: 'someEventId'};
+              var solutions = {$id: 'someEventId'};
+              var tasks = {
+                someTaskId: {serviceId: 'codeSchool'},
+                someOtherId: {serviceId: 'codeSchool', badge: {id: 'someBadgeId'}, archived: true},
+                lastId: {serviceId: 'codeSchool', badge: {id: 'someOtherBadgeId'}}
+              };
+              var profile = {
+                $id: 'bob',
+                user: {},
+                services: {
+                  codeSchool: {details: {id: 'bob'}}
+                }
+              };
+              var csBadges = [{id: 'someBadgeId'}];
+
+              clmDataStore.profile.and.returnValue($q.when(profile));
+              clmDataStore.services.codeSchool.fetchBadges.and.returnValue($q.when(csBadges));
+
+              clmDataStore.events.updateProgress(event, tasks, solutions, 'bob');
+
+              $rootScope.$apply();
+
+              expect(spfFirebase.set.calls.count()).toBe(2);
+
+              expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
+              expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
+                someTaskId: {completed: true}
+              });
+            });
+
             it('should keep task progress when the task is closed', function() {
               var event = {$id: 'someEventId'};
               var solutions = {$id: 'someEventId'};
               var tasks = {
                 someTaskId: {serviceId: 'codeSchool'},
                 someOtherId: {serviceId: 'codeSchool', badge: {id: 'someBadgeId'}, closedAt: 12345},
+                lastId: {serviceId: 'codeSchool', badge: {id: 'someOtherBadgeId'}}
+              };
+              var profile = {
+                $id: 'bob',
+                user: {},
+                services: {
+                  codeSchool: {details: {id: 'bob'}}
+                }
+              };
+              var csBadges = [{id: 'someBadgeId'}];
+
+              clmDataStore.profile.and.returnValue($q.when(profile));
+              clmDataStore.services.codeSchool.fetchBadges.and.returnValue($q.when(csBadges));
+
+              clmDataStore.events.updateProgress(event, tasks, solutions, 'bob', {
+                someTaskId: {completed: true},
+                someOtherId: {completed: true}
+              });
+
+              $rootScope.$apply();
+
+              expect(spfFirebase.set.calls.count()).toBe(2);
+
+              expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
+              expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
+                someTaskId: {completed: true},
+                someOtherId: {completed: true}
+              });
+            });
+
+            it('should keep task progress when the task is archived', function() {
+              var event = {$id: 'someEventId'};
+              var solutions = {$id: 'someEventId'};
+              var tasks = {
+                someTaskId: {serviceId: 'codeSchool'},
+                someOtherId: {serviceId: 'codeSchool', badge: {id: 'someBadgeId'}, archived: true},
                 lastId: {serviceId: 'codeSchool', badge: {id: 'someOtherBadgeId'}}
               };
               var profile = {

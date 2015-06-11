@@ -151,7 +151,7 @@
         for (i = 0; i < filters.length; i++) {
           filter = queryOptions[filters[i]];
 
-          if (!queryOptions[filters[i]]) {
+          if (filter == null) {
             continue;
           }
 

@@ -43,7 +43,7 @@
 
     <md-list>
         <md-subheader class="md-no-sticky">{{ ctrl.tasks | spfLength }} challenges</md-subheader>
-        <md-list-item class="md-3-line" ng-repeat="(taskId, task) in ctrl.tasks">
+        <md-list-item class="md-3-line" ng-repeat="(taskId, task) in ctrl.tasks" ng-if="!task.archived">
             <div class="md-list-item-text">
                 <h3>
                     {{ task.title }}
@@ -90,6 +90,13 @@
                 >
                     <md-icon md-svg-icon="clear"></md-icon>
                     Hide
+                </md-button>
+                <md-button ng-click="ctrl.archiveTask(ctrl.event.$id, taskId)"
+                    layout layout-align="center center" class="md-raised md-primary"
+                    aria-label="open"
+                >
+                    <md-icon md-svg-icon="clear"></md-icon>
+                    Archive
                 </md-button>
             </div>
 
