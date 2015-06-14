@@ -289,12 +289,7 @@
 
       this.reset = function(eventForm) {
         this.newEvent = {
-          data: {
-            options: {
-              showProgress: true,
-              showLinks: false
-            }
-          },
+          data: {},
           password: ''
         };
 
