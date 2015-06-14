@@ -495,7 +495,7 @@
         it('should return 100 if there is no participants', function() {
           var ctrl = $controller('ViewEventCtrl', deps);
 
-          expect(ctrl.completed('12345')).toBe(100);
+          expect(ctrl.completed('12345')).toBe(0);
         });
 
         it('should return percentage of participants having completed the task', function() {
@@ -503,16 +503,18 @@
 
           ctrl.participants = {
             $id: 'eventId',
-            someParticipantId: {
-              tasks: {
-                someTaskId: {
-                  completed: true
-                }
-              }
-            },
+            someParticipantId: {},
             someOtherParticipantId: {}
           };
-          expect(ctrl.completed('someTaskId')).toBe(50);
+          ctrl.progress = {
+            someParticipantId: {
+              someTaskId: {completed: true}
+            },
+            someOtherParticipantId: {
+              someOtherTaskId: {completed: true}
+            }
+          };
+          expect(ctrl.completed('someTaskId', ctrl.participants, ctrl.progress)).toBe(50);
         });
 
       });

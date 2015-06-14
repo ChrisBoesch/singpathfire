@@ -341,44 +341,6 @@
           return $q.when(data.profile && data.profile.canView(data.event));
         });
 
-        var canViewAllProgress = $q.all({
-          canview: canviewPromise,
-          event: eventPromise,
-          profile: profilePromise
-        }).then(function(data) {
-          return (
-            data.canview &&
-            data.event &&
-            data.event.options &&
-            data.event.options.showProgress
-          ) || (
-            data.profile &&
-            data.profile.$id &&
-            data.event &&
-            data.event.owner &&
-            data.event.owner.publicId === data.profile.$id
-          );
-        });
-
-        var canViewAllLinks = $q.all({
-          canview: canviewPromise,
-          event: eventPromise,
-          profile: profilePromise
-        }).then(function(data) {
-          return (
-            data.canview &&
-            data.event &&
-            data.event.options &&
-            data.event.options.showLinks
-          ) || (
-            data.profile &&
-            data.profile.$id &&
-            data.event &&
-            data.event.owner &&
-            data.event.owner.publicId === data.profile.$id
-          );
-        });
-
         var tasksPromise = canviewPromise.then(function(canView) {
           if (canView) {
             return clmDataStore.events.getTasks(eventId);
@@ -404,12 +366,12 @@
           tasks: tasksPromise,
           participants: participantsPromise,
           ranking: clmDataStore.events.getRanking(eventId),
-          progress: canViewAllProgress.then(function(canView) {
+          progress: canviewPromise.then(function(canView) {
             if (canView) {
               return clmDataStore.events.getProgress(eventId);
             }
           }),
-          solutions: canViewAllLinks.then(function(canView) {
+          solutions: canviewPromise.then(function(canView) {
             if (canView) {
               return clmDataStore.events.getSolutions(eventId);
             }
@@ -619,6 +581,10 @@
               $log.error(err);
               spfAlert.error('Failed to save the link');
               return err;
+            }).then(function() {
+              return self.update(
+                self.event, self.tasks, self.currentUserSolutions, self.profile, self.currentUserStats.progress
+              );
             });
           };
 
@@ -653,36 +619,30 @@
         }, {}));
       };
 
-      this.completed = function(taskId) {
-        var participants, count;
+      this.completed = function(taskId, participants, progress) {
+        var participantCount;
 
-        if (!this.participants) {
-          return 100;
+        if (!participants || !progress) {
+          return 0;
         }
 
-        participants = Object.keys(this.participants).filter(function(id) {
+        participantCount = Object.keys(participants).filter(function(id) {
           return id && id[0] !== '$';
         }).map(function(id) {
           return self.participants[id];
-        });
+        }).length;
 
-        count = participants.length;
-        if (count === 0) {
-          return 100;
+        if (participantCount < 1) {
+          return 0;
         }
 
-        return participants.reduce(function(completed, participant) {
-          if (
-            participant &&
-            participant.tasks &&
-            participant.tasks[taskId] &&
-            participant.tasks[taskId].completed
-          ) {
-            completed += 1;
-          }
-
-          return completed;
-        }, 0) / count * 100;
+        return Object.keys(progress).filter(function(publicId) {
+          return (
+            progress[publicId] &&
+            progress[publicId][taskId] &&
+            progress[publicId][taskId].completed
+          );
+        }).length / participantCount * 100;
       };
 
       this.startLink = function(task, profile) {

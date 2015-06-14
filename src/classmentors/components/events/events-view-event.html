@@ -41,7 +41,7 @@
                                 Completed
                             </th>
                             <td ng-repeat="(taskId, task) in ctrl.tasks" ng-if="!task.hidden">
-                                {{ctrl.completed(taskId) | number: 0}} %
+                                {{ctrl.completed(taskId, ctrl.participants, ctrl.progress) | number: 0}} %
                             </td>
                         </tr>
                         <tr>
@@ -127,7 +127,7 @@
                                     </span>
                                     <span ng-if="ctrl.progress[participant.$id][taskId].completed &amp;&amp; participant.$id != ctrl.currentUser.publicId">
                                         <span ng-if="!ctrl.solutions[participant.$id][taskId]">completed</span>
-                                        <a ng-if="ctrl.solutions[participant.$id][taskId]" ng-href="{{ctrl.solutions[participant.$id][taskId]}}">Solution</a>
+                                        <a ng-if="ctrl.solutions[participant.$id][taskId]" ng-href="{{ctrl.solutions[participant.$id][taskId]}}" target="_blank">completed</a>
                                     </span>
                                 </div>
                             </td>
