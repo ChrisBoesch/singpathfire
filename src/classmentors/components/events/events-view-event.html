@@ -33,7 +33,7 @@
                                 Help
                             </th>
                             <td ng-repeat="task in ctrl.tasks" ng-if="!task.hidden">
-                                <a ng-href="{{task.link}}" ng-if="task.link">More details</a>
+                                <a ng-href="{{task.link}}" ng-if="task.link" target="_blank">More details</a>
                             </td>
                         </tr>
                         <tr>
@@ -97,7 +97,7 @@
                                 <div ng-if="task.linkPattern">
                                     <span ng-if="participant.$id == ctrl.currentUser.publicId">
                                         <span ng-if="ctrl.currentUserProgress[taskId].completed">
-                                            <a ng-href="{{ctrl.currentUserSolutions[taskId]}}">Solution</a>
+                                            <a ng-href="{{ctrl.currentUserSolutions[taskId]}}" target="_blank">Complete</a>
                                             <md-button class="md-icon-button md-primary small-icon"
                                                 aria-label="Update link"
                                                 ng-click="ctrl.promptForLink(ctrl.event.$id, taskId, task, participant, ctrl.currentUserSolutions)"
@@ -107,7 +107,7 @@
                                             </md-button>
                                         </span>
                                         <span ng-if="!ctrl.currentUserProgress[taskId].completed &amp;&amp; ctrl.currentUserStats.progress[taskId].completed">
-                                            <a ng-href="{{ctrl.currentUserSolutions[taskId]}}">Solution*</a>
+                                            <a ng-href="{{ctrl.currentUserSolutions[taskId]}}" target="_blank">Complete*</a>
                                             <md-button class="md-icon-button md-primary small-icon"
                                                 aria-label="Update link"
                                                 ng-click="ctrl.promptForLink(ctrl.event.$id, taskId, task, participant, ctrl.currentUserSolutions)"
@@ -128,8 +128,8 @@
                                         </md-button>
                                     </span>
                                     <span ng-if="ctrl.progress[participant.$id][taskId].completed &amp;&amp; participant.$id != ctrl.currentUser.publicId">
-                                        <span ng-if="task.showProgress &amp;&amp; !task.showLinks &amp;&amp; ctrl.currentUser.publicId != ctrl.event.owner.publicId">completed</span>
-                                        <a ng-if="(ctrl.solutions[participant.$id][taskId] &amp;&amp; task.showLinks) || ctrl.currentUser.publicId == ctrl.event.owner.publicId" ng-href="{{ctrl.solutions[participant.$id][taskId]}}" target="_blank">completed</a>
+                                        <span ng-if="task.showProgress &amp;&amp; !task.showLinks &amp;&amp; ctrl.currentUser.publicId != ctrl.event.owner.publicId">complete</span>
+                                        <a ng-if="(ctrl.solutions[participant.$id][taskId] &amp;&amp; task.showLinks) || ctrl.currentUser.publicId == ctrl.event.owner.publicId" ng-href="{{ctrl.solutions[participant.$id][taskId]}}" target="_blank">complete</a>
                                     </span>
                                 </div>
                             </td>
