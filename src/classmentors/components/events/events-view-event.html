@@ -65,28 +65,30 @@
                             </th>
                             <td ng-repeat="(taskId, task) in ctrl.tasks" ng-if="!task.hidden">
                                 <div ng-if="task.serviceId">
-                                    <span ng-if="ctrl.progress[participant.$id][taskId].completed">
-                                        Completed
-                                    </span>
-                                    <span ng-if="!ctrl.progress[participant.$id][taskId].completed">
-                                        <span ng-if="participant.$id == ctrl.currentUser.publicId">
-                                            <span ng-if="ctrl.currentUserProgress[taskId].completed">
-                                                Completed
-                                            </span>
-                                            <span ng-if="!ctrl.currentUserProgress[taskId].completed &amp;&amp; ctrl.currentUserStats.progress[taskId].completed">
-                                                Completed*
-                                            </span>
-                                            <span ng-if="!ctrl.currentUserProgress[taskId].completed &amp;&amp; !ctrl.currentUserStats.progress[taskId].completed">
-                                                <md-button class="md-raised md-primary" 
-                                                    ng-href="{{ctrl.startLink(task, ctrl.profile)}}" 
-                                                    target="_blank"
-                                                    ng-disabled="task.closedAt"
-                                                >
-                                                    <span ng-switch on="ctrl.mustRegister(task, ctrl.profile)">
-                                                        <span ng-switch-when="true">Register</span>
-                                                        <span ng-switch-default>Start challenge</span>
-                                                    </span>
-                                                </md-button>
+                                    <span ng-if="participant.$id == ctrl.currentUser.publicId || ctrl.currentUser.publicId == ctrl.event.owner.publicId || ctrl.event.options.showProgress">
+                                        <span ng-if="ctrl.progress[participant.$id][taskId].completed">
+                                            Completed
+                                        </span>
+                                        <span ng-if="!ctrl.progress[participant.$id][taskId].completed">
+                                            <span ng-if="participant.$id == ctrl.currentUser.publicId">
+                                                <span ng-if="ctrl.currentUserProgress[taskId].completed">
+                                                    Completed
+                                                </span>
+                                                <span ng-if="!ctrl.currentUserProgress[taskId].completed &amp;&amp; ctrl.currentUserStats.progress[taskId].completed">
+                                                    Completed*
+                                                </span>
+                                                <span ng-if="!ctrl.currentUserProgress[taskId].completed &amp;&amp; !ctrl.currentUserStats.progress[taskId].completed">
+                                                    <md-button class="md-raised md-primary" 
+                                                        ng-href="{{ctrl.startLink(task, ctrl.profile)}}" 
+                                                        target="_blank"
+                                                        ng-disabled="task.closedAt"
+                                                    >
+                                                        <span ng-switch on="ctrl.mustRegister(task, ctrl.profile)">
+                                                            <span ng-switch-when="true">Register</span>
+                                                            <span ng-switch-default>Start challenge</span>
+                                                        </span>
+                                                    </md-button>
+                                                </span>
                                             </span>
                                         </span>
                                     </span>
@@ -126,8 +128,8 @@
                                         </md-button>
                                     </span>
                                     <span ng-if="ctrl.progress[participant.$id][taskId].completed &amp;&amp; participant.$id != ctrl.currentUser.publicId">
-                                        <span ng-if="!ctrl.solutions[participant.$id][taskId]">completed</span>
-                                        <a ng-if="ctrl.solutions[participant.$id][taskId]" ng-href="{{ctrl.solutions[participant.$id][taskId]}}" target="_blank">completed</a>
+                                        <span ng-if="ctrl.event.options.showProgress &amp;&amp; !ctrl.event.options.showLinks &amp;&amp; ctrl.currentUser.publicId != ctrl.event.owner.publicId">completed</span>
+                                        <a ng-if="(ctrl.solutions[participant.$id][taskId] &amp;&amp; ctrl.event.options.showLinks) || ctrl.currentUser.publicId == ctrl.event.owner.publicId" ng-href="{{ctrl.solutions[participant.$id][taskId]}}" target="_blank">completed</a>
                                     </span>
                                 </div>
                             </td>
