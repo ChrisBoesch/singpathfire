@@ -808,6 +808,16 @@
                 return results;
               }
 
+              if (task.textResponse) {
+                if (
+                  data.solutions &&
+                  data.solutions[taskId]
+                ) {
+                  results[taskId] = {completed: true};
+                }
+                return results;
+              }
+
               if (!clmDataStore.events._hasRegistered(
                 task, data.classMentors, data.singPath
               )) {
@@ -938,7 +948,7 @@
             });
           },
 
-          submitLink: function(eventId, taskId, publicId, link) {
+          submitSolution: function(eventId, taskId, publicId, link) {
             if (!eventId) {
               return $q.reject(new Error('No event id provided'));
             }
@@ -1290,6 +1300,22 @@
             return viewValue && viewValue.indexOf(pattern) !== -1;
           };
         }
+      };
+    }
+  ]).
+
+  filter('cmTruncate', [
+    function cmTruncateFilter() {
+      return function cmTruncate(s, limit) {
+        if (!s || !s.length || !limit) {
+          return '';
+        }
+
+        if (s.length <= limit) {
+          return s;
+        }
+
+        return s.slice(0, limit) + '...';
       };
     }
   ])

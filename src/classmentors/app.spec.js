@@ -2079,7 +2079,7 @@
 
           });
 
-          describe('submitLink', function() {
+          describe('submitSolution', function() {
             var $q, $rootScope, clmDataStore;
 
             beforeEach(inject(function(_$q_, _$rootScope_, _clmDataStore_) {
@@ -2091,7 +2091,7 @@
             it('should reject if eventId is not provided', function() {
               var err;
 
-              clmDataStore.events.submitLink(null, 'someTaskId', 'bob', 'link').catch(function(e) {
+              clmDataStore.events.submitSolution(null, 'someTaskId', 'bob', 'link').catch(function(e) {
                 err = e;
               });
 
@@ -2102,7 +2102,7 @@
             it('should reject if taskId is not provided', function() {
               var err;
 
-              clmDataStore.events.submitLink('someEventId', null, 'bob', 'link').catch(function(e) {
+              clmDataStore.events.submitSolution('someEventId', null, 'bob', 'link').catch(function(e) {
                 err = e;
               });
 
@@ -2113,7 +2113,7 @@
             it('should reject if participant public id is not provided', function() {
               var err;
 
-              clmDataStore.events.submitLink('someEventId', 'someTaskId', '', 'link').catch(function(e) {
+              clmDataStore.events.submitSolution('someEventId', 'someTaskId', '', 'link').catch(function(e) {
                 err = e;
               });
 
@@ -2123,7 +2123,7 @@
 
             it('should save the task as completed', function() {
               spfFirebase.set.and.returnValue($q.when({}));
-              clmDataStore.events.submitLink('someEventId', 'someTaskId', 'bob', 'link');
+              clmDataStore.events.submitSolution('someEventId', 'someTaskId', 'bob', 'link');
 
               $rootScope.$apply();
               expect(spfFirebase.set.calls.count()).toBe(1);

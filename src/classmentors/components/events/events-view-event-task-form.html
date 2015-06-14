@@ -86,7 +86,7 @@
             
             <p>
                 <md-switch class="md-primary" ng-model="ctrl.task.showLinks" aria-label="closed?">
-                    Show all participant links.
+                    Show all participant solutions.
                 </md-switch>
             </p>
 
@@ -97,6 +97,7 @@
             <md-radio-group ng-model="ctrl.taskType">
                 <md-radio-button value="service" class="md-primary">Service / Badge / Problem</md-radio-button>
                 <md-radio-button value="linkPattern" class="md-primary">Link pattern</md-radio-button>
+                <md-radio-button value="textResponse" class="md-primary">Text Response</md-radio-button>
             </md-radio-group>
         </div>
 
@@ -173,9 +174,23 @@
                 <input type="text" name="editTaskLink" id="edit-link-pattern"
                     ng-model="ctrl.task.linkPattern"
                     required="true"
-                    placeholer="Pat"
+                    placeholer="Pattern"
                 />
                 <div ng-messages="editTask.editTaskLink.$error">
+                    <div ng-message="required">Required.</div>
+                </div>
+            </md-input-container>
+        </div>
+
+        <div ng-if="ctrl.taskType == 'textResponse'">
+            <md-input-container>
+                <label for="edit-text-esponse">Question</label>
+                <input type="text" name="editTextResponse" id="edit-text-esponse"
+                    ng-model="ctrl.task.textResponse"
+                    required="true"
+                    placeholer="Question"
+                />
+                <div ng-messages="editTask.editTextResponse.$error">
                     <div ng-message="required">Required.</div>
                 </div>
             </md-input-container>

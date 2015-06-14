@@ -67,15 +67,15 @@
                                 <div ng-if="task.serviceId">
                                     <span ng-if="participant.$id == ctrl.currentUser.publicId || ctrl.currentUser.publicId == ctrl.event.owner.publicId || task.showProgress">
                                         <span ng-if="ctrl.progress[participant.$id][taskId].completed">
-                                            Completed
+                                            Complete
                                         </span>
                                         <span ng-if="!ctrl.progress[participant.$id][taskId].completed">
                                             <span ng-if="participant.$id == ctrl.currentUser.publicId">
                                                 <span ng-if="ctrl.currentUserProgress[taskId].completed">
-                                                    Completed
+                                                    Complete
                                                 </span>
                                                 <span ng-if="!ctrl.currentUserProgress[taskId].completed &amp;&amp; ctrl.currentUserStats.progress[taskId].completed">
-                                                    Completed*
+                                                    Complete*
                                                 </span>
                                                 <span ng-if="!ctrl.currentUserProgress[taskId].completed &amp;&amp; !ctrl.currentUserStats.progress[taskId].completed">
                                                     <md-button class="md-raised md-primary" 
@@ -90,6 +90,49 @@
                                                     </md-button>
                                                 </span>
                                             </span>
+                                        </span>
+                                    </span>
+                                </div>
+
+                                <div ng-if="task.textResponse">
+                                    <span ng-if="participant.$id == ctrl.currentUser.publicId">
+                                        <span ng-if="ctrl.currentUserProgress[taskId].completed &amp;&amp; ctrl.solutions[participant.$id][taskId]">
+                                            {{ ctrl.solutions[participant.$id][taskId] | cmTruncate: 10 }}
+                                            <md-button class="md-icon-button md-primary small-icon"
+                                                aria-label="Update response"
+                                                ng-click="ctrl.promptForTextResponse(ctrl.event.$id, taskId, task, participant, ctrl.currentUserSolutions)"
+                                                ng-if="task.openedAt"
+                                            >
+                                                <md-icon md-svg-icon="create"></md-icon>
+                                            </md-button>
+                                        </span>
+                                        <span ng-if="!ctrl.currentUserProgress[taskId].completed &amp;&amp; ctrl.currentUserStats.progress[taskId].completed &amp;&amp; ctrl.solutions[participant.$id][taskId]">
+                                            {{ ctrl.solutions[participant.$id][taskId] | cmTruncate: 10 }}*
+                                            <md-button class="md-icon-button md-primary small-icon"
+                                                aria-label="Update response"
+                                                ng-click="ctrl.promptForTextResponse(ctrl.event.$id, taskId, task, participant, ctrl.currentUserSolutions)"
+                                                ng-if="task.openedAt"
+                                            >
+                                                <md-icon md-svg-icon="create"></md-icon>
+                                            </md-button>
+                                        </span>
+                                        <span ng-if="!ctrl.currentUserProgress[taskId].completed &amp;&amp; !ctrl.currentUserStats.progress[taskId].completed">
+                                            <md-button class="md-raised md-primary"
+                                                aria-label="Submit response"
+                                                ng-click="ctrl.promptForTextResponse(ctrl.event.$id, taskId, task, participant, ctrl.currentUserSolutions)"
+                                                ng-disabled="task.closedAt"
+                                            >
+                                                Submit Response
+                                            </md-button>
+                                        </span>
+                                        </md-button>
+                                    </span>
+                                    <span ng-if="ctrl.progress[participant.$id][taskId].completed &amp;&amp; participant.$id != ctrl.currentUser.publicId">
+                                        <span ng-if="task.showProgress &amp;&amp; !task.showLinks &amp;&amp; ctrl.currentUser.publicId != ctrl.event.owner.publicId">
+                                            complete
+                                        </span>
+                                        <span ng-if="((ctrl.solutions[participant.$id][taskId] &amp;&amp; task.showLinks) || ctrl.currentUser.publicId == ctrl.event.owner.publicId) &amp;&amp; ctrl.solutions[participant.$id][taskId]">
+                                            {{ ctrl.solutions[participant.$id][taskId] | cmTruncate: 10 }}
                                         </span>
                                     </span>
                                 </div>

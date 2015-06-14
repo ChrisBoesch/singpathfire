@@ -569,12 +569,50 @@
           }
 
           this.save = function(link) {
-            clmDataStore.events.submitLink(eventId, taskId, participant.$id, link).then(function() {
+            clmDataStore.events.submitSolution(eventId, taskId, participant.$id, link).then(function() {
               $mdDialog.hide();
-              spfAlert.success('Link is saved and the the task is completed');
+              spfAlert.success('Link is saved.');
             }).catch(function(err) {
               $log.error(err);
-              spfAlert.error('Failed to save the link');
+              spfAlert.error('Failed to save the link.');
+              return err;
+            }).then(function() {
+              return self.update(
+                self.event, self.tasks, self.currentUserSolutions, self.profile, self.currentUserStats.progress
+              );
+            });
+          };
+
+          this.cancel = function() {
+            $mdDialog.hide();
+          };
+        }
+      };
+
+      this.promptForTextResponse = function(eventId, taskId, task, participant, userSolution) {
+        $mdDialog.show({
+          parent: $document.body,
+          templateUrl: 'classmentors/components/events/events-view-provide-response.html',
+          controller: DialogController,
+          controllerAs: 'ctrl'
+        });
+
+        function DialogController() {
+          this.task = task;
+          if (
+            userSolution &&
+            userSolution[taskId]
+          ) {
+            this.solution = userSolution[taskId];
+          }
+
+          this.save = function(response) {
+            clmDataStore.events.submitSolution(eventId, taskId, participant.$id, response).then(function() {
+              $mdDialog.hide();
+              spfAlert.success('Response is saved.');
+            }).catch(function(err) {
+              $log.error(err);
+              spfAlert.error('Failed to save your response.');
               return err;
             }).then(function() {
               return self.update(
@@ -1070,7 +1108,14 @@
       this.task = initialData.task;
       this.isOpen = !!this.task.openedAt;
       this.savingTask = false;
-      this.taskType = this.task.serviceId == null ? 'linkPattern' : 'service';
+
+      if (this.task.serviceId) {
+        this.taskType = 'service';
+      } else if (this.task.linkPattern) {
+        this.taskType = 'linkPattern';
+      } else if (this.task.textResponse) {
+        this.taskType = 'textResponse';
+      }
 
       // md-select badge list and the the ng-model are compared
       // by reference.
