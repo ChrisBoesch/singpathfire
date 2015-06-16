@@ -866,6 +866,31 @@
             return ranking;
           },
 
+          monitorEvent: function(event, tasks, participants, solutions, progress) {
+            function update() {
+              return $q.all(Object.keys(participants).filter(function(index) {
+                return index && index[0] !== '$';
+              }).map(function(index) {
+                return participants[index];
+              }).reduce(function(all, participant) {
+                all[participant.$id] = clmDataStore.events.updateProgress(
+                  event, tasks, solutions, participant.$id, progress[participant.$id]
+                );
+                return all;
+              }, {}));
+            }
+
+            var unWatchSolution = solutions.$watch(update);
+            var unWatchParticipants = participants.$watch(update);
+
+            update();
+
+            return function stopMonitorEvent() {
+              unWatchParticipants();
+              unWatchSolution();
+            };
+          },
+
           updateProgress: function(event, tasks, solutions, publicId, userProgress) {
             if (!publicId) {
               return $q.reject('User public id is missing missing.');
@@ -910,8 +935,8 @@
           },
 
           /**
-           * Only update the the current user profile and return his progress
-           * and ranking.
+           * Only update the the current user profile, its event badge/problem
+           * solution, and return his progress and ranking.
            *
            * Only admin and event onwer can save the progress and ranking.
            *
@@ -941,8 +966,29 @@
             }).then(function(data) {
               return {
                 progress: clmDataStore.events._getProgress(tasks, data),
-                ranking: clmDataStore.events._getRanking(data)
+                ranking: clmDataStore.events._getRanking(data),
+                solutions: data.solutions
               };
+            }).then(function(data) {
+              var result = {
+                progress: data.progress,
+                ranking: data.ranking
+              };
+
+              // look for service task having just been completed.
+              var shouldSave = Object.keys(data.progress).filter(function(taskId) {
+                return data.solutions && data.solutions[taskId] == null;
+              }).map(function(taskId) {
+                data.solutions[taskId] = true;
+              }).length;
+
+              if (shouldSave > 0) {
+                data.solutions.$save().catch(function(e) {
+                  $log.error('Failed to update solutions: ' + e);
+                });
+              }
+
+              return result;
             }).catch(function(err) {
               $log.error('Failed to get progress of ' + profile.$id + ': ' + err.toString());
             });

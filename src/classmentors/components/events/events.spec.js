@@ -253,10 +253,14 @@
 
       beforeEach(function() {
         deps = {
+          $scope: jasmine.createSpyObj('$scope', ['$on']),
           initialData: {
             currentUser: {},
             profile: {},
-            event: {},
+            event: {
+              $id: 'someEventId',
+              owner: {publicId: 'bob'}
+            },
             tasks: {},
             participants: {},
             ranking: {},
@@ -275,7 +279,9 @@
           spfNavBarService: jasmine.createSpyObj('spfNavBarService', ['update']),
           clmDataStore: {
             initProfile: jasmine.createSpy('initProfile'),
-            events: jasmine.createSpyObj('events', ['leave', 'join', 'updateProgress', 'updateCurrentUserProfile'])
+            events: jasmine.createSpyObj('events', [
+              'leave', 'join', 'updateProgress', 'updateCurrentUserProfile', 'monitorEvent'
+            ])
           }
         };
       });
@@ -291,9 +297,7 @@
       });
 
       it('should set a menu title to event title', function() {
-        deps.initialData.event = {
-          title: 'some title'
-        };
+        deps.initialData.event.title = 'some title';
 
         $controller('ViewEventCtrl', deps);
 
@@ -303,9 +307,7 @@
       });
 
       it('should set a menu parent path to event list', function() {
-        deps.initialData.event = {
-          title: 'some title'
-        };
+        deps.initialData.event.title = 'some title';
 
         $controller('ViewEventCtrl', deps);
 
@@ -315,9 +317,7 @@
       });
 
       it('should not set any menu options if the user logged off', function() {
-        deps.initialData.event = {
-          title: 'some title'
-        };
+        deps.initialData.event.title = 'some title';
 
         $controller('ViewEventCtrl', deps);
 
@@ -328,7 +328,7 @@
         deps.initialData = {
           event: {
             title: 'some title',
-            owner: {}
+            owner: {publicId: 'alice'}
           },
           currentUser: {
             publicId: 'bob'
@@ -379,13 +379,9 @@
           event: {
             $id: 'evenId',
             title: 'some title',
-            owner: {
-              publicId: 'bob'
-            }
+            owner: {publicId: 'bob'}
           },
-          currentUser: {
-            publicId: 'bob'
-          },
+          currentUser: {publicId: 'bob'},
           participants: {
             $indexFor: jasmine.createSpy('participants.$indexFor'),
             'bob': {}
@@ -401,40 +397,7 @@
           deps.spfNavBarService.update.calls.argsFor(0)[2]
         ).toEqual([
           jasmine.any(Object),
-          {title: 'Edit', url: '#/events/evenId/edit', icon: 'create'},
-          jasmine.any(Object)
-        ]);
-      });
-
-      it('should set an update menu option if the user is the owner', function() {
-        deps.initialData = {
-          event: {
-            $id: 'evenId',
-            title: 'some title',
-            owner: {
-              publicId: 'bob'
-            }
-          },
-          currentUser: {
-            publicId: 'bob'
-          },
-          participants: {
-            $indexFor: jasmine.createSpy('participants.$indexFor'),
-            'bob': {}
-          },
-          currentUserStats: {}
-        };
-
-        deps.initialData.participants.$indexFor.and.returnValue(0);
-
-        $controller('ViewEventCtrl', deps);
-
-        expect(
-          deps.spfNavBarService.update.calls.argsFor(0)[2]
-        ).toEqual([
-          jasmine.any(Object),
-          jasmine.any(Object),
-          {title: 'Update', onClick: jasmine.any(Function), icon: 'loop'}
+          {title: 'Edit', url: '#/events/evenId/edit', icon: 'create'}
         ]);
       });
 
@@ -709,41 +672,6 @@
           $rootScope.$apply();
 
           expect(deps.spfAlert.error).toHaveBeenCalled();
-        });
-
-      });
-
-      describe('updateAll', function() {
-
-        it('should update the all user task completeness', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-
-          ctrl.participants = {
-            0: {$id: 'somePublicId'},
-            1: {$id: 'someOtherPublicId'}
-          };
-
-          ctrl.progress = {
-            'somePublicId': {}
-          };
-
-          ctrl.updateAll();
-
-          expect(deps.clmDataStore.events.updateProgress.calls.count()).toBe(2);
-          expect(
-            deps.clmDataStore.events.updateProgress
-          ).toHaveBeenCalledWith(
-            deps.initialData.event,
-            deps.initialData.tasks,
-            deps.initialData.solutions,
-            'somePublicId',
-            ctrl.progress.somePublicId
-          );
-          expect(
-            deps.clmDataStore.events.updateProgress
-          ).toHaveBeenCalledWith(
-            deps.initialData.event, deps.initialData.tasks, deps.initialData.solutions, 'someOtherPublicId', undefined
-          );
         });
 
       });

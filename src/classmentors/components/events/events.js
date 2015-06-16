@@ -348,9 +348,21 @@
           }
         });
 
-        var userSolutionsPromise = profilePromise.then(function(profile) {
-          if (profile && profile.$id) {
-            return clmDataStore.events.getUserSolutions(eventId, profile.$id);
+        var userSolutionsPromise = $q.all({
+          profile: profilePromise,
+          canview: canviewPromise
+        }).then(function(result) {
+          if (result.canview && result.profile && result.profile.$id) {
+            return clmDataStore.events.getUserSolutions(eventId, result.profile.$id);
+          }
+        });
+
+        var currentUserProgressPromise = $q.all({
+          profile: profilePromise,
+          canview: canviewPromise
+        }).then(function(result) {
+          if (result.canview && result.profile && result.profile.$id) {
+            return clmDataStore.events.getUserProgress(eventId, result.profile.$id);
           }
         });
 
@@ -371,19 +383,15 @@
               return clmDataStore.events.getSolutions(eventId);
             }
           }),
-          currentUserProgress: profilePromise.then(function(profile) {
-            if (profile && profile.$id) {
-              return clmDataStore.events.getUserProgress(eventId, profile.$id);
-            }
-          }),
+          currentUserProgress: currentUserProgressPromise,
           currentUserSolutions: userSolutionsPromise,
           currentUserStats: $q.all([
-            eventPromise, tasksPromise, userSolutionsPromise, profilePromise
+            canviewPromise, eventPromise, tasksPromise, userSolutionsPromise, profilePromise
           ]).then(function(data) {
-            if (!data || !data[2] || !data[3]) {
+            if (!data || !data[0] || !data[3] || !data[4]) {
               return {};
             }
-            return clmDataStore.events.updateCurrentUserProfile.apply(clmDataStore.events, data);
+            return clmDataStore.events.updateCurrentUserProfile.apply(clmDataStore.events, data.slice(1));
           })
         });
       };
@@ -395,6 +403,7 @@
    *
    */
   controller('ViewEventCtrl', [
+    '$scope',
     'initialData',
     '$q',
     '$log',
@@ -410,11 +419,11 @@
     'clmDataStore',
     'clmServicesUrl',
     function ViewEventCtrl(
-      initialData, $q, $log, $document, $mdDialog, $route,
+      $scope, initialData, $q, $log, $document, $mdDialog, $route,
       spfAlert, urlFor, routes, spfFirebase, spfAuthData, spfNavBarService, clmDataStore, clmServicesUrl
     ) {
       var self = this;
-      var linkers;
+      var linkers, unwatch;
 
       this.currentUser = initialData.currentUser;
       this.profile = initialData.profile;
@@ -429,6 +438,27 @@
       this.currentUserSolutions = initialData.currentUserSolutions;
       this.orderKey = 'total';
       this.reverseOrder = true;
+
+      if (self.event.owner.publicId === self.currentUser.publicId) {
+        unwatch = clmDataStore.events.monitorEvent(
+          this.event, this.tasks, this.participants, this.solutions, this.progress
+        );
+      } else {
+        unwatch = angular.noop;
+      }
+
+      $scope.$on('$destroy', function() {
+        /* eslint no-unused-expressions: 0 */
+        unwatch();
+        self.profile && self.profile.$destroy && self.profile.$destroy();
+        self.tasks && self.tasks.$destroy();
+        self.ranking && self.ranking.$destroy();
+        self.participants && self.participants.$destroy();
+        self.progress && self.progress.$destroy();
+        self.solutions && self.solutions.$destroy();
+        self.currentUserProgress && self.currentUserProgress.$destroy();
+        self.currentUserSolutions && self.currentUserSolutions.$destroy();
+      });
 
       this.orderBy = function(key) {
         if (this.orderKey === key) {
@@ -493,13 +523,6 @@
             title: 'Edit',
             url: '#' + urlFor('editEvent', {eventId: self.event.$id}),
             icon: 'create'
-          });
-          options.push({
-            title: 'Update',
-            onClick: function() {
-              self.updateAll();
-            },
-            icon: 'loop'
           });
         }
 
@@ -637,19 +660,6 @@
           $log.error(err);
           spfAlert.error('Failed to update profile');
         });
-      };
-
-      this.updateAll = function() {
-        return $q.all(Object.keys(this.participants).filter(function(key) {
-          return key && key[0] !== '$';
-        }).map(function(index) {
-          return self.participants[index];
-        }).reduce(function(all, participant) {
-          all[participant.$id] = clmDataStore.events.updateProgress(
-            self.event, self.tasks, self.solutions, participant.$id, self.progress[participant.$id]
-          );
-          return all;
-        }, {}));
       };
 
       this.completed = function(taskId, participants, progress) {

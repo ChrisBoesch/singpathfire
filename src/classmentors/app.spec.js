@@ -2079,6 +2079,272 @@
 
           });
 
+          describe('updateCurrentUserProfile', function() {
+            var $rootScope, $q, clmDataStore;
+
+            beforeEach(inject(function(_$rootScope_, _$q_, _clmDataStore_) {
+              $rootScope = _$rootScope_;
+              $q = _$q_;
+              clmDataStore = _clmDataStore_;
+
+              clmDataStore.profile = jasmine.createSpy('clmDataStore.profile').and.returnValue($q.when({}));
+              clmDataStore.singPath.profile = jasmine.createSpy(
+                'clmDataStore.singPath.profile'
+              ).and.returnValue($q.when({}));
+              clmDataStore.services.codeCombat.updateProfile = jasmine.createSpy(
+                'clmDataStore.services.codeCombat.updateProfile'
+              ).and.returnValue($q.when({}));
+              clmDataStore.services.codeSchool.updateProfile = jasmine.createSpy(
+                'clmDataStore.services.codeSchool.updateProfile'
+              ).and.returnValue($q.when({}));
+            }));
+
+            it('should reject if event is missing', function() {
+              var event = {};
+              var tasks = {$id: 'someEventId'};
+              var solutions = {$id: 'someEventId'};
+              var profile = {$id: 'bob'};
+              var userProgress = {};
+              var err;
+
+              clmDataStore.events.updateCurrentUserProfile(
+                event, tasks, solutions, profile, userProgress
+              ).catch(function(e) {
+                err = e;
+              });
+
+              $rootScope.$apply();
+              expect(err).toBeDefined();
+            });
+
+            it('should reject if event is missing', function() {
+              var event = {$id: 'someEventId'};
+              var tasks = {$id: 'someEventId'};
+              var solutions = {};
+              var profile = {$id: 'bob'};
+              var userProgress = {};
+              var err;
+
+              clmDataStore.events.updateCurrentUserProfile(
+                event, tasks, solutions, profile, userProgress
+              ).catch(function(e) {
+                err = e;
+              });
+
+              $rootScope.$apply();
+              expect(err).toBeDefined();
+            });
+
+            it('should reject if profile is missing', function() {
+              var event = {$id: 'someEventId'};
+              var tasks = {$id: 'someEventId'};
+              var solutions = {$id: 'someEventId'};
+              var profile = {};
+              var userProgress = {};
+              var err;
+
+              clmDataStore.events.updateCurrentUserProfile(
+                event, tasks, solutions, profile, userProgress
+              ).catch(function(e) {
+                err = e;
+              });
+
+              $rootScope.$apply();
+              expect(err).toBeDefined();
+            });
+
+            it('should reject if update code school profile data', function() {
+              var event = {$id: 'someEventId'};
+              var tasks = {$id: 'someEventId'};
+              var solutions = {$id: 'someEventId'};
+              var profile = {$id: 'bob'};
+              var userProgress = {};
+
+              clmDataStore.events.updateCurrentUserProfile(
+                event, tasks, solutions, profile, userProgress
+              );
+
+              expect(clmDataStore.services.codeCombat.updateProfile).toHaveBeenCalledWith(profile);
+            });
+
+            it('should reject if update code combat profile data', function() {
+              var event = {$id: 'someEventId'};
+              var tasks = {$id: 'someEventId'};
+              var solutions = {$id: 'someEventId'};
+              var profile = {$id: 'bob'};
+              var userProgress = {};
+
+              clmDataStore.events.updateCurrentUserProfile(
+                event, tasks, solutions, profile, userProgress
+              );
+
+              expect(clmDataStore.services.codeCombat.updateProfile).toHaveBeenCalledWith(profile);
+            });
+
+            it('should update singpath profile', function() {
+              var event = {$id: 'someEventId'};
+              var tasks = {$id: 'someEventId'};
+              var solutions = {$id: 'someEventId'};
+              var profile = {$id: 'bob'};
+              var userProgress = {};
+
+              clmDataStore.events.updateCurrentUserProfile(
+                event, tasks, solutions, profile, userProgress
+              );
+
+              expect(clmDataStore.singPath.profile).toHaveBeenCalledWith('bob');
+            });
+
+            it('should get progress and ranking', function() {
+              var event = {$id: 'someEventId'};
+              var tasks = {
+                someTaskId: {
+                  serviceId: 'codeSchool'
+                }
+              };
+              var solutions = {$id: 'someEventId'};
+              var profile = {$id: 'bob', user: {}};
+              var userProgress = {};
+              var actual;
+
+              clmDataStore.events.updateCurrentUserProfile(
+                event, tasks, solutions, profile, userProgress
+              ).then(function(resp) {
+                actual = resp;
+              });
+
+              $rootScope.$apply();
+              expect(actual).toEqual({
+                ranking: {
+                  singPath: 0, codeCombat: 0, codeSchool: 0, total: 0, user: {}
+                },
+                progress: {}
+              });
+            });
+
+            it('should get updated progress when task user joined the required service', function() {
+              var event = {$id: 'someEventId'};
+              var solutions = {
+                $id: 'someEventId',
+                $save: jasmine.createSpy('solutions.$save').and.returnValue($q.when())
+              };
+              var tasks = {
+                someTaskId: {
+                  serviceId: 'codeSchool'
+                },
+                someOtherId: {
+                  serviceId: 'codeSchool',
+                  badge: {id: 'someBadgeId'}
+                },
+                lastTaskId: {
+                  serviceId: 'codeCombat'
+                }
+              };
+              var profile = {
+                $id: 'bob',
+                user: {},
+                services: {
+                  codeSchool: {details: {id: 'bob'}}
+                }
+              };
+              var userProgress = {};
+              var actual;
+
+              clmDataStore.events.updateCurrentUserProfile(
+                event, tasks, solutions, profile, userProgress
+              ).then(function(resp) {
+                actual = resp;
+              });
+
+              $rootScope.$apply();
+              expect(actual).toEqual({
+                ranking: {
+                  singPath: 0, codeCombat: 0, codeSchool: 0, total: 0, user: {}
+                },
+                progress: {
+                  someTaskId: {completed: true}
+                }
+              });
+            });
+
+            it('should update solution when the service task get updated', function() {
+              var event = {$id: 'someEventId'};
+              var solutions = {
+                $id: 'someEventId',
+                $save: jasmine.createSpy('solutions.$save').and.returnValue($q.when())
+              };
+              var tasks = {
+                someTaskId: {
+                  serviceId: 'codeSchool'
+                },
+                someOtherId: {
+                  serviceId: 'codeSchool',
+                  badge: {id: 'someBadgeId'}
+                },
+                lastTaskId: {
+                  serviceId: 'codeCombat'
+                }
+              };
+              var profile = {
+                $id: 'bob',
+                user: {},
+                services: {
+                  codeSchool: {details: {id: 'bob'}}
+                }
+              };
+              var userProgress = {};
+
+              clmDataStore.events.updateCurrentUserProfile(
+                event, tasks, solutions, profile, userProgress
+              );
+
+              $rootScope.$apply();
+
+              expect(solutions.someTaskId).toBe(true);
+              expect(solutions.$save).toHaveBeenCalled();
+            });
+
+            it('should not update solution when no service task get updated', function() {
+              var event = {$id: 'someEventId'};
+              var solutions = {
+                $id: 'someEventId',
+                someTaskId: true,
+                $save: jasmine.createSpy('solutions.$save').and.returnValue($q.when())
+              };
+              var tasks = {
+                someTaskId: {
+                  serviceId: 'codeSchool'
+                },
+                someOtherId: {
+                  serviceId: 'codeSchool',
+                  badge: {id: 'someBadgeId'}
+                },
+                lastTaskId: {
+                  serviceId: 'codeCombat'
+                }
+              };
+              var profile = {
+                $id: 'bob',
+                user: {},
+                services: {
+                  codeSchool: {details: {id: 'bob'}}
+                }
+              };
+              var userProgress = {
+                someTaskId: {completed: true}
+              };
+
+              clmDataStore.events.updateCurrentUserProfile(
+                event, tasks, solutions, profile, userProgress
+              );
+
+              $rootScope.$apply();
+
+              expect(solutions.$save).not.toHaveBeenCalled();
+            });
+
+          });
+
           describe('submitSolution', function() {
             var $q, $rootScope, clmDataStore;
 
@@ -2136,6 +2402,112 @@
               expect(spfFirebase.set.calls.argsFor(0)[1]).toBe(
                 'link'
               );
+            });
+
+          });
+
+          describe('monitorEvent', function() {
+            var clmDataStore;
+
+            beforeEach(inject(function(_clmDataStore_) {
+              clmDataStore = _clmDataStore_;
+              clmDataStore.events.updateProgress = jasmine.createSpy('updateProgress');
+            }));
+
+            it('should initialy update event progress', function() {
+              var event = {};
+              var tasks = {};
+              var participants = {
+                0: {$id: 'bob'},
+                1: {$id: 'alice'},
+                $watch: jasmine.createSpy('participants.$watch')
+              };
+              var solutions = jasmine.createSpyObj('solutions', ['$watch']);
+              var progress = {
+                bob: {},
+                alice: {}
+              };
+
+              clmDataStore.events.monitorEvent(event, tasks, participants, solutions, progress);
+              expect(clmDataStore.events.updateProgress.calls.count()).toBe(2);
+              expect(clmDataStore.events.updateProgress).toHaveBeenCalledWith(
+                event, tasks, solutions, 'bob', progress.bob
+              );
+              expect(clmDataStore.events.updateProgress).toHaveBeenCalledWith(
+                event, tasks, solutions, 'alice', progress.alice
+              );
+            });
+
+            it('should watch for solutions update', function() {
+              var event = {};
+              var tasks = {};
+              var participants = {
+                0: {$id: 'bob'},
+                $watch: jasmine.createSpy('participants.$watch')
+              };
+              var solutions = jasmine.createSpyObj('solutions', ['$watch']);
+              var progress = {bob: {}};
+              var cb;
+
+              clmDataStore.events.monitorEvent(event, tasks, participants, solutions, progress);
+              clmDataStore.events.updateProgress.calls.reset();
+
+              expect(solutions.$watch).toHaveBeenCalledWith(jasmine.any(Function));
+              cb = solutions.$watch.calls.argsFor(0)[0];
+              cb();
+
+              expect(clmDataStore.events.updateProgress.calls.count()).toBe(1);
+              expect(clmDataStore.events.updateProgress).toHaveBeenCalledWith(
+                event, tasks, solutions, 'bob', progress.bob
+              );
+            });
+
+            it('should watch for participant update', function() {
+              var event = {};
+              var tasks = {};
+              var participants = {
+                0: {$id: 'bob'},
+                $watch: jasmine.createSpy('participants.$watch')
+              };
+              var solutions = jasmine.createSpyObj('solutions', ['$watch']);
+              var progress = {bob: {}};
+              var cb;
+
+              clmDataStore.events.monitorEvent(event, tasks, participants, solutions, progress);
+              clmDataStore.events.updateProgress.calls.reset();
+
+              expect(participants.$watch).toHaveBeenCalledWith(jasmine.any(Function));
+              cb = participants.$watch.calls.argsFor(0)[0];
+              cb();
+
+              expect(clmDataStore.events.updateProgress.calls.count()).toBe(1);
+              expect(clmDataStore.events.updateProgress).toHaveBeenCalledWith(
+                event, tasks, solutions, 'bob', progress.bob
+              );
+            });
+
+            it('should return an unwatch function', function() {
+              var event = {};
+              var tasks = {};
+              var participants = {
+                0: {$id: 'bob'},
+                $watch: jasmine.createSpy('participants.$watch')
+              };
+              var solutions = jasmine.createSpyObj('solutions', ['$watch']);
+              var progress = {bob: {}};
+              var unwatch;
+              var unwatchSolution = jasmine.createSpy('unwatchSolution');
+              var unwatchParticpants = jasmine.createSpy('unwatchParticpants');
+
+              solutions.$watch.and.returnValue(unwatchSolution);
+              participants.$watch.and.returnValue(unwatchParticpants);
+
+              unwatch = clmDataStore.events.monitorEvent(event, tasks, participants, solutions, progress);
+              expect(unwatch).toEqual(jasmine.any(Function));
+
+              unwatch();
+              expect(unwatchSolution).toHaveBeenCalled();
+              expect(unwatchParticpants).toHaveBeenCalled();
             });
 
           });
