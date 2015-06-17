@@ -397,7 +397,36 @@
           deps.spfNavBarService.update.calls.argsFor(0)[2]
         ).toEqual([
           jasmine.any(Object),
-          {title: 'Edit', url: '#/events/evenId/edit', icon: 'create'}
+          {title: 'Edit', url: '#/events/evenId/edit', icon: 'create'},
+          jasmine.any(Object)
+        ]);
+      });
+
+      it('should set an update menu option if the user is the owner', function() {
+        deps.initialData = {
+          event: {
+            $id: 'evenId',
+            title: 'some title',
+            owner: {publicId: 'bob'}
+          },
+          currentUser: {publicId: 'bob'},
+          participants: {
+            $indexFor: jasmine.createSpy('participants.$indexFor'),
+            'bob': {}
+          },
+          currentUserStats: {}
+        };
+
+        deps.initialData.participants.$indexFor.and.returnValue(0);
+
+        $controller('ViewEventCtrl', deps);
+
+        expect(
+          deps.spfNavBarService.update.calls.argsFor(0)[2]
+        ).toEqual([
+          jasmine.any(Object),
+          jasmine.any(Object),
+          {title: 'Update', onClick: jasmine.any(Function), icon: 'loop'}
         ]);
       });
 

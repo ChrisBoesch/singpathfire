@@ -2407,9 +2407,10 @@
           });
 
           describe('monitorEvent', function() {
-            var clmDataStore;
+            var clmDataStore, $timeout;
 
-            beforeEach(inject(function(_clmDataStore_) {
+            beforeEach(inject(function(_$timeout_, _clmDataStore_) {
+              $timeout = _$timeout_;
               clmDataStore = _clmDataStore_;
               clmDataStore.events.updateProgress = jasmine.createSpy('updateProgress');
             }));
@@ -2429,6 +2430,8 @@
               };
 
               clmDataStore.events.monitorEvent(event, tasks, participants, solutions, progress);
+
+              $timeout.flush();
               expect(clmDataStore.events.updateProgress.calls.count()).toBe(2);
               expect(clmDataStore.events.updateProgress).toHaveBeenCalledWith(
                 event, tasks, solutions, 'bob', progress.bob
@@ -2450,12 +2453,12 @@
               var cb;
 
               clmDataStore.events.monitorEvent(event, tasks, participants, solutions, progress);
-              clmDataStore.events.updateProgress.calls.reset();
 
               expect(solutions.$watch).toHaveBeenCalledWith(jasmine.any(Function));
               cb = solutions.$watch.calls.argsFor(0)[0];
               cb();
 
+              $timeout.flush();
               expect(clmDataStore.events.updateProgress.calls.count()).toBe(1);
               expect(clmDataStore.events.updateProgress).toHaveBeenCalledWith(
                 event, tasks, solutions, 'bob', progress.bob
@@ -2480,6 +2483,7 @@
               cb = participants.$watch.calls.argsFor(0)[0];
               cb();
 
+              $timeout.flush();
               expect(clmDataStore.events.updateProgress.calls.count()).toBe(1);
               expect(clmDataStore.events.updateProgress).toHaveBeenCalledWith(
                 event, tasks, solutions, 'bob', progress.bob
@@ -2495,19 +2499,79 @@
               };
               var solutions = jasmine.createSpyObj('solutions', ['$watch']);
               var progress = {bob: {}};
-              var unwatch;
+              var handlers;
               var unwatchSolution = jasmine.createSpy('unwatchSolution');
               var unwatchParticpants = jasmine.createSpy('unwatchParticpants');
 
               solutions.$watch.and.returnValue(unwatchSolution);
               participants.$watch.and.returnValue(unwatchParticpants);
 
-              unwatch = clmDataStore.events.monitorEvent(event, tasks, participants, solutions, progress);
-              expect(unwatch).toEqual(jasmine.any(Function));
+              handlers = clmDataStore.events.monitorEvent(event, tasks, participants, solutions, progress);
+              expect(handlers.unwatch).toEqual(jasmine.any(Function));
 
-              unwatch();
+              handlers.unwatch();
               expect(unwatchSolution).toHaveBeenCalled();
               expect(unwatchParticpants).toHaveBeenCalled();
+            });
+
+            it('should return an update function', function() {
+              var event = {};
+              var tasks = {};
+              var participants = {
+                0: {$id: 'bob'},
+                $watch: jasmine.createSpy('participants.$watch')
+              };
+              var solutions = jasmine.createSpyObj('solutions', ['$watch']);
+              var progress = {bob: {}};
+              var handlers;
+              var unwatchSolution = jasmine.createSpy('unwatchSolution');
+              var unwatchParticpants = jasmine.createSpy('unwatchParticpants');
+
+              solutions.$watch.and.returnValue(unwatchSolution);
+              participants.$watch.and.returnValue(unwatchParticpants);
+
+              handlers = clmDataStore.events.monitorEvent(event, tasks, participants, solutions, progress);
+              expect(handlers.update).toEqual(jasmine.any(Function));
+
+              $timeout.flush();
+              clmDataStore.events.updateProgress.calls.reset();
+
+              handlers.update();
+              $timeout.flush();
+              expect(clmDataStore.events.updateProgress.calls.count()).toBe(1);
+              expect(clmDataStore.events.updateProgress).toHaveBeenCalledWith(
+                event, tasks, solutions, 'bob', progress.bob
+              );
+            });
+
+            it('should debounce update calls', function() {
+              var event = {};
+              var tasks = {};
+              var participants = {
+                0: {$id: 'bob'},
+                $watch: jasmine.createSpy('participants.$watch')
+              };
+              var solutions = jasmine.createSpyObj('solutions', ['$watch']);
+              var progress = {bob: {}};
+              var participantCb;
+              var solutionCb;
+              var handlers;
+
+              handlers = clmDataStore.events.monitorEvent(event, tasks, participants, solutions, progress);
+              clmDataStore.events.updateProgress.calls.reset();
+
+              participantCb = participants.$watch.calls.argsFor(0)[0];
+              solutionCb = solutions.$watch.calls.argsFor(0)[0];
+
+              participantCb();
+              solutionCb();
+              handlers.update();
+
+              $timeout.flush();
+              expect(clmDataStore.events.updateProgress.calls.count()).toBe(1);
+              expect(clmDataStore.events.updateProgress).toHaveBeenCalledWith(
+                event, tasks, solutions, 'bob', progress.bob
+              );
             });
 
           });

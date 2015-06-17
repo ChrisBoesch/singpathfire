@@ -297,6 +297,7 @@
     '$q',
     '$log',
     '$http',
+    '$timeout',
     'routes',
     'spfFirebase',
     'spfAuth',
@@ -305,7 +306,7 @@
     'clmService',
     'clmServicesUrl',
     function clmDataStoreFactory(
-      $window, $location, $q, $log, $http,
+      $window, $location, $q, $log, $http, $timeout,
       routes, spfFirebase, spfAuth, spfAuthData, spfCrypto, clmService, clmServicesUrl
     ) {
       var clmDataStore;
@@ -867,6 +868,11 @@
           },
 
           monitorEvent: function(event, tasks, participants, solutions, progress) {
+            var tid;
+            var delay = 300;
+            var unWatchSolution = solutions.$watch(debouncedUpdate);
+            var unWatchParticipants = participants.$watch(debouncedUpdate);
+
             function update() {
               return $q.all(Object.keys(participants).filter(function(index) {
                 return index && index[0] !== '$';
@@ -880,14 +886,21 @@
               }, {}));
             }
 
-            var unWatchSolution = solutions.$watch(update);
-            var unWatchParticipants = participants.$watch(update);
+            function debouncedUpdate() {
+              if (tid) {
+                $timeout.cancel(tid);
+              }
 
-            update();
+              tid = $timeout(update, delay, false);
+            }
 
-            return function stopMonitorEvent() {
-              unWatchParticipants();
-              unWatchSolution();
+            debouncedUpdate();
+            return {
+              update: debouncedUpdate,
+              unwatch: function stopMonitorEvent() {
+                unWatchParticipants();
+                unWatchSolution();
+              }
             };
           },
 

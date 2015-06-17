@@ -423,7 +423,7 @@
       spfAlert, urlFor, routes, spfFirebase, spfAuthData, spfNavBarService, clmDataStore, clmServicesUrl
     ) {
       var self = this;
-      var linkers, unwatch;
+      var linkers, monitorHandler;
 
       this.currentUser = initialData.currentUser;
       this.profile = initialData.profile;
@@ -446,16 +446,19 @@
         self.currentUser &&
         self.event.owner.publicId === self.currentUser.publicId
       ) {
-        unwatch = clmDataStore.events.monitorEvent(
+        monitorHandler = clmDataStore.events.monitorEvent(
           this.event, this.tasks, this.participants, this.solutions, this.progress
         );
       } else {
-        unwatch = angular.noop;
+        monitorHandler = {
+          update: angular.noop,
+          unwatch: angular.noop
+        };
       }
 
       $scope.$on('$destroy', function() {
         /* eslint no-unused-expressions: 0 */
-        unwatch();
+        monitorHandler.unwatch();
         self.profile && self.profile.$destroy && self.profile.$destroy();
         self.tasks && self.tasks.$destroy();
         self.ranking && self.ranking.$destroy();
@@ -529,6 +532,13 @@
             title: 'Edit',
             url: '#' + urlFor('editEvent', {eventId: self.event.$id}),
             icon: 'create'
+          });
+          options.push({
+            title: 'Update',
+            onClick: function() {
+              monitorHandler.update();
+            },
+            icon: 'loop'
           });
         }
 
