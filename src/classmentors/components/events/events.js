@@ -439,7 +439,13 @@
       this.orderKey = 'total';
       this.reverseOrder = true;
 
-      if (self.event.owner.publicId === self.currentUser.publicId) {
+      if (
+        self.event &&
+        self.event.owner &&
+        self.event.owner.publicId &&
+        self.currentUser &&
+        self.event.owner.publicId === self.currentUser.publicId
+      ) {
         unwatch = clmDataStore.events.monitorEvent(
           this.event, this.tasks, this.participants, this.solutions, this.progress
         );
