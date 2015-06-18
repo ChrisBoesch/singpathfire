@@ -297,6 +297,7 @@
     '$q',
     '$log',
     '$http',
+    '$timeout',
     'routes',
     'spfFirebase',
     'spfAuth',
@@ -305,7 +306,7 @@
     'clmService',
     'clmServicesUrl',
     function clmDataStoreFactory(
-      $window, $location, $q, $log, $http,
+      $window, $location, $q, $log, $http, $timeout,
       routes, spfFirebase, spfAuth, spfAuthData, spfCrypto, clmService, clmServicesUrl
     ) {
       var clmDataStore;
@@ -808,6 +809,16 @@
                 return results;
               }
 
+              if (task.textResponse) {
+                if (
+                  data.solutions &&
+                  data.solutions[taskId]
+                ) {
+                  results[taskId] = {completed: true};
+                }
+                return results;
+              }
+
               if (!clmDataStore.events._hasRegistered(
                 task, data.classMentors, data.singPath
               )) {
@@ -856,6 +867,43 @@
             return ranking;
           },
 
+          monitorEvent: function(event, tasks, participants, solutions, progress) {
+            var tid;
+            var delay = 300;
+            var unWatchSolution = solutions.$watch(debouncedUpdate);
+            var unWatchParticipants = participants.$watch(debouncedUpdate);
+
+            function update() {
+              return $q.all(Object.keys(participants).filter(function(index) {
+                return index && index[0] !== '$';
+              }).map(function(index) {
+                return participants[index];
+              }).reduce(function(all, participant) {
+                all[participant.$id] = clmDataStore.events.updateProgress(
+                  event, tasks, solutions, participant.$id, progress[participant.$id]
+                );
+                return all;
+              }, {}));
+            }
+
+            function debouncedUpdate() {
+              if (tid) {
+                $timeout.cancel(tid);
+              }
+
+              tid = $timeout(update, delay, false);
+            }
+
+            debouncedUpdate();
+            return {
+              update: debouncedUpdate,
+              unwatch: function stopMonitorEvent() {
+                unWatchParticipants();
+                unWatchSolution();
+              }
+            };
+          },
+
           updateProgress: function(event, tasks, solutions, publicId, userProgress) {
             if (!publicId) {
               return $q.reject('User public id is missing missing.');
@@ -900,8 +948,8 @@
           },
 
           /**
-           * Only update the the current user profile and return his progress
-           * and ranking.
+           * Only update the the current user profile, its event badge/problem
+           * solution, and return his progress and ranking.
            *
            * Only admin and event onwer can save the progress and ranking.
            *
@@ -931,14 +979,35 @@
             }).then(function(data) {
               return {
                 progress: clmDataStore.events._getProgress(tasks, data),
-                ranking: clmDataStore.events._getRanking(data)
+                ranking: clmDataStore.events._getRanking(data),
+                solutions: data.solutions
               };
+            }).then(function(data) {
+              var result = {
+                progress: data.progress,
+                ranking: data.ranking
+              };
+
+              // look for service task having just been completed.
+              var shouldSave = Object.keys(data.progress).filter(function(taskId) {
+                return data.solutions && data.solutions[taskId] == null;
+              }).map(function(taskId) {
+                data.solutions[taskId] = true;
+              }).length;
+
+              if (shouldSave > 0) {
+                data.solutions.$save().catch(function(e) {
+                  $log.error('Failed to update solutions: ' + e);
+                });
+              }
+
+              return result;
             }).catch(function(err) {
               $log.error('Failed to get progress of ' + profile.$id + ': ' + err.toString());
             });
           },
 
-          submitLink: function(eventId, taskId, publicId, link) {
+          submitSolution: function(eventId, taskId, publicId, link) {
             if (!eventId) {
               return $q.reject(new Error('No event id provided'));
             }
@@ -1290,6 +1359,22 @@
             return viewValue && viewValue.indexOf(pattern) !== -1;
           };
         }
+      };
+    }
+  ]).
+
+  filter('cmTruncate', [
+    function cmTruncateFilter() {
+      return function cmTruncate(s, limit) {
+        if (!s || !s.length || !limit) {
+          return '';
+        }
+
+        if (s.length <= limit) {
+          return s;
+        }
+
+        return s.slice(0, limit) + '...';
       };
     }
   ])

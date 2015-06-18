@@ -253,10 +253,14 @@
 
       beforeEach(function() {
         deps = {
+          $scope: jasmine.createSpyObj('$scope', ['$on']),
           initialData: {
             currentUser: {},
             profile: {},
-            event: {},
+            event: {
+              $id: 'someEventId',
+              owner: {publicId: 'bob'}
+            },
             tasks: {},
             participants: {},
             ranking: {},
@@ -275,7 +279,9 @@
           spfNavBarService: jasmine.createSpyObj('spfNavBarService', ['update']),
           clmDataStore: {
             initProfile: jasmine.createSpy('initProfile'),
-            events: jasmine.createSpyObj('events', ['leave', 'join', 'updateProgress', 'updateCurrentUserProfile'])
+            events: jasmine.createSpyObj('events', [
+              'leave', 'join', 'updateProgress', 'updateCurrentUserProfile', 'monitorEvent'
+            ])
           }
         };
       });
@@ -291,9 +297,7 @@
       });
 
       it('should set a menu title to event title', function() {
-        deps.initialData.event = {
-          title: 'some title'
-        };
+        deps.initialData.event.title = 'some title';
 
         $controller('ViewEventCtrl', deps);
 
@@ -303,9 +307,7 @@
       });
 
       it('should set a menu parent path to event list', function() {
-        deps.initialData.event = {
-          title: 'some title'
-        };
+        deps.initialData.event.title = 'some title';
 
         $controller('ViewEventCtrl', deps);
 
@@ -315,9 +317,7 @@
       });
 
       it('should not set any menu options if the user logged off', function() {
-        deps.initialData.event = {
-          title: 'some title'
-        };
+        deps.initialData.event.title = 'some title';
 
         $controller('ViewEventCtrl', deps);
 
@@ -328,7 +328,7 @@
         deps.initialData = {
           event: {
             title: 'some title',
-            owner: {}
+            owner: {publicId: 'alice'}
           },
           currentUser: {
             publicId: 'bob'
@@ -379,13 +379,9 @@
           event: {
             $id: 'evenId',
             title: 'some title',
-            owner: {
-              publicId: 'bob'
-            }
+            owner: {publicId: 'bob'}
           },
-          currentUser: {
-            publicId: 'bob'
-          },
+          currentUser: {publicId: 'bob'},
           participants: {
             $indexFor: jasmine.createSpy('participants.$indexFor'),
             'bob': {}
@@ -411,13 +407,9 @@
           event: {
             $id: 'evenId',
             title: 'some title',
-            owner: {
-              publicId: 'bob'
-            }
+            owner: {publicId: 'bob'}
           },
-          currentUser: {
-            publicId: 'bob'
-          },
+          currentUser: {publicId: 'bob'},
           participants: {
             $indexFor: jasmine.createSpy('participants.$indexFor'),
             'bob': {}
@@ -495,7 +487,7 @@
         it('should return 100 if there is no participants', function() {
           var ctrl = $controller('ViewEventCtrl', deps);
 
-          expect(ctrl.completed('12345')).toBe(100);
+          expect(ctrl.completed('12345')).toBe(0);
         });
 
         it('should return percentage of participants having completed the task', function() {
@@ -503,16 +495,18 @@
 
           ctrl.participants = {
             $id: 'eventId',
-            someParticipantId: {
-              tasks: {
-                someTaskId: {
-                  completed: true
-                }
-              }
-            },
+            someParticipantId: {},
             someOtherParticipantId: {}
           };
-          expect(ctrl.completed('someTaskId')).toBe(50);
+          ctrl.progress = {
+            someParticipantId: {
+              someTaskId: {completed: true}
+            },
+            someOtherParticipantId: {
+              someOtherTaskId: {completed: true}
+            }
+          };
+          expect(ctrl.completed('someTaskId', ctrl.participants, ctrl.progress)).toBe(50);
         });
 
       });
@@ -644,6 +638,14 @@
           expect(ctrl.mustRegister(task, profile)).toBe(true);
         });
 
+        it('should return true if the user is not registered to any services', function() {
+          var ctrl = $controller('ViewEventCtrl', deps);
+          var task = {serviceId: 'codeSchool'};
+          var profile = {$id: 'bob'};
+
+          expect(ctrl.mustRegister(task, profile)).toBe(true);
+        });
+
       });
 
       describe('update', function() {
@@ -699,41 +701,6 @@
           $rootScope.$apply();
 
           expect(deps.spfAlert.error).toHaveBeenCalled();
-        });
-
-      });
-
-      describe('updateAll', function() {
-
-        it('should update the all user task completeness', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-
-          ctrl.participants = {
-            0: {$id: 'somePublicId'},
-            1: {$id: 'someOtherPublicId'}
-          };
-
-          ctrl.progress = {
-            'somePublicId': {}
-          };
-
-          ctrl.updateAll();
-
-          expect(deps.clmDataStore.events.updateProgress.calls.count()).toBe(2);
-          expect(
-            deps.clmDataStore.events.updateProgress
-          ).toHaveBeenCalledWith(
-            deps.initialData.event,
-            deps.initialData.tasks,
-            deps.initialData.solutions,
-            'somePublicId',
-            ctrl.progress.somePublicId
-          );
-          expect(
-            deps.clmDataStore.events.updateProgress
-          ).toHaveBeenCalledWith(
-            deps.initialData.event, deps.initialData.tasks, deps.initialData.solutions, 'someOtherPublicId', undefined
-          );
         });
 
       });
