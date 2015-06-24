@@ -122,7 +122,7 @@
 
         return $q.all({
           auth: spfAuth,
-          currentUser: spfAuthData.user(),
+          currentUser: spfAuthData.user().catch(angular.noop),
           currentUserProfile: clmDataStore.currentUserProfile(),
           profile: profilePromise
         });
@@ -172,7 +172,7 @@
       spfNavBarService.update('Profile', undefined, menu);
 
       this.settingPublicId = false;
-      this.profileNeedsUpdate = !this.currentUser.$completed();
+      this.profileNeedsUpdate = this.currentUser && !this.currentUser.$completed();
 
       function cleanProfile(currentUser) {
         currentUser.country = spfFirebase.cleanObj(currentUser.country);
