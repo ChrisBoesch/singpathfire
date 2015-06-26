@@ -521,7 +521,66 @@
           },
 
           getRanking: function(eventId) {
-            return spfFirebase.loadedObj(['classMentors/eventRankings', eventId]);
+            return spfFirebase.loadedObj(['classMentors/eventRankings', eventId]).then(function(ranking) {
+              setRankInSchool();
+              ranking.$watch(setRankInSchool);
+              return ranking;
+
+              function setRankInSchool() {
+                // 1. sort participant by school
+                var schoolRankings = Object.keys(ranking).filter(function(publicId) {
+                  return publicId.length > 0 && publicId[0] !== '$';
+                }).reduce(function(all, publicId) {
+                  var participant = ranking[publicId];
+                  var schoolId;
+
+                  if (
+                    participant.user == null ||
+                    participant.user.school == null ||
+                    !participant.user.school.name ||
+                    !participant.user.school.type
+                  ) {
+                    return all;
+                  }
+
+                  schoolId = participant.user.school.type + '/' + participant.user.school.name;
+                  if (!all[schoolId]) {
+                    all[schoolId] = [];
+                  }
+
+                  all[schoolId].push(participant);
+
+                  return all;
+                }, {});
+
+                Object.keys(schoolRankings).map(function(schoolId) {
+                  // 2. Sort each school participants in their school
+                  schoolRankings[schoolId].sort(function(a, b) {
+                    //  sort on total by desc. order.
+                    if (a.total !== b.total) {
+                      return b.total - a.total;
+                    }
+
+                    if (!a.user || a.user.displayName) {
+                      return -1;
+                    }
+
+                    if (!b.user || b.user.displayName) {
+                      return 1;
+                    }
+                    // sort by display name if total is equal (asc. order)
+                    return a.user.displayName.localeCompare(b.user.displayName);
+                  });
+
+                  return schoolRankings[schoolId];
+                }).forEach(function(sortedParticipants) {
+                  // 3. add `$rankInSchool` property
+                  sortedParticipants.forEach(function(p, index) {
+                    p.$rankInSchool = index + 1;
+                  });
+                });
+              }
+            });
           },
 
           getProgress: function(eventId) {
@@ -659,7 +718,8 @@
             }).then(function() {
               return spfFirebase.set(paths.participation, {
                 displayName: authData.displayName,
-                gravatar: authData.gravatar
+                gravatar: authData.gravatar,
+                school: spfFirebase.cleanObj(authData.school) || null
               });
             }).then(function() {
               return spfFirebase.set(paths.profile, {
@@ -940,7 +1000,15 @@
                   ['classMentors/eventRankings', event.$id, data.classMentors.$id],
                   // 3. get ranking
                   clmDataStore.events._getRanking(data)
-                )
+                ),
+                // 5. update participants data
+                // TODO: only update it if necessary.
+                spfFirebase.set(
+                  ['classMentors/eventParticipants', event.$id, data.classMentors.$id, 'user'], {
+                  displayName: data.classMentors.user.displayName,
+                  gravatar: data.classMentors.user.gravatar,
+                  school: data.classMentors.user.school || null
+                })
               ]);
             }).catch(function(err) {
               $log.error('Failed to update progress of ' + publicId + ': ' + err.toString());

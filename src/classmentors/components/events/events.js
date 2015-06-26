@@ -546,6 +546,18 @@
       }
 
       function promptPassword() {
+        if (
+          self.event.schoolEvent && (
+            !self.profile ||
+            !self.profile.user ||
+            !self.profile.user.school
+          )
+        ) {
+          spfAlert.warning(
+            'Only Students from Singapore can join this event. ' +
+            'Maybe you profile needs to be updated.');
+          return;
+        }
         $mdDialog.show({
           parent: $document.body,
           templateUrl: 'classmentors/components/events/events-view-password.html',
