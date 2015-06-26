@@ -193,6 +193,12 @@
                             <th ng-class="{orderer: ctrl.orderKey == 'user.displayName'}">
                                 <md-button ng-click="ctrl.orderBy('user.displayName')">Participants</md-button>
                             </th>
+                            <th ng-class="{orderer: ctrl.orderKey == 'user.school.name'}" ng-if="ctrl.event.schoolEvent">
+                                <md-button ng-click="ctrl.orderBy('user.school.name')">School</md-button>
+                            </th>
+                            <th ng-class="{orderer: ctrl.orderKey == '$rankInSchool'}" ng-if="ctrl.event.schoolEvent">
+                                <md-button ng-click="ctrl.orderBy('$rankInSchool')">Rank in School</md-button>
+                            </th>
                             <th ng-class="{orderer: ctrl.orderKey == 'total'}">
                                 <md-button ng-click="ctrl.orderBy('total')">Total</md-button>
                             </th>
@@ -220,6 +226,8 @@
                                     {{ participant.user.displayName }}
                                 </md-button>
                             </th>
+                            <td ng-if="ctrl.event.schoolEvent">{{ participant.user.school.name }}</td>
+                            <td ng-if="ctrl.event.schoolEvent">{{ participant.$rankInSchool || 'N/A'}}</td>
                             <td>{{ participant.total || 0}}</td>
                             <td>{{ participant.codeCombat || 0 }}</td>
                             <td>{{ participant.codeSchool || 0 }}</td>

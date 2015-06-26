@@ -1257,6 +1257,69 @@
             });
           });
 
+          describe('getRanking', function() {
+            var $rootScope, $q, clmDataStore;
+
+            beforeEach(inject(function(_$rootScope_, _$q_, _clmDataStore_) {
+              $q = _$q_;
+              $rootScope = _$rootScope_;
+              clmDataStore = _clmDataStore_;
+            }));
+
+            it('should retrieve participants ranking for an event', function() {
+              spfFirebase.loadedObj.and.returnValue($q.when());
+
+              clmDataStore.events.getRanking('someEventId');
+
+              expect(spfFirebase.loadedObj.calls.count()).toBe(1);
+              expect(spfFirebase.loadedObj.calls.argsFor(0).length).toBe(1);
+              expect(
+                spfFirebase.loadedObj.calls.argsFor(0)[0].join('/')
+              ).toBe(
+                'classMentors/eventRankings/someEventId'
+              );
+            });
+
+            it('should calculate ranking in school', function() {
+              var someSchool = {type: 'someType', name: 'someName'};
+              var ranking = {
+                bob: {total: '2', user: {displayName: 'bob', school: someSchool}},
+                alice: {total: '4', user: {displayName: 'alice', school: someSchool}},
+                $watch: jasmine.createSpy('rankingObj.$watch')
+              };
+
+              spfFirebase.loadedObj.and.returnValue($q.when(ranking));
+              clmDataStore.events.getRanking('someEventId');
+              $rootScope.$apply();
+
+              expect(ranking.bob.$rankInSchool).toBe(2);
+              expect(ranking.alice.$rankInSchool).toBe(1);
+            });
+
+            it('should recalculate ranking in school if ranking is updated', function() {
+              var watcher;
+              var someSchool = {type: 'someType', name: 'someName'};
+              var ranking = {
+                bob: {total: '2', user: {displayName: 'bob', school: someSchool}},
+                alice: {total: '4', user: {displayName: 'alice', school: someSchool}},
+                $watch: jasmine.createSpy('rankingObj.$watch')
+              };
+
+              spfFirebase.loadedObj.and.returnValue($q.when(ranking));
+              clmDataStore.events.getRanking('someEventId');
+              $rootScope.$apply();
+
+              expect(ranking.$watch).toHaveBeenCalledWith(jasmine.any(Function));
+
+              watcher = ranking.$watch.calls.argsFor(0)[0];
+              ranking.bob.total = 5;
+              watcher();
+
+              expect(ranking.bob.$rankInSchool).toBe(1);
+              expect(ranking.alice.$rankInSchool).toBe(2);
+            });
+          });
+
           describe('getProgress', function() {
             var clmDataStore;
 
@@ -1474,7 +1537,8 @@
               );
               expect(spfFirebase.set.calls.argsFor(1)[1]).toEqual({
                 displayName: 'Mr Bob',
-                gravatar: 'http://example.com'
+                gravatar: 'http://example.com',
+                school: null
               });
             });
 
@@ -1671,6 +1735,12 @@
                   serviceId: 'codeSchool'
                 }
               };
+              var profile = {
+                $id: 'bob',
+                user: {displayName: 'bob'}
+              };
+
+              clmDataStore.profile.and.returnValue($q.when(profile));
 
               clmDataStore.events.updateProgress(event, tasks, solutions, 'bob');
 
@@ -1688,7 +1758,8 @@
                 }
               };
               var profile = {
-                $id: 'bob'
+                $id: 'bob',
+                user: {displayName: 'bob'}
               };
 
               clmDataStore.profile.and.returnValue($q.when(profile));
@@ -1700,7 +1771,7 @@
               expect(clmDataStore.services.codeCombat.fetchBadges).toHaveBeenCalledWith(profile);
             });
 
-            it('should set progress and ranking', function() {
+            it('should set progress, ranking and user details', function() {
               var event = {$id: 'someEventId'};
               var solutions = {$id: 'someEventId'};
               var tasks = {
@@ -1710,7 +1781,7 @@
               };
               var profile = {
                 $id: 'bob',
-                user: {}
+                user: {displayName: 'bob', gravatar: 'someUrl'}
               };
 
               clmDataStore.profile.and.returnValue($q.when(profile));
@@ -1719,7 +1790,7 @@
 
               $rootScope.$apply();
 
-              expect(spfFirebase.set.calls.count()).toBe(2);
+              expect(spfFirebase.set.calls.count()).toBe(3);
 
               expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
               expect(
@@ -1738,7 +1809,19 @@
               expect(
                 spfFirebase.set.calls.argsFor(1)[1]
               ).toEqual(
-                {codeSchool: 0, codeCombat: 0, singPath: 0, total: 0, user: {}}
+                {codeSchool: 0, codeCombat: 0, singPath: 0, total: 0, user: {displayName: 'bob', gravatar: 'someUrl'}}
+              );
+
+              expect(spfFirebase.set.calls.argsFor(2).length).toBe(2);
+              expect(
+                spfFirebase.set.calls.argsFor(2)[0].join('/')
+              ).toBe(
+                'classMentors/eventParticipants/someEventId/bob/user'
+              );
+              expect(
+                spfFirebase.set.calls.argsFor(2)[1]
+              ).toEqual(
+                {displayName: 'bob', gravatar: 'someUrl', school: null}
               );
             });
 
@@ -1761,12 +1844,9 @@
               };
               var profile = {
                 $id: 'bob',
+                user: {displayName: 'bob'},
                 services: {
-                  codeSchool: {
-                    details: {
-                      id: 'bob'
-                    }
-                  }
+                  codeSchool: {details: {id: 'bob'}}
                 }
               };
 
@@ -1776,7 +1856,7 @@
 
               $rootScope.$apply();
 
-              expect(spfFirebase.set.calls.count()).toBe(2);
+              expect(spfFirebase.set.calls.count()).toBe(3);
 
               expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
               expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
@@ -1812,7 +1892,7 @@
 
               $rootScope.$apply();
 
-              expect(spfFirebase.set.calls.count()).toBe(2);
+              expect(spfFirebase.set.calls.count()).toBe(3);
 
               expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
               expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
@@ -1856,7 +1936,7 @@
 
               $rootScope.$apply();
 
-              expect(spfFirebase.set.calls.count()).toBe(2);
+              expect(spfFirebase.set.calls.count()).toBe(3);
 
               expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
               expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
@@ -1888,7 +1968,7 @@
 
               $rootScope.$apply();
 
-              expect(spfFirebase.set.calls.count()).toBe(2);
+              expect(spfFirebase.set.calls.count()).toBe(3);
 
               expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
               expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
@@ -1923,7 +2003,7 @@
 
               $rootScope.$apply();
 
-              expect(spfFirebase.set.calls.count()).toBe(2);
+              expect(spfFirebase.set.calls.count()).toBe(3);
 
               expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
               expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
@@ -1959,7 +2039,7 @@
 
               $rootScope.$apply();
 
-              expect(spfFirebase.set.calls.count()).toBe(2);
+              expect(spfFirebase.set.calls.count()).toBe(3);
 
               expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
               expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
@@ -2028,7 +2108,7 @@
 
               $rootScope.$apply();
 
-              expect(spfFirebase.set.calls.count()).toBe(2);
+              expect(spfFirebase.set.calls.count()).toBe(3);
 
               expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
               expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
@@ -2051,7 +2131,10 @@
                 someTaskId: {linkPattern: 'github.com'},
                 someOtherId: {linkPattern: 'bitbucket.org'}
               };
-              var profile = {$id: 'bob'};
+              var profile = {
+                $id: 'bob',
+                user: {displayName: 'bob'}
+              };
 
               var solutions = {
                 $id: 'someEventId',
