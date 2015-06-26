@@ -213,9 +213,10 @@
                                 No participants
                             </th> 
                         </tr>
-                        <tr ng-repeat="(publicId, participant) in (ctrl.ranking | toArray | orderBy:ctrl.orderKey:ctrl.reverseOrder)" ng-class="'index-' + $index + ' ' + ($index % 2 == 0? 'even' : 'odd')">
+                        <tr ng-repeat="participant in (ctrl.ranking | spfToArray | orderBy:ctrl.orderKey:ctrl.reverseOrder)" ng-class="'index-' + $index + ' ' + ($index % 2 == 0? 'even' : 'odd')">
                             <th>
-                                <md-button ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$id} }}">
+                                <!-- spfToArray adds the $$hashKey property to every element in the object -->
+                                <md-button ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$$hashKey} }}">
                                     {{ participant.user.displayName }}
                                 </md-button>
                             </th>

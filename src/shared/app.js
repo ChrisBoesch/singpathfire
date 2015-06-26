@@ -812,9 +812,9 @@
     }
   ]).
 
-  filter('toArray', [
-    function toArrayFilterFactory() {
-      return function toArrayFilter(obj) {
+  filter('spfToArray', [
+    function spfToArrayFilterFactory() {
+      return function spfToArrayFilter(obj) {
         if (!(obj instanceof Object)) {
           return obj;
         }
