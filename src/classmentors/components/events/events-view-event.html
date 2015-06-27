@@ -187,9 +187,12 @@
 
         <md-tab label="Ranking">
             <md-content layout-padding>
-                <table class="events rankink">
+                <table class="events ranking">
                     <thead>
                         <tr ng-class="{'reversed': ctrl.reverseOrder}">
+                            <th>
+                                #
+                            </th>
                             <th ng-class="{orderer: ctrl.orderKey == 'user.displayName'}">
                                 <md-button ng-click="ctrl.orderBy('user.displayName')">Participants</md-button>
                             </th>
@@ -220,6 +223,9 @@
                             </th> 
                         </tr>
                         <tr ng-repeat="participant in (ctrl.ranking | spfToArray | orderBy:ctrl.orderKey:ctrl.reverseOrder)" ng-class="'index-' + $index + ' ' + ($index % 2 == 0? 'even' : 'odd')">
+                            <th>
+                                {{ $index + 1 }}
+                            </th>
                             <th>
                                 <!-- spfToArray adds the $$hashKey property to every element in the object -->
                                 <md-button ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$$hashKey} }}">
