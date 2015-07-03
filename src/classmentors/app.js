@@ -26,6 +26,7 @@
    */
   constant('routes', {
     home: '/events',
+    aceOfCoders: '/ace-of-coders',
     events: '/events',
     newEvent: '/new-event',
     oneEvent: '/events/:eventId',
