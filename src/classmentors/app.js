@@ -685,8 +685,28 @@
             return spfFirebase.set(url, true);
           },
 
+          _participantsFactory: spfFirebase.arrayFactory({
+            $schools: function() {
+              return this.$list.reduce(function(schools, participant) {
+                if (
+                  !participant.user ||
+                  !participant.user.school ||
+                  !participant.user.school.name
+                ) {
+                  return schools;
+                }
+
+                schools[participant.user.school.name] = participant.user.school;
+                return schools;
+              }, {});
+            }
+          }),
+
           participants: function(eventId) {
-            return spfFirebase.loadedArray(['classMentors/eventParticipants', eventId]);
+            return clmDataStore.events._participantsFactory(
+              ['classMentors/eventParticipants', eventId]
+            ).$loaded();
+            // return spfFirebase.loadedArray(['classMentors/eventParticipants', eventId]);
           },
 
           join: function(event, pw) {
