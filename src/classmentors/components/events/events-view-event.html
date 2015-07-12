@@ -193,25 +193,25 @@
                             <th>
                                 #
                             </th>
-                            <th ng-class="{orderer: ctrl.orderKey == 'user.displayName'}">
+                            <th ng-class="{orderer: ctrl.orderKey == 'user.displayName', secondaryOrderer: ctrl.previousOrderKey == 'user.displayName'}">
                                 <md-button ng-click="ctrl.orderBy('user.displayName')">Participants</md-button>
                             </th>
-                            <th ng-class="{orderer: ctrl.orderKey == 'user.school.name'}" ng-if="ctrl.event.schoolEvent">
+                            <th ng-class="{orderer: ctrl.orderKey == 'user.school.name', secondaryOrderer: ctrl.previousOrderKey == 'user.school.name'}" ng-if="ctrl.event.schoolEvent">
                                 <md-button ng-click="ctrl.orderBy('user.school.name')">School</md-button>
                             </th>
-                            <th ng-class="{orderer: ctrl.orderKey == '$rankInSchool'}" ng-if="ctrl.event.schoolEvent">
+                            <th ng-class="{orderer: ctrl.orderKey == '$rankInSchool', secondaryOrderer: ctrl.previousOrderKey == '$rankInSchool'}" ng-if="ctrl.event.schoolEvent">
                                 <md-button ng-click="ctrl.orderBy('$rankInSchool')">Rank in School</md-button>
                             </th>
-                            <th ng-class="{orderer: ctrl.orderKey == 'total'}">
+                            <th ng-class="{orderer: ctrl.orderKey == 'total', secondaryOrderer: ctrl.previousOrderKey == 'total'}">
                                 <md-button ng-click="ctrl.orderBy('total')">Total</md-button>
                             </th>
-                            <th ng-class="{orderer: ctrl.orderKey == 'codeCombat'}">
+                            <th ng-class="{orderer: ctrl.orderKey == 'codeCombat', secondaryOrderer: ctrl.previousOrderKey == 'codeCombat'}">
                                 <md-button ng-click="ctrl.orderBy('codeCombat')">Code Combat Badges</md-button>
                             </th>
-                            <th ng-class="{orderer: ctrl.orderKey == 'codeSchool'}">
+                            <th ng-class="{orderer: ctrl.orderKey == 'codeSchool', secondaryOrderer: ctrl.previousOrderKey == 'codeSchool'}">
                                 <md-button ng-click="ctrl.orderBy('codeSchool')">Code School Badges</md-button>
                             </th>
-                            <th ng-class="{orderer: ctrl.orderKey == 'singPath'}">
+                            <th ng-class="{orderer: ctrl.orderKey == 'singPath', secondaryOrderer: ctrl.previousOrderKey == 'singPath'}">
                                 <md-button ng-click="ctrl.orderBy('singPath')">SingPath Problems</md-button>
                             </th>
                         </tr>
@@ -222,7 +222,7 @@
                                 No participants
                             </th> 
                         </tr>
-                        <tr ng-repeat="participant in (ctrl.ranking | spfToArray | orderBy:ctrl.orderKey:ctrl.reverseOrder)" ng-class="'index-' + $index + ' ' + ($index % 2 == 0? 'even' : 'odd')">
+                        <tr ng-repeat="participant in (ctrl.ranking | spfToArray | orderBy:[ctrl.orderKey, ctrl.previousOrderKey]:ctrl.reverseOrder)" ng-class="'index-' + $index + ' ' + ($index % 2 == 0? 'even' : 'odd')">
                             <th>
                                 {{ $index + 1 }}
                             </th>

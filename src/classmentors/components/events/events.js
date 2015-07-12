@@ -437,6 +437,7 @@
       this.currentUserProgress = initialData.currentUserProgress;
       this.currentUserSolutions = initialData.currentUserSolutions;
       this.orderKey = 'total';
+      this.previousOrderKey = 'user.displayName';
       this.reverseOrder = true;
 
       if (
@@ -473,6 +474,7 @@
         if (this.orderKey === key) {
           this.reverseOrder = !this.reverseOrder;
         } else {
+          this.previousOrderKey = this.orderKey;
           this.orderKey = key;
           this.reverseOrder = true;
         }

@@ -707,10 +707,11 @@
 
       describe('orderBy', function() {
 
-        it('should setup orderKey and reverseOrder', function() {
+        it('should setup orderKey, previousOrderKey and reverseOrder', function() {
           var ctrl = $controller('ViewEventCtrl', deps);
 
           expect(ctrl.orderKey).toBe('total');
+          expect(ctrl.previousOrderKey).toBe('user.displayName');
           expect(ctrl.reverseOrder).toBe(true);
         });
 
@@ -724,13 +725,15 @@
           expect(ctrl.reverseOrder).toBe(true);
         });
 
-        it('should set new key and reset reverseOrder', function() {
+        it('should set new key and previousOrderKey, and reset reverseOrder', function() {
           var ctrl = $controller('ViewEventCtrl', deps);
 
           ctrl.reverseOrder = false;
-          ctrl.orderBy('someOtherKey');
+          ctrl.orderKey = 'originalKey';
+          ctrl.orderBy('newKey');
 
-          expect(ctrl.orderKey).toBe('someOtherKey');
+          expect(ctrl.orderKey).toBe('newKey');
+          expect(ctrl.previousOrderKey).toBe('originalKey');
           expect(ctrl.reverseOrder).toBe(true);
         });
 
