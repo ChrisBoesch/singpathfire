@@ -28,7 +28,6 @@
     }
   ]).
 
-
   /**
    * Use to resolve `initialData` of `ClmAceOfCodersCtrl`.
    *
