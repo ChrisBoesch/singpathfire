@@ -56,7 +56,8 @@
             'push',
             'patch',
             'remove',
-            'objFactory'
+            'objFactory',
+            'arrayFactory'
           ]);
 
           module(function($provide) {
@@ -378,6 +379,7 @@
             'loadedObj',
             'obj',
             'objFactory',
+            'arrayFactory',
             'patch',
             'push',
             'ref',
@@ -1669,6 +1671,88 @@
             });
           });
 
+          describe('_participantsFactory', function() {
+
+            it('should create an angularfire array factory', function() {
+              var expected = {};
+
+              spfFirebase.arrayFactory.and.returnValue(expected);
+
+              inject(function(clmDataStore) {
+                expect(clmDataStore.events._participantsFactory).toBe(expected);
+              });
+            });
+
+            it('should augment the participants array with a list of school participating', function() {
+              spfFirebase.arrayFactory.and.callFake(function() {
+                return arguments;
+              });
+
+              inject(function(clmDataStore) {
+                expect(clmDataStore.events._participantsFactory.length).toBe(1);
+                expect(clmDataStore.events._participantsFactory[0]).toEqual({
+                  $schools: jasmine.any(Function)
+                });
+              });
+            });
+
+            describe('$schools', function() {
+
+              beforeEach(function() {
+                spfFirebase.arrayFactory.and.callFake(function() {
+                  return arguments;
+                });
+              });
+
+              afterEach(function() {
+                // remove side effect
+                spfFirebase.arrayFactory.and.stub();
+              });
+
+              it('should return an empty list if no participants', inject(
+                function(clmDataStore) {
+                  var mixin = clmDataStore.events._participantsFactory[0];
+                  var participants = {$list: []};
+                  var schools = mixin.$schools.call(participants);
+
+                  expect(schools).toEqual({});
+                }
+              ));
+
+              it('should return an empty list if participants have no schools', inject(
+                function(clmDataStore) {
+                  var mixin = clmDataStore.events._participantsFactory[0];
+                  var participants = {$list: [
+                    {user: {}}
+                  ]};
+                  var schools = mixin.$schools.call(participants);
+
+                  expect(schools).toEqual({});
+                }
+              ));
+
+              it('should return the participating schools', inject(
+                function(clmDataStore) {
+                  var mixin = clmDataStore.events._participantsFactory[0];
+                  var participants = {$list: [
+                    {user: {name: 'bob', school: {name: 'some school'}}},
+                    {user: {name: 'alice', school: {name: 'some school'}}},
+                    {user: {name: 'joe', school: {name: 'some other school'}}},
+                    {user: {name: 'mary'}}
+                  ]};
+                  var schools = mixin.$schools.call(participants);
+
+                  expect(schools).toEqual({
+                    'some school': {name: 'some school'},
+                    'some other school': {name: 'some other school'}
+                  });
+                }
+              ));
+
+            });
+
+          });
+
           describe('participants', function() {
             var clmDataStore;
 
@@ -1676,16 +1760,24 @@
               clmDataStore = _clmDataStore_;
             }));
 
-            it('should fetch list of participants', function() {
-              clmDataStore.events.participants('someEventId');
+            it('should return an array of participants', function() {
+              var augmentedArrayObj = jasmine.createSpyObj('augmentedArrayObj', ['$loaded']);
+              var expected = {};
 
-              expect(spfFirebase.loadedArray.calls.count()).toBe(1);
-              expect(spfFirebase.loadedArray.calls.argsFor(0).length).toBe(1);
+              clmDataStore.events._participantsFactory = jasmine.createSpy('participantsFactory');
+              clmDataStore.events._participantsFactory.and.returnValue(augmentedArrayObj);
+              augmentedArrayObj.$loaded.and.returnValue(expected);
+
+              expect(clmDataStore.events.participants('someEventId')).toBe(expected);
+
+              expect(clmDataStore.events._participantsFactory).toHaveBeenCalledWith(jasmine.any(Array));
+              expect(clmDataStore.events._participantsFactory.calls.count()).toBe(1);
               expect(
-                spfFirebase.loadedArray.calls.argsFor(0)[0].join('/')
+                clmDataStore.events._participantsFactory.calls.argsFor(0)[0].join('/')
               ).toBe(
                 'classMentors/eventParticipants/someEventId'
               );
+              expect(augmentedArrayObj.$loaded).toHaveBeenCalled();
             });
           });
 
