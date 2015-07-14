@@ -35,7 +35,9 @@
     addEventTask: '/events/:eventId/new-task',
     profile: '/profile/:publicId',
     editProfile: '/profile/',
-    setProfileCodeCombatId: '/profile/codeCombat'
+    setProfileCodeCombatId: '/profile/codeCombat',
+    levelList: '/levels',
+    newLevel: '/new-level'
   }).
 
   /**
@@ -1113,6 +1115,35 @@
               'classMentors/eventSolutions', eventId, publicId, taskId
             ], link);
           }
+        },
+
+        problems: {
+          /**
+           * Return a promise resolving to an angularfire array object holding
+           * the list of problem levels
+           *
+           * @return Promise
+           */
+          levels: function() {
+            return spfFirebase.loadedArray(['classMentors/problemLevels']);
+          },
+
+          /**
+           * Create a new level
+           *
+           * @return {Promise} return a promise resolving to a firebase ref on success.
+           */
+          newLevel: function(level, priority) {
+            level.createdAt = {'.sv': 'timestamp'};
+
+            return spfFirebase.pushWithPriority(
+              ['classMentors/problemLevels'], level, priority
+            ).catch(function(err) {
+              $log.error(err);
+              return $q.reject(err);
+            });
+          }
+
         },
 
         services: {

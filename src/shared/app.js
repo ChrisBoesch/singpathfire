@@ -266,6 +266,27 @@
         },
 
         /**
+         * Add data to a collection like `push` but also set the priority.
+         *
+         * Returns a promise resolving to an error on error or a Firebase
+         * reference to the new item in the collection.
+         *
+         */
+        pushWithPriority: function(root, value, priority) {
+          return $q(function(resolve, reject) {
+            var ref = spfFirebaseRef(root).push();
+
+            ref.setWithPriority(value, priority, function(err) {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(ref);
+              }
+            });
+          });
+        },
+
+        /**
          * Set a firebase entry to the value.
          *
          * Returns a promise resolving to an error on error or to a Firebase
