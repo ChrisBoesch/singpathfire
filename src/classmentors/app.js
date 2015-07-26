@@ -37,7 +37,11 @@
     editProfile: '/profile/',
     setProfileCodeCombatId: '/profile/codeCombat',
     levelList: '/levels',
-    newLevel: '/new-level'
+    newLevel: '/new-level',
+    oneLevel: '/levels/:levelId',
+    problemContributions: '/contributions',
+    newProblem: '/levels/:levelId/new-problem',
+    oneProblem: '/levels/:levelId/problems/:problemId'
   }).
 
   /**
@@ -1124,8 +1128,8 @@
            *
            * @return Promise
            */
-          levels: function() {
-            return spfFirebase.loadedArray(['classMentors/problemLevels']);
+          levels: function(opts) {
+            return spfFirebase.loadedArray(['classMentors/problemLevels'], opts);
           },
 
           /**
@@ -1136,12 +1140,49 @@
           newLevel: function(level, priority) {
             level.createdAt = {'.sv': 'timestamp'};
 
-            return spfFirebase.pushWithPriority(
-              ['classMentors/problemLevels'], level, priority
-            ).catch(function(err) {
-              $log.error(err);
-              return $q.reject(err);
-            });
+            return spfFirebase.pushWithPriority(['classMentors/problemLevels'], level, priority);
+          },
+
+          /**
+           * Fetch level details.
+           *
+           * @param  {string} levelId ID of the level to fetch.
+           * @return {Promise}        Promise resolving to the level details.
+           */
+          getLevel: function(levelId) {
+            return spfFirebase.loadedObj(['classMentors/problemLevels', levelId]);
+          },
+
+          /**
+           * Fetch a level problems.
+           *
+           * @param  {string} levelId ID of the level to fetch.
+           * @return {Promise}        Promise resolving to an angularfire array of problem.
+           */
+          getProblems: function(levelId) {
+            return spfFirebase.loadedArray(['classMentors/problems', levelId]);
+          },
+
+          /**
+           * Fetch problem details.
+           *
+           * @param  {string} levelId
+           * @param  {string} problemId
+           * @return {Promise}
+           */
+          getProblem: function(levelId, problemId) {
+            return spfFirebase.loadedObj(['classMentors/problems', levelId, problemId]);
+          },
+
+          /**
+           * Create a new problem
+           *
+           * @return {[Promise]} return a promise resolving to a firebase ref on success.
+           */
+          newProblem: function(level, problem) {
+            problem.createdAt = {'.sv': 'timestamp'};
+
+            return spfFirebase.push(['classMentors/problems', level.$id], problem);
           }
 
         },
@@ -1459,6 +1500,154 @@
       };
 
       return clmDataStore;
+    }
+  ]).
+
+  /**
+   * A pythonTutor link object.
+   *
+   * Its `params` property holds the parameters of a pythonTutor link:
+   * `code`, `py` (python version or language code) and `mode` ('display' or 'edit').
+   */
+  factory('pythonTutorLink', [
+    '$window',
+    function pythonTutorLinkFactory($window) {
+      var baseUrl = 'http://www.pythontutor.com/visualize.html#';
+      var defaults = {
+        code: '',
+        py: '3',
+        mode: 'edit'
+      };
+
+      return function pythonTutorLink(opts) {
+        var link = {
+          params: Object.assign({}, defaults, opts),
+
+          code: function(code) {
+            if (code !== undefined) {
+              link.params.code = code;
+            }
+
+            return link.params.code;
+          },
+
+          language: function(lang) {
+            if (lang !== undefined) {
+              link.params.py = lang;
+            }
+
+            return link.params.py;
+          },
+
+          mode: function(mode) {
+            if (mode !== undefined) {
+              link.params.mode = mode;
+            }
+
+            return link.params.mode;
+          },
+
+          href: function() {
+            var hash;
+            var params = Object.assign({}, link.params);
+
+            params.code = params.code || defaults.code;
+            params.py = params.py || defaults.py;
+            params.mode = params.mode || defaults.mode;
+
+            hash = Object.keys(params).sort().map(function(key) {
+              return key + '=' + $window.encodeURIComponent(params[key]);
+            }).join('&');
+
+            return baseUrl + hash;
+          }
+        };
+
+        return link;
+      };
+    }
+  ]).
+
+  /**
+   * Parse a link hash and return a pythonTuror link object.
+   *
+   * Used to check the pythonTutor parameters or to manipulate it.
+   *
+   * @param  {string} pythonTutor link
+   * @return {Object}             object holding methods to get and set the link code
+   *                              parameters and get link to display or edit the code
+   *                              on pythonTutor.com.
+   */
+  factory('pythonTutorLinkParser', [
+    '$window',
+    'pythonTutorLink',
+    function pythonTutorLinkParserFactory($window, pythonTutorLink) {
+
+      return function pythonTutorLinkParser(link) {
+        var hashPos = link.indexOf('#');
+        var hash, vars;
+        var errInvalidLink = 'Invalid pythonTutor link';
+
+        if (hashPos < 0) {
+          throw new Error(errInvalidLink);
+        }
+
+        hash = link.slice(hashPos + 1);
+        if (hash.length < 1) {
+          throw new Error(errInvalidLink);
+        }
+
+        vars = hash.split('&').reduce(function(all, partial) {
+          var eqPos, varName;
+
+          partial = $window.decodeURIComponent(partial);
+          eqPos = partial.indexOf('=');
+          if (eqPos < 1) {
+            return all;
+          }
+
+          varName = partial.slice(0, eqPos);
+          all[varName] = partial.slice(eqPos + 1);
+
+          return all;
+        }, {});
+
+        return pythonTutorLink(vars);
+      };
+    }
+  ]).
+
+  /**
+   * Directive validation a ngModel value is a valid pythonTutor link
+   * targetting a given set of language.
+   *
+   */
+  directive('cmPythonTutor', [
+    'pythonTutorLinkParser',
+    function cmPythonTutorFactory(pythonTutorLinkParser) {
+      return {
+        restrict: 'A',
+        scope: false,
+        require: 'ngModel',
+        link: function cmPythonTutorLink(scope, e, attr, model) {
+          var languages = scope.$eval(attr.cmPythonTutor);
+
+          scope.$watch(attr.cmPythonTutor, function(value) {
+            languages = value;
+          });
+
+          model.$validators.cmPythonTutor = function(modelValue, viewValue) {
+            var parsedUrl;
+
+            if (!viewValue) {
+              return;
+            }
+
+            parsedUrl = pythonTutorLinkParser(viewValue);
+            return languages.indexOf(parsedUrl.language()) > -1;
+          };
+        }
+      };
     }
   ]).
 

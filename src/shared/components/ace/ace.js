@@ -1,7 +1,7 @@
 (function() {
   'use strict';
 
-  angular.module('spf').
+  angular.module('spf.shared').
 
   directive('spfEditor', [
     '$window',

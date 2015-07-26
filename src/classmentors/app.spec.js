@@ -28,6 +28,86 @@
      */
     describe('services', function() {
 
+      describe('pythonTutorLinkParser', function() {
+        var parser;
+        var link = (
+          'http://www.pythontutor.com/visualize.html#' +
+          'code=print(\'foo\'%29' +
+          '&mode=display' +
+          '&py=3' +
+          '&curInstr=0'
+        );
+
+        beforeEach(module('clm'));
+
+        beforeEach(inject(function(pythonTutorLinkParser) {
+          parser = pythonTutorLinkParser;
+        }));
+
+        it('should throw an error if the link has no hash', function() {
+          expect(function() {
+            parser('http://www.pythontutor.com/visualize.html');
+          }).toThrow();
+        });
+
+        it('should throw an error if the link has an empty hash', function() {
+          expect(function() {
+            parser('http://www.pythontutor.com/visualize.html#');
+          }).toThrow();
+        });
+
+        describe('code', function() {
+
+          it('should return the code from a pythonTutor link', function() {
+            var p = parser(link);
+
+            expect(p.code()).toBe('print(\'foo\')');
+          });
+
+          it('should edit the code from the parsed link', function() {
+            var p = parser(link);
+
+            p.code('print(\'bar\')');
+            expect(p.code()).toBe('print(\'bar\')');
+          });
+
+        });
+
+        describe('language', function() {
+
+          it('should return the language from a pythonTutor link', function() {
+            var p = parser(link);
+
+            expect(p.language()).toBe('3');
+          });
+
+          it('should edit the language from the parsed link', function() {
+            var p = parser(link);
+
+            p.language('2');
+            expect(p.language()).toBe('2');
+          });
+
+        });
+
+        describe('href', function() {
+
+          it('can return a link to pythonTutor.com', function() {
+            var p = parser(link);
+
+            expect(p.href(true)).toBe(
+              'http://www.pythontutor.com/visualize.html#' +
+              'code=print(\'foo\')' +
+              '&curInstr=0' +
+              '&mode=display' +
+              '&py=3'
+            );
+          });
+
+        });
+
+      });
+
       describe('clmService', function() {
         var spfFirebase, profile;
 
