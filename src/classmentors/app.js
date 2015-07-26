@@ -760,22 +760,21 @@
 
           leave: function(eventId) {
             return spfAuthData.user().then(function(authData) {
-              return spfFirebase.remove([
-                'classMentors/userProfiles',
-                authData.publicId,
-                'joinedEvents',
-                eventId
-              ]).then(function() {
-                return authData;
-              });
-            }).then(function(authData) {
+              return clmDataStore.events.removeParticpants(eventId, authData.publicId);
+            });
+          },
+
+          removeParticpants: function(eventId, publicId) {
+            return spfFirebase.remove([
+              'classMentors/userProfiles', publicId, 'joinedEvents', eventId
+            ]).then(function() {
               var urls = [
                 'classMentors/eventParticipants',
                 'classMentors/eventRankings'
               ];
 
               return $q.all(urls.map(function(url) {
-                return spfFirebase.remove([url, eventId, authData.publicId]);
+                return spfFirebase.remove([url, eventId, publicId]);
               }));
             }).catch(function(err) {
               $log.error(err);

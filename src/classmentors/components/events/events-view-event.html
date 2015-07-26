@@ -62,6 +62,11 @@
                                         <md-icon md-svg-icon="loop"></md-icon>
                                     </md-button>
                                 </span>
+                                <span ng-if="ctrl.currentUser.publicId == ctrl.event.owner.publicId &amp;&amp; participant.$id != ctrl.currentUser.publicId">
+                                    <md-button class="md-icon-button md-primary small-icon" aria-label="Delete" ng-click="ctrl.removeParticipant($event, ctrl.event, participant)">
+                                        <md-icon md-svg-icon="clear"></md-icon>
+                                    </md-button>
+                                </span>
                             </th>
                             <td ng-repeat="(taskId, task) in ctrl.tasks" ng-if="!task.hidden">
                                 <div ng-if="task.serviceId">

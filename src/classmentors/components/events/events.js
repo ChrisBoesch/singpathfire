@@ -796,6 +796,21 @@
           );
         }
       };
+
+      this.removeParticipant = function(e, event, participant) {
+        var confirm = $mdDialog.confirm()
+          .parent(angular.element($document.body))
+          .title('Would you like to remove ' + participant.user.displayName + '?')
+          .content('The participant progress will be kept but he/she will not show as participant')
+          .ariaLabel('Remove participant')
+          .ok('Remove')
+          .cancel('Cancel')
+          .targetEvent(e);
+
+        $mdDialog.show(confirm).then(function() {
+          clmDataStore.events.removeParticpants(event.$id, participant.$id);
+        });
+      };
     }
   ]).
 
