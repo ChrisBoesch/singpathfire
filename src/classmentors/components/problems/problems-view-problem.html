@@ -1,0 +1,67 @@
+<md-content flex class="md-padding">
+
+    <h2 class="md-title">Description</h2>
+
+    <p>{{ctrl.problem.description}}</p>
+
+    <div ng-if="ctrl.problem.linkPattern">
+    	
+	    <h2 class="md-title">Link Pattern</h2>
+
+	    <p>{{ctrl.problem.linkPattern}}</p>
+
+    </div>
+
+    <div ng-if="ctrl.problem.textResponse">
+    	
+	    <h2 class="md-title">Text Response</h2>
+
+	    <p>{{ctrl.problem.textResponse}}</p>
+
+    </div>
+
+    <div ng-if="ctrl.problem.pythonTutorLink">
+    	
+	    <h2 class="md-title">Python Tutor</h2>
+
+	    <p><a ng-href="{{ctrl.problem.pythonTutorLink}}" target="_blank">Starting link</a></p>
+
+	    <h2 class="md-title">Validation Code</h2>
+
+        <div layout="row" layout-sm="column" layout-padding>
+            <spf-editor-container flex>
+                <label>Pre-Code</label>
+                <textarea name="problemPreCode"
+                    ng-model="ctrl.problem.preCode"
+                    columns="1"
+                    spf-editor="python"
+                    spf-readonly="true"
+                ></textarea>
+            </spf-editor-container>
+
+            <spf-editor-container flex>
+                <label>Post-Code</label>
+                <textarea name="problemPostCode"
+                    ng-model="ctrl.problem.postCode"
+                    columns="1"
+                    spf-editor="python"
+                    spf-readonly="true"
+                ></textarea>
+            </spf-editor-container>
+        </div>
+
+		<h2 class="md-title">Expected Output</h2>
+		<div layout="row" layout-sm="column" layout-padding>
+            <spf-editor-container flex>
+                <textarea name="problemExpectedOutput"
+                    ng-model="ctrl.problem.expectedOutput"
+                    columns="1"
+                    spf-editor="python"
+                    spf-readonly="true"
+                ></textarea>
+            </spf-editor-container>
+        </div>
+
+    </div>
+
+</md-content>

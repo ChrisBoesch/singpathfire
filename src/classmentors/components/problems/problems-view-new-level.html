@@ -1,0 +1,44 @@
+<md-content class="md-padding">
+    <form name="newLevelForm" ng-submit="ctrl.save(ctrl.profile, ctrl.newLevel, ctrl.priority)">
+
+        <div layout layout-sm="column">
+            <md-input-container flex>
+                <label for="level-title">Name</label>
+                <input name="levelTitle" type="text" id="level-title" ng-model="ctrl.newLevel.title" required ng-minlength="3" md-maxlength="60"/>
+                <div ng-messages="newLevelForm.levelTitle.$error">
+                    <div ng-message="required">A level should have a name.</div>
+                    <div ng-message="minlength">A level name shouldn't be shorten than 3 characters.</div>
+                    <div ng-message="maxlength">A level name shouldn't be longer than 60 characters.</div>
+                </div>
+            </md-input-container>
+
+            <md-input-container flex>
+                <label for="level-priority">Priority</label>
+                <input name="levelPriority" type="number" id="level-priority" ng-model="ctrl.priority" step="1"/>
+            </md-input-container>
+        </div>
+
+        <md-input-container flex>
+            <label>Description</label>
+            <textarea name="levelDescription" ng-model="ctrl.newLevel.description" columns="1" required ng-minlength="3" md-maxlength="255"></textarea>
+            <div ng-messages="newLevelForm.levelDescription.$error">
+                <div ng-message="required">A level should have a description.</div>
+                <div ng-message="minlength">A level description shouldn't be shorten than 3 characters.</div>
+                <div ng-message="maxlength">A level description shouldn't be longer than 255 characters.</div>
+            </div>
+        </md-input-container>
+
+        <div>
+            <md-switch ng-model="ctrl.newLevel.acceptContribution" aria-label="accept contribution">
+                Accept contribution
+            </md-switch>
+        </div>
+
+        <md-progress-circular ng-show="ctrl.creatingLevel" md-mode="indeterminate" style="margin: 16px auto"></md-progress-circular>
+
+        <div layout="row" layout-align="center center">
+            <md-button type="submit" class="md-raised md-primary" ng-disabled="newLevelForm.$invalid || ctrl.creatingLevel">Create</md-button>
+            <md-button type="reset" class="md-raised" ng-click="ctrl.reset(newLevelForm)" ng-disabled="ctrl.creatingLevel || newLevelForm.$pristine">Reset</md-button>
+        </div>
+    </form>
+</md-content>

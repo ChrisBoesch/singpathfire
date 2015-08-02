@@ -1,0 +1,161 @@
+<md-content class="md-padding">
+    <form name="newProblemForm" ng-submit="ctrl.save(ctrl.currentUser, ctrl.level, ctrl.problemType, ctrl.newProblem)">
+
+        <spf-sign-form current-user="ctrl.currentUser" ng-if="ctrl.profileNeedsUpdate"></spf-sign-form>
+
+        
+        <md-input-container flex>
+            <label for="problem-title">Title</label>
+            <input name="problemTitle" type="text" id="problem-title" ng-model="ctrl.newProblem.title" required ng-minlength="3" md-maxlength="60"/>
+            <div ng-messages="newProblemForm.problemTitle.$error">
+                <div ng-message="required">A problem should have a title.</div>
+                <div ng-message="minlength">A problem title shouldn't be shorten than 3 characters.</div>
+                <div ng-message="maxlength">A problem title shouldn't be longer than 60 characters.</div>
+            </div>
+        </md-input-container>
+
+        <md-input-container flex>
+            <label>Description</label>
+            <textarea name="problemDescription" ng-model="ctrl.newProblem.description" columns="1" required ng-minlength="3" md-maxlength="2000"></textarea>
+            <div ng-messages="newProblemForm.problemDescription.$error">
+                <div ng-message="required">A problem should have a description.</div>
+                <div ng-message="minlength">A problem description shouldn't be shorten than 3 characters.</div>
+                <div ng-message="maxlength">A problem description shouldn't be longer than 2000 characters.</div>
+            </div>
+        </md-input-container>
+
+        <md-input-container>
+            <label for="problem-link">Help Link</label>
+            <input type="url" name="problemLink" id="problem-link"
+                ng-model="ctrl.newProblem.link"
+                md-maxlength="2000"
+                placeholer="URL to a problem help page"
+            />
+            <div ng-messages="newProblemForm.problemLink.$error">
+                <div ng-message="url">Wrong format for an URL.</div>
+                <div ng-message="maxlength">A link shouldn't be longer than 2000 characters.</div>
+            </div>
+        </md-input-container>
+
+        <div>
+            <h3>Problem type <small ng-if="!ctrl.problemType">(Required)</small></h3>
+            <md-radio-group ng-model="ctrl.problemType" required>
+                <md-radio-button value="linkPattern" class="md-primary">Link pattern</md-radio-button>
+                <md-radio-button value="textResponse" class="md-primary">Text Response</md-radio-button>
+                <md-radio-button value="pythonTutor" class="md-primary">Python Tutor</md-radio-button>
+            </md-radio-group>
+        </div>
+
+
+        <div ng-if="ctrl.problemType == 'linkPattern'">
+            <md-input-container>
+                <label for="link-pattern">Link pattern</label>
+                <input type="text" name="problemLinkPattern" id="link-pattern"
+                    ng-model="ctrl.newProblem.linkPattern"
+                    required="true"
+                    ng-minlength="3"
+                    md-maxlength="2000"
+                    placeholer="Pattern"
+                />
+                <div ng-messages="editTask.problemLinkPattern.$error">
+                    <div ng-message="required">Required.</div>
+                    <div ng-message="minlength">A link pattern should be longer than 3 characters.</div>
+                    <div ng-message="maxlength">A link pattern shouldn't be longer than 2000 characters.</div>
+                </div>
+            </md-input-container>
+        </div>
+
+        <div ng-if="ctrl.problemType == 'textResponse'">
+            <md-input-container flex>
+                <label for="text-response">Question</label>
+                <input type="text" name="problemTextResponse" id="text-response"
+                    ng-model="ctrl.newProblem.textResponse"
+                    required="true"
+                    placeholer="Question"
+                />
+                <div ng-messages="editTask.problemTextResponse.$error">
+                    <div ng-message="required">Required.</div>
+                </div>
+            </md-input-container>
+        </div>
+
+        <div ng-if="ctrl.problemType == 'pythonTutor'" >
+            <div layout="row" layout-sm="column" layout-padding>
+                <md-input-container flex>
+                    <label for="problem-title">PythonTutor Link (seed code)</label>
+                    <input name="problemPythonTutorLink"
+                        type="url"
+                        id="problem-pythonTutorLink"
+                        ng-model="ctrl.newProblem.pythonTutorLink"
+                        required
+                        md-maxlength="2000"
+                        cm-python-tutor="['3']"
+                    />
+                    <div ng-messages="newProblemForm.problemPythonTutorLink.$error">
+                        <div ng-message="required">A problem should have a PythonTutor link.</div>
+                        <div ng-message="url">Invalid URL pattern.</div>
+                        <div ng-message="maxlength">A problem PythonTutor link shouldn't be longer than 2000 characters.
+                        </div>
+                        <div ng-message="cmPythonTutor">Invalid python tutor link or language (support Python 3 only)</div>
+                    </div>
+                </md-input-container>
+            </div>
+
+            <div layout="row" layout-sm="column" layout-padding>
+                <spf-editor-container flex>
+                    <label>Pre Validation Code</label>
+                    <textarea name="problemPreCode"
+                        ng-model="ctrl.newProblem.preCode"
+                        columns="1"
+                        ng-minlength="3"
+                        ng-maxlength="8196"
+                        spf-editor="python"
+                    ></textarea>
+                    <div ng-messages="newProblem.problemPreCode.$error">
+                        <div ng-message="minlength">The pre-code has to be more than 3 characters long.</div>
+                        <div ng-message="maxlength">The pre-code has to be less than 8196 characters long.</div>
+                    </div>
+                </spf-editor-container>
+
+                <spf-editor-container flex>
+                    <label>Post Validation Code</label>
+                    <textarea name="problemPostCode"
+                        ng-model="ctrl.newProblem.postCode"
+                        columns="1"
+                        ng-minlength="3"
+                        ng-maxlength="8196"
+                        spf-editor="python"
+                    ></textarea>
+                    <div ng-messages="newProblem.problemPostCode.$error">
+                        <div ng-message="minlength">The post-code has to be more than 3 characters long.</div>
+                        <div ng-message="maxlength">The post-code has to be less than 8196 characters long.</div>
+                    </div>
+                </spf-editor-container>
+            </div>
+
+            <div layout="row" layout-sm="column" layout-padding>
+                <spf-editor-container flex>
+                    <label>Expected Output</label>
+                    <textarea name="problemExpectedOutput"
+                        ng-model="ctrl.newProblem.expectedOutput"
+                        columns="1"
+                        ng-minlength="3"
+                        ng-maxlength="8196"
+                        spf-editor="python"
+                    ></textarea>
+                    <div ng-messages="newProblem.problemExpectedOutput.$error">
+                        <div ng-message="minlength">The post-code has to be more than 3 characters long.</div>
+                        <div ng-message="maxlength">The post-code has to be less than 8196 characters long.</div>
+                    </div>
+                </spf-editor-container>
+            </div>
+
+        </div>
+        <md-progress-circular ng-show="ctrl.creatingProblem" md-mode="indeterminate" style="margin: 16px auto"></md-progress-circular>
+
+        <div layout="row" layout-align="center center">
+            <md-button type="submit" class="md-raised md-primary" ng-disabled="newProblemForm.$invalid || ctrl.creatingProblem">Create</md-button>
+            <md-button type="reset" class="md-raised" ng-click="ctrl.reset(newProblemForm)" ng-disabled="ctrl.creatingProblem || newProblemForm.$pristine">Reset</md-button>
+        </div>
+    </form>
+</md-content>

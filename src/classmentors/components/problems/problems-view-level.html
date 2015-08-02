@@ -1,0 +1,15 @@
+<md-content flex class="md-padding">
+
+    <md-list class="problem-list">
+        <md-subheader>{{ctrl.problems.length}} problem(s).</md-subheader>
+        
+        <md-list-item class="md-2-line" ng-repeat="problem in ctrl.problems">
+            <div class="md-list-item-text" ng-click="ctrl.showProblem(ctrl.level, problem)">
+                <h3>{{problem.title}}</h3>
+                <p>{{problem.description}}</p>
+            </div>
+            <md-divider ng-if="!$last"></md-divider>
+        </md-item>
+    </md-list>
+
+</md-content>
