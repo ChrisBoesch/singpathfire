@@ -53,13 +53,12 @@
       spfNavBarService.update('Ace of Coders');
       this.stats = {};
       var parent = this;
-      
       $http.get('https://dl.dropboxusercontent.com/u/4972572/ace_of_coders_stats.json').
         then(function(response) {
           parent.stats = response.data;
-        }, function(response) {
-          // called asynchronously if an error occurs
-        });
+        }
+        //, function(response) { // called asynchronously if an error occurs}
+        );
     }
   ])
 
