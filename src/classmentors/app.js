@@ -324,9 +324,9 @@
           canView: function(obj) {
             var kind = obj && obj.$ref && obj.$ref().parent().path.toString();
 
-            if (this.user && this.user.isAdmin) {
-              return true;
-            }
+            // if (this.user && this.user.isAdmin) {
+            //   return true;
+            // }
 
             if (obj.owner && obj.owner.publicId && this.$id === obj.owner.publicId) {
               return true;
