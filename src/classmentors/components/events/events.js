@@ -699,11 +699,7 @@
           return 0;
         }
 
-        participantCount = Object.keys(participants).filter(function(id) {
-          return id && id[0] !== '$';
-        }).map(function(id) {
-          return self.participants[id];
-        }).length;
+        participantCount = participants.length;
 
         if (participantCount < 1) {
           return 0;
