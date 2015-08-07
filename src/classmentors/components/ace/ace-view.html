@@ -58,4 +58,39 @@
 			</tr>
 	    </table>
 	</md-content>
+		<md-toolbar md-scroll-shrink>
+		<div class="md-toolbar-tools">
+			<h3><span>Top 5 Junior Category Schools by Registrations</span></h3>
+		</div>
+	</md-toolbar>
+	<md-content class="md-padding">
+		<table>
+			<tr>
+				<th>Registered Students</th> 
+				<th>School</th>
+			</tr>
+			<tr ng-repeat="school in ctrl.stats.juniorSchoolRanking | limitTo:5">
+				<td>{{school.total}}</td>
+				<td>{{school.school}}</td>				
+			</tr>
+	    </table>
+	</md-content>
+	</md-content>
+		<md-toolbar md-scroll-shrink>
+		<div class="md-toolbar-tools">
+			<h3><span>Top 5 Senior Category Schools by Registrations</span></h3>
+		</div>
+	</md-toolbar>
+	<md-content class="md-padding">
+		<table>
+			<tr>
+				<th>Registered Students</th> 
+				<th>School</th>
+			</tr>
+			<tr ng-repeat="school in ctrl.stats.seniorSchoolRanking | limitTo:5">
+				<td>{{school.total}}</td>
+				<td>{{school.school}}</td>				
+			</tr>
+	    </table>
+	</md-content>
 </md-content>
