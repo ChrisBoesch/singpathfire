@@ -49,7 +49,7 @@
           return school.name === 'NUS High School';
         });
         expect(nus.type).toBe('Junior College');
-        expect(nus.iconUrl).toBe('/assets/schools/NUS_HS.jpeg');
+        expect(nus.iconUrl).toBe('/assets/crests/NUS_HS.jpeg');
       });
 
       it('should have an ageGroups property', function() {
@@ -72,9 +72,7 @@
         };
 
         var ctrl = $controller('SpfSignFormCtrl', deps);
-        var nus = ctrl.schools.find(function(school) {
-          return school.name === 'NUS High School';
-        });
+        var nus = ctrl.schools['NUS High School'];
 
         expect(deps.$scope.currentUser.school).toBe(nus);
       });
