@@ -3,1171 +3,1153 @@
 
   angular.module('spf.shared').
 
-  constant('SPF_SINGAPORE_SCHOOLS', [
-    {
-      'type': 'Other',
-      'id': '0',
-      'name': 'Other'
-    },
-    {
-      'iconUrl': '/assets/schools/Anderson_Junior_College_iconUrl.jpg',
-      'type': 'Junior College',
-      'id': '14',
-      'name': 'Anderson Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/Anglo-Chinese_School_Independent.png',
-      'type': 'Junior College',
-      'id': '15',
-      'name': 'Anglo Chinese School (Independent)'
-    },
-    {
-      'iconUrl': '/assets/schools/Anglo-Chinese_School_JC.png',
-      'type': 'Junior College',
-      'id': '24',
-      'name': 'Anglo-Chinese Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/Catholic_JC_Crest.png',
-      'type': 'Junior College',
-      'id': '25',
-      'name': 'Catholic Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/DunmanHighSchoolCrest.png',
-      'type': 'Junior College',
-      'id': '5',
-      'name': 'Dunman High School'
-    },
-    {
-      'iconUrl': '/assets/schools/HWA_Chong.png',
-      'type': 'Junior College',
-      'id': '13',
-      'name': 'Hwa Chong Institution'
-    },
-    {
-      'iconUrl': '/assets/schools/Innova_Junior_College.png',
-      'type': 'Junior College',
-      'id': '26',
-      'name': 'Innova Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/Jurong_JC.png',
-      'type': 'Junior College',
-      'id': '27',
-      'name': 'Jurong Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/Meridian_JC_Crest.png',
-      'type': 'Junior College',
-      'id': '28',
-      'name': 'Meridian Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/Millennia_institute.jpg',
-      'type': 'Junior College',
-      'id': '29',
-      'name': 'Millennia Institute'
-    },
-    {
-      'iconUrl': '/assets/schools/NUS_HS.jpeg',
-      'type': 'Junior College',
-      'id': '7',
-      'name': 'NUS High School'
-    },
-    {
-      'iconUrl': '/assets/schools/Nanyang_JC.png',
-      'type': 'Junior College',
-      'id': '30',
-      'name': 'Nanyang Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/National_JC.png',
-      'type': 'Junior College',
-      'id': '16',
-      'name': 'National Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/Pionerr_JC.jpg',
-      'type': 'Junior College',
-      'id': '6',
-      'name': 'Pioneer Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/Raffles_Institute.png',
-      'type': 'Junior College',
-      'id': '18',
-      'name': 'Raffles Institution'
-    },
-    {
-      'iconUrl': '/assets/schools/River_Valley_HS.png',
-      'type': 'Junior College',
-      'id': '31',
-      'name': 'River Valley High School'
-    },
-    {
-      'iconUrl': '/assets/schools/Saint_Andrews.jpg',
-      'type': 'Junior College',
-      'id': '33',
-      'name': 'Saint Andrew\'s Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/Sota.jpg',
-      'type': 'Junior College',
-      'id': '35',
-      'name': 'School of the Arts'
-    },
-    {
-      'iconUrl': '/assets/schools/Serangoon_JC.jpg',
-      'type': 'Junior College',
-      'id': '32',
-      'name': 'Serangoon Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/St_Josephs.png',
-      'type': 'Junior College',
-      'id': '36',
-      'name': 'St Joseph\'s Institution'
-    },
-    {
-      'iconUrl': '/assets/schools/Tampines_JC.jpg',
-      'type': 'Junior College',
-      'id': '34',
-      'name': 'Tampines Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/Temasek_Junior_College.jpg',
-      'type': 'Junior College',
-      'id': '17',
-      'name': 'Temasek Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/Victoria_JC.png',
-      'type': 'Junior College',
-      'id': '19',
-      'name': 'Victoria Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/Yishun_JC.jpg',
-      'type': 'Junior College',
-      'id': '20',
-      'name': 'Yishun Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/Nanyang_Poly.jpg',
-      'type': 'Polytechnic',
-      'id': '8',
-      'name': 'Nanyang Polytechnic'
-    },
-    {
-      'iconUrl': '/assets/schools/Ngee-Ann-Poly.jpeg',
-      'type': 'Polytechnic',
-      'id': '10',
-      'name': 'Ngee Ann Polytechnic'
-    },
-    {
-      'iconUrl': '/assets/schools/Republic_Poly.jpg',
-      'type': 'Polytechnic',
-      'id': '2',
-      'name': 'Republic Polytechnic'
-    },
-    {
-      'iconUrl': '/assets/schools/Singapore_Poly.png',
-      'type': 'Polytechnic',
-      'id': '9',
-      'name': 'Singapore Polytechnic'
-    },
-    {
-      'iconUrl': '/assets/schools/Temasek_Poly.png',
-      'type': 'Polytechnic',
-      'id': '3',
-      'name': 'Temasek Polytechnic'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '101',
-      'name': 'Admiralty Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '102',
-      'name': 'Ahmad Ibrahim Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '103',
-      'name': 'Anderson Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '104',
-      'name': 'Ang Mo Kio Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '105',
-      'name': 'Anglican High School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '106',
-      'name': 'Anglo-Chinese School (Barker Road)'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '107',
-      'name': 'Assumption English School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '108',
-      'name': 'Assumption Pathway School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '109',
-      'name': 'Balestier Hill Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '110',
-      'name': 'Bartley Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '111',
-      'name': 'Beatty Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '112',
-      'name': 'Bedok Green Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '113',
-      'name': 'Bedok North Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '114',
-      'name': 'Bedok South Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '115',
-      'name': 'Bedok Town Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '116',
-      'name': 'Bedok View Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '117',
-      'name': 'Bendemeer Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '118',
-      'name': 'Bishan Park Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '119',
-      'name': 'Boon Lay Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '120',
-      'name': 'Bowen Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '121',
-      'name': 'Broadrick Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '122',
-      'name': 'Bukit Batok Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '123',
-      'name': 'Bukit Merah Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '124',
-      'name': 'Bukit Panjang Govt. High School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '125',
-      'name': 'Bukit View Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '131',
-      'name': 'CHIJ Katong Convent'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '132',
-      'name': 'CHIJ Secondary (Toa Payoh)'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '133',
-      'name': 'CHIJ St. Joseph\'s Convent'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '134',
-      'name': 'CHIJ St. Nicholas Girls\' School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '135',
-      'name': 'CHIJ St. Theresa\'s Convent'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '126',
-      'name': 'Canberra Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '127',
-      'name': 'Catholic High School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '128',
-      'name': 'Cedar Girls\' Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '129',
-      'name': 'Changkat Changi Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '130',
-      'name': 'Chestnut Drive Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '136',
-      'name': 'Chong Boon Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '137',
-      'name': 'Christ Church Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '138',
-      'name': 'Chua Chu Kang Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '139',
-      'name': 'Chung Cheng High School (Main)'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '140',
-      'name': 'Chung Cheng High School (Yishun)'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '141',
-      'name': 'Church Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '142',
-      'name': 'Clementi Town Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '143',
-      'name': 'Clementi Woods Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '144',
-      'name': 'Commonwealth Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '145',
-      'name': 'Compassvale Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '146',
-      'name': 'Coral Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '147',
-      'name': 'Crescent Girls\' School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '148',
-      'name': 'Crest Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '149',
-      'name': 'Damai Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '150',
-      'name': 'Deyi Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '151',
-      'name': 'Dunearn Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '152',
-      'name': 'Dunman Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '153',
-      'name': 'East Spring Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '154',
-      'name': 'East View Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '155',
-      'name': 'Edgefield Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '156',
-      'name': 'Evergreen Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '157',
-      'name': 'Fairfield Methodist Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '158',
-      'name': 'Fajar Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '159',
-      'name': 'First Toa Payoh Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '160',
-      'name': 'Fuchun Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '161',
-      'name': 'Fuhua Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '162',
-      'name': 'Gan Eng Seng School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '163',
-      'name': 'Geylang Methodist School (Secondary)'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '164',
-      'name': 'Greendale Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '165',
-      'name': 'Greenridge Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '166',
-      'name': 'Greenview Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '167',
-      'name': 'Guangyang Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '168',
-      'name': 'Hai Sing Catholic School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '169',
-      'name': 'Henderson Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '170',
-      'name': 'Hillgrove Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '171',
-      'name': 'Holy Innocents\' High School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '172',
-      'name': 'Hong Kah Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '173',
-      'name': 'Hougang Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '174',
-      'name': 'Hua Yi Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '175',
-      'name': 'Hwa Chong Institution'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '176',
-      'name': 'Junyuan Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '177',
-      'name': 'Jurong Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '178',
-      'name': 'Jurong West Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '179',
-      'name': 'Jurongville Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '180',
-      'name': 'Juying Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '181',
-      'name': 'Kent Ridge Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '182',
-      'name': 'Kranji Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '183',
-      'name': 'Kuo Chuan Presbyterian Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '184',
-      'name': 'Loyang Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '185',
-      'name': 'MacPherson Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '186',
-      'name': 'Manjusri Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '187',
-      'name': 'Maris Stella High School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '188',
-      'name': 'Marsiling Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '189',
-      'name': 'Mayflower Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '190',
-      'name': 'Methodist Girls\' School (Secondary)'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '191',
-      'name': 'Montfort Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '192',
-      'name': 'Nan Chiau High School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '193',
-      'name': 'Nan Hua High School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '194',
-      'name': 'Nanyang Girls\' High School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '195',
-      'name': 'National Junior College'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '196',
-      'name': 'Naval Base Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '197',
-      'name': 'New Town Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '198',
-      'name': 'Ngee Ann Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '199',
-      'name': 'North View Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '200',
-      'name': 'North Vista Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '201',
-      'name': 'Northbrooks Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '202',
-      'name': 'Northland Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '203',
-      'name': 'Northlight School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '204',
-      'name': 'Orchid Park Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '205',
-      'name': 'Outram Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '206',
-      'name': 'Pasir Ris Crest Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '207',
-      'name': 'Pasir Ris Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '208',
-      'name': 'Paya Lebar Methodist Girls\' School (Secondary)'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '209',
-      'name': 'Pei Hwa Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '210',
-      'name': 'Peicai Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '211',
-      'name': 'Peirce Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '212',
-      'name': 'Ping Yi Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '213',
-      'name': 'Pioneer Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '214',
-      'name': 'Presbyterian High School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '215',
-      'name': 'Punggol Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '216',
-      'name': 'Queenstown Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '217',
-      'name': 'Queensway Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '218',
-      'name': 'Raffles Girls\' School (Secondary)'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '219',
-      'name': 'Raffles Institution (Secondary)'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '220',
-      'name': 'Regent Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '221',
-      'name': 'Riverside Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '222',
-      'name': 'School of Science and Technology, Singapore'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '223',
-      'name': 'Sembawang Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '224',
-      'name': 'Seng Kang Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '225',
-      'name': 'Serangoon Garden Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '226',
-      'name': 'Serangoon Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '227',
-      'name': 'Shuqun Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '228',
-      'name': 'Si Ling Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '229',
-      'name': 'Siglap Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '230',
-      'name': 'Singapore Chinese Girls\' School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '231',
-      'name': 'Singapore Sports School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '232',
-      'name': 'Springfield Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '233',
-      'name': 'St. Andrew\'s Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '234',
-      'name': 'St. Anthony\'s Canossian Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '235',
-      'name': 'St. Gabriel\'s Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '236',
-      'name': 'St. Hilda\'s Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '237',
-      'name': 'St. Margaret\'s Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '238',
-      'name': 'St. Patrick\'s School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '239',
-      'name': 'Swiss Cottage Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '240',
-      'name': 'Tampines Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '241',
-      'name': 'Tanglin Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '242',
-      'name': 'Tanjong Katong Girls\' School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '243',
-      'name': 'Tanjong Katong Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '244',
-      'name': 'Teck Whye Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '245',
-      'name': 'Temasek Academy'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '246',
-      'name': 'Temasek Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '247',
-      'name': 'Unity Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '248',
-      'name': 'Victoria School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '249',
-      'name': 'West Spring Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '250',
-      'name': 'Westwood Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '251',
-      'name': 'Whitley Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '252',
-      'name': 'Woodgrove Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '253',
-      'name': 'Woodlands Ring Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '254',
-      'name': 'Woodlands Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '255',
-      'name': 'Xinmin Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '256',
-      'name': 'Yio Chu Kang Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '257',
-      'name': 'Yishun Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '258',
-      'name': 'Yishun Town Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '259',
-      'name': 'Yuan Ching Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '260',
-      'name': 'Yuhua Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '261',
-      'name': 'Yusof Ishak Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '262',
-      'name': 'Yuying Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '263',
-      'name': 'Zhenghua Secondary School'
-    },
-    {
-      'iconUrl': '/assets/schools/tempbadge.png',
-      'type': 'Secondary',
-      'id': '264',
-      'name': 'Zhonghua Secondary School'
+  constant('SPF_SINGAPORE_SCHOOLS', {
+    'Other': {
+      id: 'Other',
+      type: 'Other',
+      name: 'Other'
+    },
+    'Admiralty Secondary School': {
+      id: 'Admiralty Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Admiralty Secondary School'
+    },
+    'Ahmad Ibrahim Secondary School': {
+      id: 'Ahmad Ibrahim Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Ahmad Ibrahim Secondary School'
+    },
+    'Anderson Junior College': {
+      id: 'Anderson Junior College',
+      iconUrl: '/assets/crests/Anderson_Junior_College_crest.jpg',
+      type: 'Junior College',
+      name: 'Anderson Junior College'
+    },
+    'Anderson Secondary School': {
+      id: 'Anderson Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Anderson Secondary School'
+    },
+    'Ang Mo Kio Secondary School': {
+      id: 'Ang Mo Kio Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Ang Mo Kio Secondary School'
+    },
+    'Anglican High School': {
+      id: 'Anglican High School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Anglican High School'
+    },
+    'Anglo Chinese School (Independent)': {
+      id: 'Anglo Chinese School (Independent)',
+      iconUrl: '/assets/crests/Anglo-Chinese_School_Independent.png',
+      type: 'Junior College',
+      name: 'Anglo Chinese School (Independent)'
+    },
+    'Anglo-Chinese Junior College': {
+      id: 'Anglo-Chinese Junior College',
+      iconUrl: '/assets/crests/Anglo-Chinese_School_JC.png',
+      type: 'Junior College',
+      name: 'Anglo-Chinese Junior College'
+    },
+    'Anglo-Chinese School (Barker Road)': {
+      id: 'Anglo-Chinese School (Barker Road)',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Anglo-Chinese School (Barker Road)'
+    },
+    'Assumption English School': {
+      id: 'Assumption English School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Assumption English School'
+    },
+    'Assumption Pathway School': {
+      id: 'Assumption Pathway School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Assumption Pathway School'
+    },
+    'Balestier Hill Secondary School': {
+      id: 'Balestier Hill Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Balestier Hill Secondary School'
+    },
+    'Bartley Secondary School': {
+      id: 'Bartley Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Bartley Secondary School'
+    },
+    'Beatty Secondary School': {
+      id: 'Beatty Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Beatty Secondary School'
+    },
+    'Bedok Green Secondary School': {
+      id: 'Bedok Green Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Bedok Green Secondary School'
+    },
+    'Bedok North Secondary School': {
+      id: 'Bedok North Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Bedok North Secondary School'
+    },
+    'Bedok South Secondary School': {
+      id: 'Bedok South Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Bedok South Secondary School'
+    },
+    'Bedok Town Secondary School': {
+      id: 'Bedok Town Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Bedok Town Secondary School'
+    },
+    'Bedok View Secondary School': {
+      id: 'Bedok View Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Bedok View Secondary School'
+    },
+    'Bendemeer Secondary School': {
+      id: 'Bendemeer Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Bendemeer Secondary School'
+    },
+    'Bishan Park Secondary School': {
+      id: 'Bishan Park Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Bishan Park Secondary School'
+    },
+    'Boon Lay Secondary School': {
+      id: 'Boon Lay Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Boon Lay Secondary School'
+    },
+    'Bowen Secondary School': {
+      id: 'Bowen Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Bowen Secondary School'
+    },
+    'Broadrick Secondary School': {
+      id: 'Broadrick Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Broadrick Secondary School'
+    },
+    'Bukit Batok Secondary School': {
+      id: 'Bukit Batok Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Bukit Batok Secondary School'
+    },
+    'Bukit Merah Secondary School': {
+      id: 'Bukit Merah Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Bukit Merah Secondary School'
+    },
+    'Bukit Panjang Govt High School': {
+      id: 'Bukit Panjang Govt High School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Bukit Panjang Govt. High School'
+    },
+    'Bukit View Secondary School': {
+      id: 'Bukit View Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Bukit View Secondary School'
+    },
+    'CHIJ Katong Convent': {
+      id: 'CHIJ Katong Convent',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'CHIJ Katong Convent'
+    },
+    'CHIJ Secondary (Toa Payoh)': {
+      id: 'CHIJ Secondary (Toa Payoh)',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'CHIJ Secondary (Toa Payoh)'
+    },
+    'CHIJ St Josephs Convent': {
+      id: 'CHIJ St Josephs Convent',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'CHIJ St. Josephs Convent'
+    },
+    'CHIJ St Nicholas Girls School': {
+      id: 'CHIJ St Nicholas Girls School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'CHIJ St. Nicholas Girls\' School'
+    },
+    'CHIJ St Theresas Convent': {
+      id: 'CHIJ St Theresas Convent',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'CHIJ St. Theresas Convent'
+    },
+    'Canberra Secondary School': {
+      id: 'Canberra Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Canberra Secondary School'
+    },
+    'Catholic High School': {
+      id: 'Catholic High School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Catholic High School'
+    },
+    'Catholic Junior College': {
+      id: 'Catholic Junior College',
+      iconUrl: '/assets/crests/Catholic_JC_Crest.png',
+      type: 'Junior College',
+      name: 'Catholic Junior College'
+    },
+    'Cedar Girls Secondary School': {
+      id: 'Cedar Girls Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Cedar Girls\' Secondary School'
+    },
+    'Changkat Changi Secondary School': {
+      id: 'Changkat Changi Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Changkat Changi Secondary School'
+    },
+    'Chestnut Drive Secondary School': {
+      id: 'Chestnut Drive Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Chestnut Drive Secondary School'
+    },
+    'Chong Boon Secondary School': {
+      id: 'Chong Boon Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Chong Boon Secondary School'
+    },
+    'Christ Church Secondary School': {
+      id: 'Christ Church Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Christ Church Secondary School'
+    },
+    'Chua Chu Kang Secondary School': {
+      id: 'Chua Chu Kang Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Chua Chu Kang Secondary School'
+    },
+    'Chung Cheng High School (Main)': {
+      id: 'Chung Cheng High School (Main)',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Chung Cheng High School (Main)'
+    },
+    'Chung Cheng High School (Yishun)': {
+      id: 'Chung Cheng High School (Yishun)',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Chung Cheng High School (Yishun)'
+    },
+    'Church Secondary School': {
+      id: 'Church Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Church Secondary School'
+    },
+    'Clementi Town Secondary School': {
+      id: 'Clementi Town Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Clementi Town Secondary School'
+    },
+    'Clementi Woods Secondary School': {
+      id: 'Clementi Woods Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Clementi Woods Secondary School'
+    },
+    'Commonwealth Secondary School': {
+      id: 'Commonwealth Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Commonwealth Secondary School'
+    },
+    'Compassvale Secondary School': {
+      id: 'Compassvale Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Compassvale Secondary School'
+    },
+    'Coral Secondary School': {
+      id: 'Coral Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Coral Secondary School'
+    },
+    'Crescent Girls School': {
+      id: 'Crescent Girls School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Crescent Girls\' School'
+    },
+    'Crest Secondary School': {
+      id: 'Crest Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Crest Secondary School'
+    },
+    'Damai Secondary School': {
+      id: 'Damai Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Damai Secondary School'
+    },
+    'Deyi Secondary School': {
+      id: 'Deyi Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Deyi Secondary School'
+    },
+    'Dunearn Secondary School': {
+      id: 'Dunearn Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Dunearn Secondary School'
+    },
+    'Dunman High School': {
+      id: 'Dunman High School',
+      iconUrl: '/assets/crests/DunmanHighSchoolCrest.png',
+      type: 'Junior College',
+      name: 'Dunman High School'
+    },
+    'Dunman Secondary School': {
+      id: 'Dunman Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Dunman Secondary School'
+    },
+    'East Spring Secondary School': {
+      id: 'East Spring Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'East Spring Secondary School'
+    },
+    'East View Secondary School': {
+      id: 'East View Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'East View Secondary School'
+    },
+    'Edgefield Secondary School': {
+      id: 'Edgefield Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Edgefield Secondary School'
+    },
+    'Evergreen Secondary School': {
+      id: 'Evergreen Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Evergreen Secondary School'
+    },
+    'Fairfield Methodist Secondary School': {
+      id: 'Fairfield Methodist Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Fairfield Methodist Secondary School'
+    },
+    'Fajar Secondary School': {
+      id: 'Fajar Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Fajar Secondary School'
+    },
+    'First Toa Payoh Secondary School': {
+      id: 'First Toa Payoh Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'First Toa Payoh Secondary School'
+    },
+    'Fuchun Secondary School': {
+      id: 'Fuchun Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Fuchun Secondary School'
+    },
+    'Fuhua Secondary School': {
+      id: 'Fuhua Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Fuhua Secondary School'
+    },
+    'Gan Eng Seng School': {
+      id: 'Gan Eng Seng School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Gan Eng Seng School'
+    },
+    'Geylang Methodist School (Secondary)': {
+      id: 'Geylang Methodist School (Secondary)',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Geylang Methodist School (Secondary)'
+    },
+    'Greendale Secondary School': {
+      id: 'Greendale Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Greendale Secondary School'
+    },
+    'Greenridge Secondary School': {
+      id: 'Greenridge Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Greenridge Secondary School'
+    },
+    'Greenview Secondary School': {
+      id: 'Greenview Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Greenview Secondary School'
+    },
+    'Guangyang Secondary School': {
+      id: 'Guangyang Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Guangyang Secondary School'
+    },
+    'Hai Sing Catholic School': {
+      id: 'Hai Sing Catholic School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Hai Sing Catholic School'
+    },
+    'Henderson Secondary School': {
+      id: 'Henderson Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Henderson Secondary School'
+    },
+    'Hillgrove Secondary School': {
+      id: 'Hillgrove Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Hillgrove Secondary School'
+    },
+    'Holy Innocents High School': {
+      id: 'Holy Innocents High School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Holy Innocents\' High School'
+    },
+    'Hong Kah Secondary School': {
+      id: 'Hong Kah Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Hong Kah Secondary School'
+    },
+    'Hougang Secondary School': {
+      id: 'Hougang Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Hougang Secondary School'
+    },
+    'Hua Yi Secondary School': {
+      id: 'Hua Yi Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Hua Yi Secondary School'
+    },
+    'Hwa Chong Institution': {
+      id: 'Hwa Chong Institution',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Hwa Chong Institution'
+    },
+    'Innova Junior College': {
+      id: 'Innova Junior College',
+      iconUrl: '/assets/crests/Innova_Junior_College.png',
+      type: 'Junior College',
+      name: 'Innova Junior College'
+    },
+    'Junyuan Secondary School': {
+      id: 'Junyuan Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Junyuan Secondary School'
+    },
+    'Jurong Junior College': {
+      id: 'Jurong Junior College',
+      iconUrl: '/assets/crests/Jurong_JC.png',
+      type: 'Junior College',
+      name: 'Jurong Junior College'
+    },
+    'Jurong Secondary School': {
+      id: 'Jurong Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Jurong Secondary School'
+    },
+    'Jurong West Secondary School': {
+      id: 'Jurong West Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Jurong West Secondary School'
+    },
+    'Jurongville Secondary School': {
+      id: 'Jurongville Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Jurongville Secondary School'
+    },
+    'Juying Secondary School': {
+      id: 'Juying Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Juying Secondary School'
+    },
+    'Kent Ridge Secondary School': {
+      id: 'Kent Ridge Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Kent Ridge Secondary School'
+    },
+    'Kranji Secondary School': {
+      id: 'Kranji Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Kranji Secondary School'
+    },
+    'Kuo Chuan Presbyterian Secondary School': {
+      id: 'Kuo Chuan Presbyterian Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Kuo Chuan Presbyterian Secondary School'
+    },
+    'Loyang Secondary School': {
+      id: 'Loyang Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Loyang Secondary School'
+    },
+    'MacPherson Secondary School': {
+      id: 'MacPherson Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'MacPherson Secondary School'
+    },
+    'Manjusri Secondary School': {
+      id: 'Manjusri Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Manjusri Secondary School'
+    },
+    'Maris Stella High School': {
+      id: 'Maris Stella High School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Maris Stella High School'
+    },
+    'Marsiling Secondary School': {
+      id: 'Marsiling Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Marsiling Secondary School'
+    },
+    'Mayflower Secondary School': {
+      id: 'Mayflower Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Mayflower Secondary School'
+    },
+    'Meridian Junior College': {
+      id: 'Meridian Junior College',
+      iconUrl: '/assets/crests/Meridian_JC_Crest.png',
+      type: 'Junior College',
+      name: 'Meridian Junior College'
+    },
+    'Methodist Girls School (Secondary)': {
+      id: 'Methodist Girls School (Secondary)',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Methodist Girls\' School (Secondary)'
+    },
+    'Millennia Institute': {
+      id: 'Millennia Institute',
+      iconUrl: '/assets/crests/Millennia_institute.jpg',
+      type: 'Junior College',
+      name: 'Millennia Institute'
+    },
+    'Montfort Secondary School': {
+      id: 'Montfort Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Montfort Secondary School'
+    },
+    'NUS High School': {
+      id: 'NUS High School',
+      iconUrl: '/assets/crests/NUS_HS.jpeg',
+      type: 'Junior College',
+      name: 'NUS High School'
+    },
+    'Nan Chiau High School': {
+      id: 'Nan Chiau High School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Nan Chiau High School'
+    },
+    'Nan Hua High School': {
+      id: 'Nan Hua High School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Nan Hua High School'
+    },
+    'Nanyang Girls High School': {
+      id: 'Nanyang Girls High School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Nanyang Girls\' High School'
+    },
+    'Nanyang Junior College': {
+      id: 'Nanyang Junior College',
+      iconUrl: '/assets/crests/Nanyang_JC.png',
+      type: 'Junior College',
+      name: 'Nanyang Junior College'
+    },
+    'Nanyang Polytechnic': {
+      id: 'Nanyang Polytechnic',
+      iconUrl: '/assets/crests/Nanyang_Poly.jpg',
+      type: 'Polytechnic',
+      name: 'Nanyang Polytechnic'
+    },
+    'National Junior College': {
+      id: 'National Junior College',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'National Junior College'
+    },
+    'Naval Base Secondary School': {
+      id: 'Naval Base Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Naval Base Secondary School'
+    },
+    'New Town Secondary School': {
+      id: 'New Town Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'New Town Secondary School'
+    },
+    'Ngee Ann Polytechnic': {
+      id: 'Ngee Ann Polytechnic',
+      iconUrl: '/assets/crests/Ngee-Ann-Poly.jpeg',
+      type: 'Polytechnic',
+      name: 'Ngee Ann Polytechnic'
+    },
+    'Ngee Ann Secondary School': {
+      id: 'Ngee Ann Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Ngee Ann Secondary School'
+    },
+    'North View Secondary School': {
+      id: 'North View Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'North View Secondary School'
+    },
+    'North Vista Secondary School': {
+      id: 'North Vista Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'North Vista Secondary School'
+    },
+    'Northbrooks Secondary School': {
+      id: 'Northbrooks Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Northbrooks Secondary School'
+    },
+    'Northland Secondary School': {
+      id: 'Northland Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Northland Secondary School'
+    },
+    'Northlight School': {
+      id: 'Northlight School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Northlight School'
+    },
+    'Orchid Park Secondary School': {
+      id: 'Orchid Park Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Orchid Park Secondary School'
+    },
+    'Outram Secondary School': {
+      id: 'Outram Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Outram Secondary School'
+    },
+    'Pasir Ris Crest Secondary School': {
+      id: 'Pasir Ris Crest Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Pasir Ris Crest Secondary School'
+    },
+    'Pasir Ris Secondary School': {
+      id: 'Pasir Ris Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Pasir Ris Secondary School'
+    },
+    'Paya Lebar Methodist Girls School (Secondary)': {
+      id: 'Paya Lebar Methodist Girls School (Secondary)',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Paya Lebar Methodist Girls\' School (Secondary)'
+    },
+    'Pei Hwa Secondary School': {
+      id: 'Pei Hwa Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Pei Hwa Secondary School'
+    },
+    'Peicai Secondary School': {
+      id: 'Peicai Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Peicai Secondary School'
+    },
+    'Peirce Secondary School': {
+      id: 'Peirce Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Peirce Secondary School'
+    },
+    'Ping Yi Secondary School': {
+      id: 'Ping Yi Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Ping Yi Secondary School'
+    },
+    'Pioneer Junior College': {
+      id: 'Pioneer Junior College',
+      iconUrl: '/assets/crests/Pionerr_JC.jpg',
+      type: 'Junior College',
+      name: 'Pioneer Junior College'
+    },
+    'Pioneer Secondary School': {
+      id: 'Pioneer Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Pioneer Secondary School'
+    },
+    'Presbyterian High School': {
+      id: 'Presbyterian High School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Presbyterian High School'
+    },
+    'Punggol Secondary School': {
+      id: 'Punggol Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Punggol Secondary School'
+    },
+    'Queenstown Secondary School': {
+      id: 'Queenstown Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Queenstown Secondary School'
+    },
+    'Queensway Secondary School': {
+      id: 'Queensway Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Queensway Secondary School'
+    },
+    'Raffles Girls School (Secondary)': {
+      id: 'Raffles Girls School (Secondary)',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Raffles Girls\' School (Secondary)'
+    },
+    'Raffles Institution': {
+      id: 'Raffles Institution',
+      iconUrl: '/assets/crests/Raffles_Institute.png',
+      type: 'Junior College',
+      name: 'Raffles Institution'
+    },
+    'Regent Secondary School': {
+      id: 'Regent Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Regent Secondary School'
+    },
+    'Republic Polytechnic': {
+      id: 'Republic Polytechnic',
+      iconUrl: '/assets/crests/Republic_Poly.jpg',
+      type: 'Polytechnic',
+      name: 'Republic Polytechnic'
+    },
+    'River Valley High School': {
+      id: 'River Valley High School',
+      iconUrl: '/assets/crests/River_Valley_HS.png',
+      type: 'Junior College',
+      name: 'River Valley High School'
+    },
+    'Riverside Secondary School': {
+      id: 'Riverside Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Riverside Secondary School'
+    },
+    'Saint Andrews Junior College': {
+      id: 'Saint Andrews Junior College',
+      iconUrl: '/assets/crests/Saint_Andrews.jpg',
+      type: 'Junior College',
+      name: 'Saint Andrew\'s Junior College'
+    },
+    'School of Science and Technology, Singapore': {
+      id: 'School of Science and Technology, Singapore',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'School of Science and Technology, Singapore'
+    },
+    'School of the Arts': {
+      id: 'School of the Arts',
+      iconUrl: '/assets/crests/Sota.jpg',
+      type: 'Junior College',
+      name: 'School of the Arts'
+    },
+    'Sembawang Secondary School': {
+      id: 'Sembawang Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Sembawang Secondary School'
+    },
+    'Seng Kang Secondary School': {
+      id: 'Seng Kang Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Seng Kang Secondary School'
+    },
+    'Serangoon Garden Secondary School': {
+      id: 'Serangoon Garden Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Serangoon Garden Secondary School'
+    },
+    'Serangoon Junior College': {
+      id: 'Serangoon Junior College',
+      iconUrl: '/assets/crests/Serangoon_JC.jpg',
+      type: 'Junior College',
+      name: 'Serangoon Junior College'
+    },
+    'Serangoon Secondary School': {
+      id: 'Serangoon Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Serangoon Secondary School'
+    },
+    'Shuqun Secondary School': {
+      id: 'Shuqun Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Shuqun Secondary School'
+    },
+    'Si Ling Secondary School': {
+      id: 'Si Ling Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Si Ling Secondary School'
+    },
+    'Siglap Secondary School': {
+      id: 'Siglap Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Siglap Secondary School'
+    },
+    'Singapore Chinese Girls School': {
+      id: 'Singapore Chinese Girls School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Singapore Chinese Girls\' School'
+    },
+    'Singapore Polytechnic': {
+      id: 'Singapore Polytechnic',
+      iconUrl: '/assets/crests/Singapore_Poly.png',
+      type: 'Polytechnic',
+      name: 'Singapore Polytechnic'
+    },
+    'Singapore Sports School': {
+      id: 'Singapore Sports School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Singapore Sports School'
+    },
+    'Springfield Secondary School': {
+      id: 'Springfield Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Springfield Secondary School'
+    },
+    'St Andrews Secondary School': {
+      id: 'St Andrews Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'St. Andrew\'s Secondary School'
+    },
+    'St Anthonys Canossian Secondary School': {
+      id: 'St Anthonys Canossian Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'St. Anthony\'s Canossian Secondary School'
+    },
+    'St Gabriels Secondary School': {
+      id: 'St Gabriels Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'St. Gabriel\'s Secondary School'
+    },
+    'St Hildas Secondary School': {
+      id: 'St Hildas Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'St. Hilda\'s Secondary School'
+    },
+    'St Josephs Institution': {
+      id: 'St Josephs Institution',
+      iconUrl: '/assets/crests/St_Josephs.png',
+      type: 'Junior College',
+      name: 'St Joseph\'s Institution'
+    },
+    'St Margarets Secondary School': {
+      id: 'St Margarets Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'St. Margaret\'s Secondary School'
+    },
+    'St Patricks School': {
+      id: 'St Patricks School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'St. Patrick\'s School'
+    },
+    'Swiss Cottage Secondary School': {
+      id: 'Swiss Cottage Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Swiss Cottage Secondary School'
+    },
+    'Tampines Junior College': {
+      id: 'Tampines Junior College',
+      iconUrl: '/assets/crests/Tampines_JC.jpg',
+      type: 'Junior College',
+      name: 'Tampines Junior College'
+    },
+    'Tampines Secondary School': {
+      id: 'Tampines Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Tampines Secondary School'
+    },
+    'Tanglin Secondary School': {
+      id: 'Tanglin Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Tanglin Secondary School'
+    },
+    'Tanjong Katong Girls School': {
+      id: 'Tanjong Katong Girls School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Tanjong Katong Girls\' School'
+    },
+    'Tanjong Katong Secondary School': {
+      id: 'Tanjong Katong Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Tanjong Katong Secondary School'
+    },
+    'Teck Whye Secondary School': {
+      id: 'Teck Whye Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Teck Whye Secondary School'
+    },
+    'Temasek Academy': {
+      id: 'Temasek Academy',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Temasek Academy'
+    },
+    'Temasek Junior College': {
+      id: 'Temasek Junior College',
+      iconUrl: '/assets/crests/Temasek_Junior_College.jpg',
+      type: 'Junior College',
+      name: 'Temasek Junior College'
+    },
+    'Temasek Polytechnic': {
+      id: 'Temasek Polytechnic',
+      iconUrl: '/assets/crests/Temasek_Poly.png',
+      type: 'Polytechnic',
+      name: 'Temasek Polytechnic'
+    },
+    'Temasek Secondary School': {
+      id: 'Temasek Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Temasek Secondary School'
+    },
+    'Unity Secondary School': {
+      id: 'Unity Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Unity Secondary School'
+    },
+    'Victoria Junior College': {
+      id: 'Victoria Junior College',
+      iconUrl: '/assets/crests/Victoria_JC.png',
+      type: 'Junior College',
+      name: 'Victoria Junior College'
+    },
+    'Victoria School': {
+      id: 'Victoria School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Victoria School'
+    },
+    'West Spring Secondary School': {
+      id: 'West Spring Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'West Spring Secondary School'
+    },
+    'Westwood Secondary School': {
+      id: 'Westwood Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Westwood Secondary School'
+    },
+    'Whitley Secondary School': {
+      id: 'Whitley Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Whitley Secondary School'
+    },
+    'Woodgrove Secondary School': {
+      id: 'Woodgrove Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Woodgrove Secondary School'
+    },
+    'Woodlands Ring Secondary School': {
+      id: 'Woodlands Ring Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Woodlands Ring Secondary School'
+    },
+    'Woodlands Secondary School': {
+      id: 'Woodlands Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Woodlands Secondary School'
+    },
+    'Xinmin Secondary School': {
+      id: 'Xinmin Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Xinmin Secondary School'
+    },
+    'Yio Chu Kang Secondary School': {
+      id: 'Yio Chu Kang Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Yio Chu Kang Secondary School'
+    },
+    'Yishun Junior College': {
+      id: 'Yishun Junior College',
+      iconUrl: '/assets/crests/Yishun_JC.jpg',
+      type: 'Junior College',
+      name: 'Yishun Junior College'
+    },
+    'Yishun Secondary School': {
+      id: 'Yishun Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Yishun Secondary School'
+    },
+    'Yishun Town Secondary School': {
+      id: 'Yishun Town Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Yishun Town Secondary School'
+    },
+    'Yuan Ching Secondary School': {
+      id: 'Yuan Ching Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Yuan Ching Secondary School'
+    },
+    'Yuhua Secondary School': {
+      id: 'Yuhua Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Yuhua Secondary School'
+    },
+    'Yusof Ishak Secondary School': {
+      id: 'Yusof Ishak Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Yusof Ishak Secondary School'
+    },
+    'Yuying Secondary School': {
+      id: 'Yuying Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Yuying Secondary School'
+    },
+    'Zhenghua Secondary School': {
+      id: 'Zhenghua Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Zhenghua Secondary School'
+    },
+    'Zhonghua Secondary School': {
+      id: 'Zhonghua Secondary School',
+      iconUrl: '/assets/crests/tempbadge.png',
+      type: 'Secondary',
+      name: 'Zhonghua Secondary School'
     }
-  ])
+  })
 
   ;
 

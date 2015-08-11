@@ -12,7 +12,9 @@
 
       this.publicIdIsReadOnly = Boolean($scope.currentUser.publicId);
       this.countries = SPF_COUNTRIES;
-      this.schools = SPF_SINGAPORE_SCHOOLS;
+      this.schools = Object.keys(SPF_SINGAPORE_SCHOOLS).map(function(id) {
+        return SPF_SINGAPORE_SCHOOLS[id];
+      });
       this.ageGroups = [];
 
       year = 1990;
@@ -29,9 +31,7 @@
       }
 
       if ($scope.currentUser.school) {
-        $scope.currentUser.school = this.schools.find(function(school) {
-          return school.name === $scope.currentUser.school.name;
-        });
+        $scope.currentUser.school = SPF_SINGAPORE_SCHOOLS[$scope.currentUser.school.id];
       }
     }
   ]).
