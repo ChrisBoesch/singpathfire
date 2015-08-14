@@ -6,15 +6,30 @@
   controller('SpfSignFormCtrl', [
     '$scope',
     'SPF_COUNTRIES',
-    'SPF_SINGAPORE_SCHOOLS',
-    function SpfSignFormCtrl($scope, SPF_COUNTRIES, SPF_SINGAPORE_SCHOOLS) {
+    'spfSchools',
+    function SpfSignFormCtrl($scope, SPF_COUNTRIES, spfSchools) {
+      var self = this;
       var year;
 
+      spfSchools().then(function(schools) {
+
+        self.schools = Object.keys(schools).map(function(id) {
+          return schools[id];
+        });
+
+        // Make sure the items in the profile attribute are in the list
+        // of options; or ng-select will show empty select box
+        if ($scope.currentUser.school) {
+          $scope.currentUser.school = schools[$scope.currentUser.school.id];
+        }
+
+        self.loaded = true;
+      });
+
+      this.loaded = false;
       this.publicIdIsReadOnly = Boolean($scope.currentUser.publicId);
       this.countries = SPF_COUNTRIES;
-      this.schools = Object.keys(SPF_SINGAPORE_SCHOOLS).map(function(id) {
-        return SPF_SINGAPORE_SCHOOLS[id];
-      });
+      this.schools = [];
       this.ageGroups = [];
 
       year = 1990;
@@ -28,10 +43,6 @@
         $scope.currentUser.country = this.countries.find(function(country) {
           return country.code === $scope.currentUser.country.code;
         });
-      }
-
-      if ($scope.currentUser.school) {
-        $scope.currentUser.school = SPF_SINGAPORE_SCHOOLS[$scope.currentUser.school.id];
       }
     }
   ]).
