@@ -146,7 +146,7 @@
         opts.push({
           title: 'New event',
           url: '#' + urlFor('newEvent'),
-          icon: 'add-circle-outline'
+          icon: 'add'
         });
       }
 
@@ -518,13 +518,13 @@
                 $route.reload();
               });
             },
-            icon: 'highlight-remove'
+            icon: 'clear'
           });
         } else {
           options.push({
             title: 'Join',
             onClick: promptPassword,
-            icon: 'add-circle-outline'
+            icon: 'add'
           });
         }
 

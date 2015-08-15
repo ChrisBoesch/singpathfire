@@ -23,8 +23,8 @@
         <md-progress-circular ng-show="ctrl.creatingEvent" md-mode="indeterminate" style="margin: 16px auto"></md-progress-circular>
 
         <div layout="row" layout-align="center center">
-            <md-button type="submit" class="md-raised md-primary" ng-disabled="newEventForm.$invalid || ctrl.creatingEvent">Create</md-button>
-            <md-button type="reset" class="md-raised" ng-click="ctrl.reset(newEventForm)" ng-disabled="ctrl.creatingEvent || newEventForm.$pristine">Reset</md-button>
+            <md-button type="submit" class="md-primary" ng-disabled="newEventForm.$invalid || ctrl.creatingEvent">Create</md-button>
+            <md-button type="reset" ng-click="ctrl.reset(newEventForm)" ng-disabled="ctrl.creatingEvent || newEventForm.$pristine">Reset</md-button>
         </div>
     </form>
 </md-content>
