@@ -60,9 +60,14 @@
                 </spf-editor-container>
             </div>
 
-            <div layout="column" layout-align="center center" ng-if="ctrl.solutionSaved &amp;&amp; !ctrl.resolution.output">
+            <div ng-if="ctrl.solutionSaved &amp;&amp; !ctrl.resolution.output" layout="column" layout-align="center center">
                 <md-progress-circular md-mode="indeterminate"></md-progress-circular>
-                <p>Waiting for result...</p>
+                <p ng-if="!ctrl.serverIsRunning">
+                    The verification server is not running yet.
+                    it will need one or two minutes to start.
+                    Sorry for the delay...
+                </p>
+                <p ng-if="ctrl.serverIsRunning">Waiting for result...</p>
             </div>
 
             <div layout layout-align="center center" layout-align="center center" ng-if="ctrl.resolution.$solved()">

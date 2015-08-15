@@ -307,7 +307,6 @@
         solutions: {
           errMissingPublicId: new Error('No public id for the solution'),
           errMissingProblemId: new Error('The problem has no id. Is it saved?'),
-          errStartVerifcation: new Error('Failed to initiate solution verification'),
           errSaveSolution: new Error('Failed to save solution.'),
 
           /**
@@ -352,11 +351,10 @@
                 'levels', level.key(),
                 'problems', problem.$id,
                 'solutions', publicId
-              ].join('/')).catch(function(err) {
-                $log.error(err);
-                return $q.reject(spfDataStore.solutions.errStartVerifcation);
-              });
-            }, function(err) {
+              ].join('/'));
+            }).then(function(resp) {
+              return resp.data;
+            }).catch(function(err) {
               $log.error(err);
               return $q.reject(spfDataStore.solutions.errSaveSolution);
             });

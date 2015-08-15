@@ -699,6 +699,18 @@
     }
   ]);
 
+  module.factory('spfSchools', [
+    '$q',
+    'spfFirebase',
+    function spfSchoolsFactory($q, spfFirebase) {
+      var promise = spfFirebase.loadedObj(['classMentors/schools']);
+
+      return function spfSchools() {
+        return promise;
+      };
+    }
+  ]);
+
   module.provider('spfCrypto', [
     function cryptoProvider() {
       var saltSize = 128 / 8;
