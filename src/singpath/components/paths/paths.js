@@ -73,7 +73,7 @@
         undefined, [{
           title: 'New path',
           url: '#' + urlFor('newPath'),
-          icon: 'add-circle-outline'
+          icon: 'add'
         }]
       );
       this.paths = initialData.paths;

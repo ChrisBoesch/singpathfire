@@ -20,7 +20,7 @@
 
     <span flex></span>
 
-    <md-button class="menu-item md-raised md-primary" ng-repeat="btn in navBar.currentPage.menuItems track by (btn.url || btn.onClick)" ng-href="{{btn.url}}" aria-label="{{btn.title}}" ng-click="btn.onClick()">
+    <md-button class="menu-item" ng-repeat="btn in navBar.currentPage.menuItems track by (btn.url || btn.onClick)" ng-href="{{btn.url}}" aria-label="{{btn.title}}" ng-click="btn.onClick()">
         <md-icon md-svg-icon="{{btn.icon}}" ng-if="btn.icon"></md-icon>
         <span ng-bind="btn.title" hide show-gt-sm></span>
     </md-button>
@@ -29,13 +29,13 @@
         <span ng-switch-when="undefined">
             <md-button ng-click="navBar.login()" class="md-raised md-accent">
                 <md-icon md-svg-icon="launch"></md-icon>
-                login
+                <span hide-sm>login</span>
             </md-button>
         </span>
         <span ng-switch-default>
             <md-button ng-click="navBar.logout()" class="md-raised md-primary">
                 <md-icon md-svg-icon="exit-to-app"></md-icon>
-                logout
+                <span hide-sm>logout</span>
             </md-button>
         </span>
     </span>
