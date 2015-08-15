@@ -33,6 +33,9 @@
       if ($scope.currentUser.school) {
         $scope.currentUser.school = SPF_SINGAPORE_SCHOOLS[$scope.currentUser.school.id];
       }
+
+      // Current year used to calculate age
+      $scope.currentYear = new Date().getFullYear();
     }
   ]).
 
