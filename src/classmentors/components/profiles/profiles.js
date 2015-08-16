@@ -258,10 +258,10 @@
         var username = search.username;
 
         return clmDataStore.services.codeCombat.setUser(username, verificationKey).then(function() {
-          spfAlert.success('Your Code School user name and id have been saved.');
+          spfAlert.success('Your Code Combat user name and id have been saved.');
           return clmDataStore.currentUserProfile();
         }, function(err) {
-          spfAlert.error('Failed to set user name and id');
+          spfAlert.error('Failed to set user name and ID');
           return $q.reject(err);
         }).then(function(profile) {
           clmDataStore.services.codeCombat.updateProfile(profile);
