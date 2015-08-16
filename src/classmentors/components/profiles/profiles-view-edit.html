@@ -15,23 +15,23 @@
         </form>
     </div>
 
-    <div ng-if="ctrl.profile &amp;&amp; !ctrl.profileNeedsUpdate" layout="row">
-        <div class="profile" flex="33">
+    <div ng-if="ctrl.profile &amp;&amp; !ctrl.profileNeedsUpdate" layout="row" layout-wrap>
+        <div class="profile" flex="33" flex-sm="100">
             <div class="md-whiteframe-z1 avatar">
                 <img ng-src="{{ctrl.profile.user.gravatar}}?s=200&amp;r=g&amp;d=mm" alt="user avatar">
                 <h2>
                     {{ctrl.profile.user.displayName}}
                 </h2>
-                <h3 ng-if="ctrl.profile.user.school &amp;&amp; ctrl.profile.user.school.type != 'Other'" layout="row" layout-align="center center">
-                    <span flex="33" ng-if="ctrl.profile.user.school.iconUrl">
+                <h3 ng-if="ctrl.profile.user.school &amp;&amp; ctrl.profile.user.school.type != 'Other'" layout="row" layout-wrap layout-align="center center">
+                    <span flex-gt-md="33" flex="100" ng-if="ctrl.profile.user.school.iconUrl">
                         <img ng-src="{{ctrl.profile.user.school.iconUrl}}" alt="user school crest">
                     </span>
-                    <span flex="67">{{ctrl.profile.user.school.name}}</span>
+                    <span flex-gt-md="67" flex="100">{{ctrl.profile.user.school.name}}</span>
                 </h3>
             </div>
         </div>
 
-        <div flex="67">
+        <div flex="67" flex-sm="100">
 
             <div clm-spf-profile="ctrl.profile.$id"></div>
             <div clm-profile="ctrl.profile" clm-service-id="codeCombat" clm-current-user="ctrl.currentUserProfile"></div>

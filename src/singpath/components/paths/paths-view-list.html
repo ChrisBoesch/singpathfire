@@ -4,10 +4,9 @@
 
     <md-list>
         <md-list-item class="md-3-line" ng-repeat="path in ctrl.paths">
-            <div class="language-icon" hide-sm>
+            <div class="language-icon" >
                 <md-icon md-svg-icon="language:{{path.language}}" alt="{{path.language}}"></md-icon>
             </div>
-            <md-icon hide-gt-sm md-svg-icon="language:{{path.language}}" alt="{{path.language}}">
             <div class="md-list-item-text">
                 <h3 layout>
                     <span flex>{{path.title}}</span>
@@ -17,16 +16,13 @@
                 <p>{{path.description}}</p>
             </div>
             <div layout="column" layout-align="top center">
-                <md-button hide-sm ng-href="#{{ 'levels'|urlFor: {pathId: path.$id} }}" layout layout-align="center center" class="md-raised md-primary" aria-label="Run">
-                    <md-icon md-svg-icon="play-arrow"></md-icon>
-                    <span ng-if="!ctrl.profile.hasStartedPath(path)" flex>Start</span>
-                    <span ng-if="ctrl.profile.workingOnPath(path)" flex>Continue</span>
-                    <span ng-if="ctrl.profile.hasSolvedPath(path)" flex>Results</span>
-                </md-button>
-                <md-button hide-gt-sm class="md-icon-button md-primary" ng-href="#{{ 'levels'|urlFor: {pathId: path.$id} }}" aria-label="Run">
+                <md-button ng-href="#{{ 'levels'|urlFor: {pathId: path.$id} }}" layout layout-align="center center" class="md-raised md-primary responsive-button" aria-label="Run">
                     <md-icon ng-if="!ctrl.profile.hasStartedPath(path)" md-svg-icon="chevron-right"></md-icon>
                     <md-icon ng-if="ctrl.profile.workingOnPath(path)" md-svg-icon="play-arrow"></md-icon>
-                    <md-icon ng-if="ctrl.profile.hasSolvedPath(path)" md-svg-icon="check"></md-icon>
+                    <md-icon ng-if="ctrl.profile.hasSolvedPath(path)" md-svg-icon="check"></md-icon>    
+                    <span hide-sm ng-if="!ctrl.profile.hasStartedPath(path)" flex>Start</span>
+                    <span hide-sm ng-if="ctrl.profile.workingOnPath(path)" flex>Continue</span>
+                    <span hide-sm ng-if="ctrl.profile.hasSolvedPath(path)" flex>Results</span>
                 </md-button>
             </div>
         </md-list-item>

@@ -29,7 +29,8 @@
 				<td>{{$index+1}}</td>				
 				<td>{{school.total}}</td>
 				<td>{{school.school}}</td>
-				<td>{{school.name == 'no second student'?'<span style="font-style: italic; color: grey;">No second student</span>':school.name}}</td>
+				<td ng-if="school.name !== 'no second student'">{{school.name}}</td>
+				<td ng-if="school.name == 'no second student'"><span style="font-style: italic; color: grey;">No second student</span></td>
 			</tr>
 
 	    </table>
@@ -53,7 +54,8 @@
 				<td>{{$index+1}}</td>
 				<td>{{school.total}}</td>
 				<td>{{school.school}}</td>
-				<td>{{school.name == 'no second student'?'<span style="font-style: italic; color: grey;">No second student</span>':school.name}}</td>
+				<td ng-if="school.name !== 'no second student'">{{school.name}}</td>
+				<td ng-if="school.name == 'no second student'"><span style="font-style: italic; color: grey;">No second student</span></td>
 				
 			</tr>
 	    </table>
