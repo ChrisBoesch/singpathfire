@@ -5,22 +5,24 @@
     <md-list class="problem-list">
         <md-list-item class="md-3-line" ng-repeat="problem in ctrl.problems">
             <div class="language-icon" hide-sm>
-                <md-icon md-svg-icon="language:{{problem.language}}" alt="{{problem.language}}">
+                <md-icon md-svg-icon="language:{{problem.language}}" alt="{{problem.language}}"></md-icon>
             </div>
             <div class="md-list-item-text">
                 <h3 layout>
                     <span flex>{{problem.title}}</span>
-                    <span hide-gt-sm>[{{problem.language}}]</span>
+                    <span hide>[{{problem.language}}]</span>
                 </h3>
                 <h4>by {{problem.owner.displayName}}</h4>
                 <p>{{problem.description}}</p>
             </div>
             <div layout="column" layout-align="top center">
-                <md-button ng-href="#{{ 'playProblem'|urlFor: {pathId: ctrl.path.$id, levelId: ctrl.level.$id, problemId: problem.$id} }}" layout layout-align="center center" class="md-raised md-primary" aria-label="Run">
-                    <md-icon md-svg-icon="play-arrow"></md-icon>
-                    <span ng-if="!ctrl.profile.$hasStarted(problem)" flex>Solve</span>
-                    <span ng-if="ctrl.profile.$workingOn(problem)" flex>Continue</span>
-                    <span ng-if="ctrl.profile.$hasSolved(problem)" flex>Results</span>
+                <md-button ng-href="#{{ 'playProblem'|urlFor: {pathId: ctrl.path.$id, levelId: ctrl.level.$id, problemId: problem.$id} }}" layout layout-align="center center" class="md-raised md-primary responsive-button" aria-label="Run">
+                    <md-icon ng-if="!ctrl.profile.$hasStarted(problem)" md-svg-icon="chevron-right"></md-icon>
+                    <md-icon ng-if="ctrl.profile.$workingOn(problem)" md-svg-icon="play-arrow"></md-icon>
+                    <md-icon ng-if="ctrl.profile.$hasSolved(problem)" md-svg-icon="check"></md-icon>
+                    <span hide-sm ng-if="!ctrl.profile.$hasStarted(problem)" flex>Solve</span>
+                    <span hide-sm ng-if="ctrl.profile.$workingOn(problem)" flex>Continue</span>
+                    <span hide-sm ng-if="ctrl.profile.$hasSolved(problem)" flex>Results</span>
                 </md-button>
             </div>
             <md-divider ng-if="!$last"></md-divider>

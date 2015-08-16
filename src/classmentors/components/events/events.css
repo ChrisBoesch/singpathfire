@@ -21,3 +21,8 @@ th.orderer .md-button:after, th.secondaryOrderer .md-button:after {
 th.secondaryOrderer .md-button:after {
     color: #ddd;
 }
+
+.name-button{
+	text-align: left;
+	width: 100%;
+}

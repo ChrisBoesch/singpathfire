@@ -91,7 +91,7 @@
         navBarOptions.push({
           title: 'New level',
           url: '#' + urlFor('newLevel', {pathId: this.path.$id}),
-          icon: 'add-circle-outline'
+          icon: 'add'
         });
       }
 
