@@ -493,14 +493,19 @@
         it('should return percentage of participants having completed the task', function() {
           var ctrl = $controller('ViewEventCtrl', deps);
 
-          ctrl.participants = [{}, {}];
+          ctrl.participants = [{$id: 'bob'}, {$id: 'alice'}];
           ctrl.participants.$id = 'eventId';
 
           ctrl.progress = {
-            someParticipantId: {
-              someTaskId: {completed: true}
+            bob: {
+              someTaskId: {completed: true},
+              someOtherTaskId: {completed: true}
             },
-            someOtherParticipantId: {
+            alice: {
+              someOtherTaskId: {completed: true}
+            },
+            tom: {
+              someTaskId: {completed: true},
               someOtherTaskId: {completed: true}
             }
           };

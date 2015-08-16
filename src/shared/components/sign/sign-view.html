@@ -47,6 +47,9 @@
                 <div ng-message="required">This is required.</div>
             </div>
         </md-input-container>
+    	
+        <p ng-if="!ctrl.loaded" flex>Loading schools...</p>
+
 		<md-input-container flex layout="column" ng-if="currentYear - currentUser.yearOfBirth <= 20 &amp;&amp; currentYear - currentUser.yearOfBirth  >= 10">
             <md-select flex name="userSchool" ng-model="currentUser.school" required placeholder="Select a School">
                 <md-optgroup label="Other">

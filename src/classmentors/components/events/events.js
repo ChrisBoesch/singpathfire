@@ -693,13 +693,19 @@
       };
 
       this.completed = function(taskId, participants, progress) {
-        var participantCount;
+        var participantCount, participantsIds;
 
         if (!participants || !progress) {
           return 0;
         }
 
         participantCount = participants.length;
+        participantsIds = participants.reduce(function(all, participant) {
+          if (participant.$id) {
+            all[participant.$id] = true;
+          }
+          return all;
+        }, {});
 
         if (participantCount < 1) {
           return 0;
@@ -707,6 +713,8 @@
 
         return Object.keys(progress).filter(function(publicId) {
           return (
+            participantsIds[publicId] && // Make sure user is still participating
+                                         // (user progress is kept when they leave)
             progress[publicId] &&
             progress[publicId][taskId] &&
             progress[publicId][taskId].completed

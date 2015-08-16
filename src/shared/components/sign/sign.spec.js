@@ -5,12 +5,14 @@
   'use strict';
 
   describe('sign in components', function() {
-    var $controller;
+    var $controller, $rootScope, $q;
 
     beforeEach(module('spf.shared'));
 
-    beforeEach(inject(function(_$controller_) {
+    beforeEach(inject(function(_$controller_, _$rootScope_, _$q_) {
       $controller = _$controller_;
+      $rootScope = _$rootScope_;
+      $q = _$q_;
     }));
 
     describe('SpfSignFormCtrl', function() {
@@ -20,8 +22,18 @@
         deps = {
           $scope: {
             currentUser: {}
-          }
+          },
+          spfSchools: jasmine.createSpy('spfSchools')
         };
+
+        deps.spfSchools.and.returnValue($q.when({
+          'NUS High School': {
+            id: 'NUS High School',
+            iconUrl: '/assets/crests/NUS_HS.jpeg',
+            type: 'Junior College',
+            name: 'NUS High School'
+          }
+        }));
       });
 
       it('should have a country property', function() {
@@ -44,6 +56,7 @@
         ctrl = $controller('SpfSignFormCtrl', deps);
 
         expect(ctrl.schools).toEqual(jasmine.any(Array));
+        $rootScope.$apply();
 
         nus = ctrl.schools.find(function(school) {
           return school.name === 'NUS High School';
@@ -66,13 +79,18 @@
         deps.$scope = {
           currentUser: {
             school: {
-              name: 'NUS High School'
+              id: 'NUS High School'
             }
           }
         };
 
         var ctrl = $controller('SpfSignFormCtrl', deps);
-        var nus = ctrl.schools['NUS High School'];
+        var nus;
+
+        $rootScope.$apply();
+        nus = ctrl.schools.find(function(school) {
+          return school.id === 'NUS High School';
+        });
 
         expect(deps.$scope.currentUser.school).toBe(nus);
       });
