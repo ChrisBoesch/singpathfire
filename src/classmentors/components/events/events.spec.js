@@ -344,7 +344,7 @@
         $controller('ViewEventCtrl', deps);
 
         expect(deps.spfNavBarService.update.calls.argsFor(0)[2]).toEqual(
-          [{title: 'Join', onClick: jasmine.any(Function), icon: 'add-circle-outline'}]
+          [{title: 'Join', onClick: jasmine.any(Function), icon: 'add'}]
         );
       });
 
