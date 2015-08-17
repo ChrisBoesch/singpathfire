@@ -16,7 +16,7 @@
     "serve-build-debug": "./node_modules/.bin/gulp build:debug && ./bin/server.js --root=./build-debug --port=8886",
     "serve-build-dev": "./node_modules/.bin/gulp build:dev && ./bin/server.js --root=./build-dev --port=8887",
     "serve-build-e2e": "./node_modules/.bin/gulp build:e2e && ./bin/server.js --root=./build-e2e --port=5555",
-    "serve-dist": "./node_modules/.bin/gulp dist && ./bin/server.js --root=./dist --port=8884",
+    "serve-dist": "./node_modules/.bin/gulp dist && ./bin/server.js --root=./dist --port=8885",
     "start": "./bin/server.js --root=./src --port=8888 -o",
     "test": "./node_modules/karma/bin/karma start config/karma.js",
     "test-e2e": "./bin/init-protractor.sh start && ./node_modules/.bin/protractor config/protractor.js && ./bin/init-protractor.sh stop",

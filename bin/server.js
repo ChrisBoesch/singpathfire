@@ -21,7 +21,7 @@ var fileServerOptions = {
   root: argv.root || './build-debug'
 };
 var port = parseInt(argv.port || 3000, 10);
-var host = argv.host || 'localhost';
+var host = argv.host || '0.0.0.0';
 var firebaseKeyPath = argv.keypath || 'config/secret-keys.yaml';
 var firebaseServer = argv.keypath || 'dev';
 
