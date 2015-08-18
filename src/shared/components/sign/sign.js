@@ -44,6 +44,9 @@
           return country.code === $scope.currentUser.country.code;
         });
       }
+
+      // Current year used to calculate age
+      $scope.currentYear = new Date().getFullYear();
     }
   ]).
 

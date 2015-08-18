@@ -54,7 +54,7 @@
                     <tbody>
                         <tr ng-repeat="(publicId, participant) in ctrl.participants" ng-class="'index-' + $index + ' ' + ($index % 2 == 0? 'even' : 'odd')">
                             <th layout="row" layout-align="start center">
-                                <md-button ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$id} }}">
+                                <md-button class="name-button" ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$id} }}">
                                     {{ participant.user.displayName }}
                                 </md-button>
                                 <span ng-if="ctrl.currentUser.publicId == participant.$id">
@@ -233,7 +233,7 @@
                             </th>
                             <th>
                                 <!-- spfToArray adds the $$hashKey property to every element in the object -->
-                                <md-button ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$$hashKey} }}">
+                                <md-button class="name-button" ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$$hashKey} }}">
                                     {{ participant.user.displayName }}
                                 </md-button>
                             </th>

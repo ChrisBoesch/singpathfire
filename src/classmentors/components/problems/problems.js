@@ -134,7 +134,7 @@
         opts.push({
           title: 'New level',
           url: '#' + urlFor('newLevel'),
-          icon: 'add-circle-outline'
+          icon: 'add'
         });
       }
 
@@ -311,7 +311,7 @@
         var newProblemOption = {
           title: 'New Problem',
           url: '#' + urlFor('newProblem', {levelId: self.level.$id}),
-          icon: 'add-circle-outline'
+          icon: 'add'
         };
 
         if (self.level && self.level.acceptContribution) {
