@@ -7,25 +7,46 @@
 
 ## Requirements
 
-- Node.js;
-- npm (usually installed with node);
-- Bash (on windows, it will require cygwin or Git Windows environment);
-- Selenium (installed by npm);
-- PhantomJS (installed by npm);
-- nc (netcat).
+- make
+- python 2.7 and pip
+- docker (via [docker toolbox] on OSX and Windows)
+- docker-compose (via [docker toolbox] on OSX and Windows)
+- docker-machine (via [docker toolbox] on OSX and Windows) - only required
+on Windows and OS X.
 
 
 ## Installation
 
+On OS X and Windows, we will assume you have a docker host running; e.g.:
+```
+docker-machine create --driver virtualbox default
+docker-machine start
+eval "$(docker-machine env default)"
+```
+
+Then:
 ```
 git clone https://github.com/ChrisBoesch/singpathfire.git
 cd singpathfire
-npm install
+make run
 ```
+
+The GUI will be available at:
+- http://localhost:8888 on linux
+- http://192.168.99.100:8888 on OS X and Windows (192.168.99.100 being the IP of the docker host).
 
 ## Testing
 
-To run the application locally:
+```
+make test
+```
+
+## TODO
+
+- a Firebase DB variable to target the developer own Firebase DB.
+- E2E tests.
+
+<!-- To run the application locally:
 ```
 npm start                  # starts the server to serve src
 npm run serve-build-dev    # starts the server to serve build-dev/
@@ -59,11 +80,14 @@ and set to a demo firebase database depending of the context:
 - build-debug: no mocking.
 - build: no mocking, js and css scripts are concatenated.
 - dist: no mocking, js and css scripts are concatenated and minified.
-- e2e: auth mocked and set to use testing db.. It's up to each e2e scenario to 
-  mock the http requests. 
+- e2e: auth mocked and set to use testing db.. It's up to each e2e scenario to
+  mock the http requests.
 
 ```
 npm run build # build all version except dist.
 npm run watch # same, but run the build after any changes to the source files.
 npm run dist
 ```
+ -->
+
+ [docker toolbox]: https://www.docker.com/toolbox
