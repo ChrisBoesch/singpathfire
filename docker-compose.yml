@@ -1,0 +1,9 @@
+web:
+  build: .
+  ports:
+   - "8888:8888"
+  volumes:
+   - ./bin:/app/bin
+   - ./config:/app/config
+   - ./lib:/app/lib
+   - ./src:/app/src

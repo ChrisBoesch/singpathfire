@@ -10,3 +10,4 @@ phantomjsdriver.log
 bin/*.log
 bin/*.pid
 bower_components/**
+.images/**

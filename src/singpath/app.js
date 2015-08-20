@@ -183,6 +183,12 @@
           });
         },
 
+        verifierStatus: function() {
+          return $http.get('/api/verifier').then(function(resp) {
+            return resp.data;
+          });
+        },
+
         paths: {
           _Factory: spfFirebase.objFactory({
             $canBeEditedBy: function(user) {

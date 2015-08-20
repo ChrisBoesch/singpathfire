@@ -474,9 +474,11 @@
           self.profileNeedsUpdate = !self.currentUser.$completed();
         }).then(function() {
           return spfDataStore.solutions.create(problem, currentUser.publicId, solution);
-        }).then(function(resp) {
-          self.serverIsRunning = resp.serverIsRunning;
+        }).then(function() {
           spfAlert.success('Solution saved');
+          return spfDataStore.verifierStatus();
+        }).then(function(serverInfo) {
+          self.serverIsRunning = serverInfo.status === 'running';
         }).catch(function(err) {
           spfAlert.error(err.message || err.toString());
         }).finally(function() {
