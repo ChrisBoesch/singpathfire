@@ -4,21 +4,21 @@
     <div layout="column" ng-if="!ctrl.loading">
 
         <div class="language python" flex>
-            <div class="language-icon" hide-sm>
+            <div class="language-icon">
                 <md-icon md-svg-icon="language:python" alt="python"></md-icon>
                 {{ctrl.stats.user.python || 0}} / {{ctrl.stats.total.python || 0}} problems solved
             </div>
         </div>
 
         <div class="language angularjs" flex>
-            <div class="language-icon" hide-sm>
+            <div class="language-icon">
                 <md-icon md-svg-icon="language:angularjs" alt="javascript"></md-icon>
                 {{ctrl.stats.user.angularjs || 0}} / {{ctrl.stats.total.angularjs || 0}} problems solved
             </div>              
         </div>
 
         <div class="language javascript" flex>
-            <div class="language-icon" hide-sm>
+            <div class="language-icon">
                 <md-icon md-svg-icon="language:javascript" alt="angularjs"></md-icon>
                 {{ctrl.stats.user.javascript || 0}} / {{ctrl.stats.total.javascript || 0}} problems solved
             </div>
