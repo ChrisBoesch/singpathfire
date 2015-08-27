@@ -1340,22 +1340,26 @@
           }),
 
           codeSchool: clmService('codeSchool', {
-            errNoUserId: new Error('Your code school user id is missing'),
-            errInvalidBadgeUrl: new Error(
-              'A code school badge URL should start with "http://www.codeschool.com/courses/"'
-            ),
+            errNoUserId: new Error('Your code school user id is missing.'),
+            errNoBadgeUrl: new Error('No badge url.'),
 
             _badgeId: function(url, name) {
               var id;
 
               if (!url) {
-                throw clmDataStore.services.codeSchool.errNoUserId;
+                $log.error(clmDataStore.services.codeSchool.errNoBadgeUrl);
+                return;
               } else if (url.startsWith('http://www.codeschool.com/courses/')) {
                 id = url.slice(34) + '-' + name;
               } else if (url.startsWith('https://www.codeschool.com/courses/')) {
                 id = url.slice(35) + '-' + name;
               } else {
-                throw clmDataStore.services.codeSchool.errInvalidBadgeUrl;
+                $log.error(new Error(
+                  'A code school badge URL should start with ' +
+                  '"http://www.codeschool.com/courses/" (' +
+                  url + ').'
+                ));
+                return;
               }
 
               return id.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -1383,14 +1387,20 @@
 
                 return badges.map(function(badge) {
                   //jscs:disable requireCamelCaseOrUpperCaseIdentifiers
+                  var badgeId = clmDataStore.services.codeSchool._badgeId(badge.course_url, badge.name);
+
+                  if (badgeId == null) {
+                    return;
+                  }
+
                   return {
-                    'id': clmDataStore.services.codeSchool._badgeId(
-                      badge.course_url, badge.name
-                    ),
+                    'id': badgeId,
                     'name': badge.name,
                     'url': badge.course_url,
                     'iconUrl': badge.badge
                   };
+                }).filter(function(badge) {
+                  return badge !== undefined;
                 });
               }).catch(function(err) {
                 $log.error('Failed to fetch code school badges for ' + profile.$id);
