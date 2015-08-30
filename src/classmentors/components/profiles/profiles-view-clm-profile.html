@@ -1,8 +1,14 @@
 <div class="service-card md-whiteframe-z1" ng-if="profile.services[serviceId].details.id &amp;&amp; ctrl.services[serviceId]">
-    <h2>
-        {{ctrl.services[serviceId].name}}
-        <small>- registered as <em>{{profile.services[serviceId].details.name}}</em></small>
-    </h2>
+    <div layout="row">
+        <h2 flex>
+            <span>{{ctrl.services[serviceId].name}}</span>
+            <small> - registered as <em>{{profile.services[serviceId].details.name}}</em></small>
+        </h2>
+
+        <md-button class="md-icon-button" aria-label="remove service" ng-click="ctrl.remove(serviceId, profile.services[serviceId].details)" ng-if="ctrl.canUpdate()">
+            <md-icon md-svg-icon="highlight-remove"></md-icon>
+        </md-button>
+    </div>
 
     <p ng-if="profile.services[serviceId].badges | spfEmpty">
         No level completed yet.
@@ -24,7 +30,7 @@
                 last update from {{profile.services[serviceId].lastUpdate|date:'medium'}}
             </small>
         </p>
-        <md-button class="md-fab md-mini md-primary" aria-label="Update" ng-if="ctrl.canUpdate()">
+        <md-button class="md-icon-button" aria-label="Update" ng-if="ctrl.canUpdate()">
           <md-icon md-svg-icon="loop" ng-click="ctrl.update()"></md-icon>
         </md-button>
     </div>
