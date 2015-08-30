@@ -298,9 +298,11 @@
         },
         controller: [
           '$scope',
+          '$log',
           'spfAuthData',
+          'spfAlert',
           'clmDataStore',
-          function ClmProfileCtrl($scope, spfAuthData, clmDataStore) {
+          function ClmProfileCtrl($scope, $log, spfAuthData, spfAlert, clmDataStore) {
             this.services = {
               codeCombat: {
                 name: 'Code Combat',
@@ -338,6 +340,20 @@
               return clmDataStore.services[$scope.serviceId].updateProfile(
                 $scope.profile
               );
+            };
+
+            this.remove = function(serviceId, details) {
+              if (
+                !$scope.profile ||
+                !details
+              ) {
+                return;
+              }
+
+              clmDataStore.services[serviceId].removeDetails($scope.profile.$id, details.id).catch(function(err) {
+                $log.error(err);
+                spfAlert.error('Failed to delete service data.');
+              });
             };
           }
         ],

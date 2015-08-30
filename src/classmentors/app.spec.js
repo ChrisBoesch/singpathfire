@@ -220,6 +220,67 @@
 
         });
 
+        describe('removeDetails', function() {
+
+          it('should remove the the service data from the user profile', inject(function($q, clmService) {
+            var service = clmService('codeCombat');
+
+            spfFirebase.remove.and.returnValue($q.when());
+
+            service.removeDetails('bob', '12345');
+            expect(spfFirebase.remove.calls.count()).toEqual(1);
+            expect(spfFirebase.remove.calls.argsFor(0)).toEqual([jasmine.any(Array)]);
+            expect(
+              spfFirebase.remove.calls.argsFor(0)[0].join('/')
+            ).toBe(
+              'classMentors/userProfiles/bob/services/codeCombat'
+            );
+          }));
+
+          it('should remove the claim on the user service id', inject(function($q, $rootScope, clmService) {
+            var service = clmService('codeCombat');
+
+            spfFirebase.remove.and.returnValue($q.when());
+            service.removeDetails('bob', '12345');
+            $rootScope.$apply();
+
+            expect(spfFirebase.remove.calls.count()).toEqual(2);
+            expect(spfFirebase.remove.calls.argsFor(1)).toEqual([jasmine.any(Array)]);
+            expect(
+              spfFirebase.remove.calls.argsFor(1)[0].join('/')
+            ).toBe(
+              'classMentors/servicesUserIds/codeCombat/12345'
+            );
+          }));
+
+          it('should reject if the public id is missing', inject(function($q, $rootScope, clmService) {
+            var service = clmService('codeCombat');
+            var err;
+
+            spfFirebase.remove.and.returnValue($q.when());
+            service.removeDetails(null, '12345').catch(function(e) {
+              err = e;
+            });
+
+            $rootScope.$apply();
+            expect(err).toBeDefined();
+          }));
+
+          it('should reject if the user id is missing', inject(function($q, $rootScope, clmService) {
+            var service = clmService('codeCombat');
+            var err;
+
+            spfFirebase.remove.and.returnValue($q.when());
+            service.removeDetails('bob', null).catch(function(e) {
+              err = e;
+            });
+
+            $rootScope.$apply();
+            expect(err).toBeDefined();
+          }));
+
+        });
+
         describe('userIdTaken', function() {
 
           it('should check if the claim for the user id exist', inject(function($rootScope, $q, clmService) {

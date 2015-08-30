@@ -143,7 +143,8 @@
           },
 
           /**
-           * Claim the user name for t
+           * Claim the user name for the service and save his/her details
+           *
            * @param  string      user's publiId.
            * @param  Object      details object holding the user id and user name.
            *                     of the user for that service.
@@ -177,6 +178,32 @@
             }).catch(function(err) {
               $log.error(err);
               return $q.reject(new Error('Failed to save your details for ' + serviceId));
+            });
+          },
+
+          /**
+           * Remove the service data.
+           *
+           * @param  string      user's publiId.
+           * @param  string      user's id for service.
+           *                     of the user for that service.
+           * @return Promise     Promise resolving when the service has been removed.
+           */
+          removeDetails: function(publicId, userId) {
+            if (!publicId) {
+              return $q.reject(new Error('The Classmentors profile should have an id.'));
+            }
+
+            if (!userId) {
+              return $q.reject(new Error('The profile should have an id for that service.'));
+            }
+
+            return spfFirebase.remove(
+              ['classMentors/userProfiles', publicId, 'services', serviceId]
+            ).then(function() {
+              return spfFirebase.remove(
+                ['classMentors/servicesUserIds', serviceId, userId]
+              );
             });
           },
 
