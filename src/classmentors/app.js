@@ -76,9 +76,22 @@
       var availableBadges = {};
       var availableBadgesPromise = {};
 
+      function UserIdTakenError(serviceId, userId, ownerPublicId) {
+        this.name = 'UserIdTakenError';
+        this.stack = (new Error()).stack;
+        this.serviceId = serviceId;
+        this.userId = userId;
+        this.owner = ownerPublicId;
+        this.message = 'This account is already registered with ' + ownerPublicId;
+      }
+
+      UserIdTakenError.prototype = Object.create(Error.prototype);
+      UserIdTakenError.prototype.constructor = UserIdTakenError;
+
       return function clmService(serviceId, mixin) {
         var service = {
           errNotImplemented: new Error('Not implemented'),
+          errUserIdTaken: UserIdTakenError,
 
           /**
            * Return a promise resolving to all avalaible badges at
@@ -165,7 +178,20 @@
             return spfFirebase.set(
               ['classMentors/servicesUserIds', serviceId, details.id],
               publicId
-            ).then(function() {
+            ).catch(function(err) {
+              return service.userIdOwner(details.id).then(function(obj) {
+                if (obj.$value == null) {
+                  return $q.reject(err);
+                }
+
+                if (obj.$value === publicId) {
+                  $log.error('Claiming user id reported failed but seems to be rightly set: ' + err);
+                  return;
+                }
+
+                return $q.reject(new UserIdTakenError(serviceId, details.id, obj.$value));
+              });
+            }).then(function() {
               return spfFirebase.set(
                 ['classMentors/userProfiles', publicId, 'services', serviceId, 'details'], {
                   id: details.id,
@@ -177,6 +203,9 @@
               );
             }).catch(function(err) {
               $log.error(err);
+              if (err.constructor === UserIdTakenError) {
+                return $q.reject(err);
+              }
               return $q.reject(new Error('Failed to save your details for ' + serviceId));
             });
           },
@@ -215,9 +244,22 @@
            *                        otherwise.
            */
           userIdTaken: function(userId) {
-            return spfFirebase.loadedObj(['classMentors/servicesUserIds', serviceId, userId]).then(function(sync) {
+            return service.userIdOwner(userId).then(function(sync) {
               return sync.$value !== null;
             });
+          },
+
+          /**
+           * Return a promise resolving to a loaded AngularFire object for the service
+           * user id owners public id.
+           *
+           * The public Id will be set to the `$value` attribute.
+           *
+           * @param  {[type]} userId [description]
+           * @return {[type]}        [description]
+           */
+          userIdOwner: function(userId) {
+            return spfFirebase.loadedObj(['classMentors/servicesUserIds', serviceId, userId]);
           },
 
           /**
@@ -1351,9 +1393,18 @@
                     userId: resp.data
                   };
                 });
+              }).catch(function(err) {
+                $log.error(err);
+                return $q.reject(new Error(
+                  'We failed to look up your Code Combat user id (user name ' +
+                  userName + ').'
+                ));
               }).then(function(data) {
                 if (!data.userId) {
-                  return $q.reject('We failed to lookup your Code Combat user id.');
+                  return $q.reject(new Error(
+                    'We failed to lookup your Code Combat user id (user name ' +
+                    userName + ').'
+                  ));
                 }
 
                 return clmDataStore.services.codeCombat.saveDetails(

@@ -1,0 +1,9 @@
+<md-content flex class="md-padding">
+
+	<p>We failed to add the Code Combat user name "{{ ctrl.userName }}" account to your profile.</p>
+
+	<p ng-if="ctrl.err.owner">
+		It's is already associated to
+		<a ng-href="#{{ 'profile' | urlFor:{'publicId': ctrl.err.owner} }}">{{ ctrl.err.owner }}'s account</a>.
+	</p>
+</md-content>

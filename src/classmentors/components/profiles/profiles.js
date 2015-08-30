@@ -10,7 +10,7 @@
       $routeProvider.
 
       when(routes.setProfileCodeCombatId, {
-        template: '<md-content flex class="md-padding" layout="row">Something went wrong...</md-content>',
+        templateUrl: 'classmentors/components/profiles/profiles-view-codecombat-lookup-error.html',
         controller: 'SetCodeCombatUserIdCtrl',
         controllerAs: 'ctrl',
         resolve: {
@@ -260,16 +260,14 @@
         return clmDataStore.services.codeCombat.setUser(username, verificationKey).then(function() {
           spfAlert.success('Your Code Combat user name and id have been saved.');
           return clmDataStore.currentUserProfile();
-        }, function(err) {
-          spfAlert.error('Failed to set user name and ID');
-          return $q.reject(err);
         }).then(function(profile) {
           clmDataStore.services.codeCombat.updateProfile(profile);
         }).then(function() {
           $location.path(routes.editProfile);
         }).catch(function(err) {
           return {
-            err: err
+            err: err,
+            userName: username
           };
         });
       };
@@ -282,7 +280,13 @@
    */
   controller('SetCodeCombatUserIdCtrl', [
     'initialData',
-    function SetCodeCombatUserIdCtrl() {}
+    'spfNavBarService',
+    function SetCodeCombatUserIdCtrl(initialData, spfNavBarService) {
+      this.err = initialData.err;
+      this.userName = initialData.userName;
+
+      spfNavBarService.update('Code Combat User Name');
+    }
   ]).
 
   directive('clmProfile', [
