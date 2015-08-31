@@ -15,9 +15,9 @@
     <div flex="67">
 
         <div clm-spf-profile="ctrl.profile.$id"></div>
-        <div clm-profile="ctrl.profile" clm-service-id="codeCombat"></div>
-        <div clm-profile="ctrl.profile" clm-service-id="codeSchool"></div>
-        <div clm-profile="ctrl.profile" clm-service-id="treeHouse"></div>
+        <div clm-profile="ctrl.profile" clm-service-id="codeCombat" clm-current-user="ctrl.currentUserProfile"></div>
+        <div clm-profile="ctrl.profile" clm-service-id="codeSchool" clm-current-user="ctrl.currentUserProfile"></div>
+        <div clm-profile="ctrl.profile" clm-service-id="treeHouse" clm-current-user="ctrl.currentUserProfile"></div>
 
         <div id="register-codecombat" ng-if="!ctrl.profile.services.codeCombat.details.id" class="register-service md-whiteframe-z1">
             <h2>Code Combat</h2>

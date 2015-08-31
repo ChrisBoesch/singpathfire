@@ -5,7 +5,7 @@
             <small> - registered as <em>{{profile.services[serviceId].details.name}}</em></small>
         </h2>
 
-        <md-button class="md-icon-button" aria-label="remove service" ng-click="ctrl.remove(serviceId, profile.services[serviceId].details)" ng-if="ctrl.canUpdate()">
+        <md-button class="md-icon-button" aria-label="remove service" ng-click="ctrl.remove(serviceId, profile.services[serviceId].details)" ng-if="ctrl.canRemove()">
             <md-icon md-svg-icon="highlight-remove"></md-icon>
         </md-button>
     </div>
