@@ -340,6 +340,14 @@
               );
             };
 
+            this.canRemove = function() {
+              return (
+                $scope.profile &&
+                $scope.currentUser &&
+                $scope.profile.$id === $scope.currentUser.$id
+              );
+            };
+
             this.update = function() {
               return clmDataStore.services[$scope.serviceId].updateProfile(
                 $scope.profile
