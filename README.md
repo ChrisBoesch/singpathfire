@@ -5,7 +5,12 @@
 
 # Class Mentors and SingPathFire
 
-## Requirements
+## Editing from Koding.com (a free online IDE)
+
+This [Koding tutorial] walks through how to work on singpathfire from Koding.com using just your web browser. Koding allows you to contribute without downloading or installing anything to your local system. This can be faster for contributers with slower Internet connections for development machines. 
+[Koding tutorial]: https://docs.google.com/document/d/18Uclfe2em3iK73ZhS2HPijrsdJDpCfju52RyyZOVWXk/edit?usp=sharing
+
+## Local Installation Requirements
 
 - make
 - python 2.7 and pip
