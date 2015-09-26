@@ -316,11 +316,8 @@
       return function viewEventCtrlInitialData() {
         var errNoEvent = new Error('Event not found');
         var eventId = $route.current.params.eventId;
-        var profilePromise = clmDataStore.currentUserProfile().catch(rescue);
 
-        function rescue() {
-          return;
-        }
+        var profilePromise = clmDataStore.currentUserProfile().catch(angular.noop);
 
         var eventPromise = clmDataStore.events.get(eventId).then(function(event) {
           if (event.$value === null) {
@@ -336,43 +333,22 @@
           return $q.when(data.profile && data.profile.canView(data.event));
         });
 
-        var tasksPromise = canviewPromise.then(function(canView) {
-          if (canView) {
-            return clmDataStore.events.getTasks(eventId);
-          }
-        });
-
-        var participantsPromise = canviewPromise.then(function(canView) {
-          if (canView) {
-            return clmDataStore.events.participants(eventId);
-          }
-        });
-
-        var userSolutionsPromise = $q.all({
-          profile: profilePromise,
-          canview: canviewPromise
-        }).then(function(result) {
-          if (result.canview && result.profile && result.profile.$id) {
-            return clmDataStore.events.getUserSolutions(eventId, result.profile.$id);
-          }
-        });
-
-        var currentUserProgressPromise = $q.all({
-          profile: profilePromise,
-          canview: canviewPromise
-        }).then(function(result) {
-          if (result.canview && result.profile && result.profile.$id) {
-            return clmDataStore.events.getUserProgress(eventId, result.profile.$id);
-          }
-        });
-
         return $q.all({
-          currentUser: spfAuthData.user().catch(rescue),
+          currentUser: spfAuthData.user().catch(angular.noop),
           profile: profilePromise,
           event: eventPromise,
-          tasks: tasksPromise,
-          participants: participantsPromise,
           ranking: clmDataStore.events.getRanking(eventId),
+          canView: canviewPromise,
+          tasks: canviewPromise.then(function(canView) {
+            if (canView) {
+              return clmDataStore.events.getTasks(eventId);
+            }
+          }),
+          participants: canviewPromise.then(function(canView) {
+            if (canView) {
+              return clmDataStore.events.participants(eventId);
+            }
+          }),
           progress: canviewPromise.then(function(canView) {
             if (canView) {
               return clmDataStore.events.getProgress(eventId);
@@ -382,16 +358,6 @@
             if (canView) {
               return clmDataStore.events.getSolutions(eventId);
             }
-          }),
-          currentUserProgress: currentUserProgressPromise,
-          currentUserSolutions: userSolutionsPromise,
-          currentUserStats: $q.all([
-            canviewPromise, eventPromise, tasksPromise, userSolutionsPromise, profilePromise
-          ]).then(function(data) {
-            if (!data || !data[0] || !data[3] || !data[4]) {
-              return {};
-            }
-            return clmDataStore.events.updateCurrentUserProfile.apply(clmDataStore.events, data.slice(1));
           })
         });
       };
@@ -405,37 +371,31 @@
   controller('ViewEventCtrl', [
     '$scope',
     'initialData',
-    '$q',
-    '$log',
     '$document',
     '$mdDialog',
     '$route',
     'spfAlert',
     'urlFor',
-    'routes',
     'spfFirebase',
     'spfAuthData',
     'spfNavBarService',
     'clmDataStore',
-    'clmServicesUrl',
     function ViewEventCtrl(
-      $scope, initialData, $q, $log, $document, $mdDialog, $route,
-      spfAlert, urlFor, routes, spfFirebase, spfAuthData, spfNavBarService, clmDataStore, clmServicesUrl
+      $scope, initialData, $document, $mdDialog, $route,
+      spfAlert, urlFor, spfFirebase, spfAuthData, spfNavBarService, clmDataStore
     ) {
       var self = this;
-      var linkers, monitorHandler;
+      var monitorHandler;
 
       this.currentUser = initialData.currentUser;
-      this.profile = initialData.profile;
       this.event = initialData.event;
-      this.tasks = initialData.tasks;
-      this.ranking = initialData.ranking;
-      this.currentUserStats = initialData.currentUserStats;
       this.participants = initialData.participants;
+      this.profile = initialData.profile;
+      this.tasks = initialData.tasks;
       this.progress = initialData.progress;
+      this.ranking = initialData.ranking;
       this.solutions = initialData.solutions;
-      this.currentUserProgress = initialData.currentUserProgress;
-      this.currentUserSolutions = initialData.currentUserSolutions;
+      this.canView = initialData.canView;
       this.orderKey = 'total';
       this.previousOrderKey = 'user.displayName';
       this.reverseOrder = true;
@@ -460,14 +420,12 @@
       $scope.$on('$destroy', function() {
         /* eslint no-unused-expressions: 0 */
         monitorHandler.unwatch();
+        self.event && self.event.$destroy && self.event.$destroy();
+        self.participants && self.participants.$destroy && self.participants.$destroy();
         self.profile && self.profile.$destroy && self.profile.$destroy();
-        self.tasks && self.tasks.$destroy();
-        self.ranking && self.ranking.$destroy();
-        self.participants && self.participants.$destroy();
-        self.progress && self.progress.$destroy();
-        self.solutions && self.solutions.$destroy();
-        self.currentUserProgress && self.currentUserProgress.$destroy();
-        self.currentUserSolutions && self.currentUserSolutions.$destroy();
+        self.progress && self.progress.$destroy && self.progress.$destroy();
+        self.ranking && self.ranking.$destroy && self.ranking.$destroy();
+        self.solutions && self.solutions.$destroy && self.solutions.$destroy();
       });
 
       this.orderBy = function(key) {
@@ -478,14 +436,6 @@
           this.orderKey = key;
           this.reverseOrder = true;
         }
-      };
-
-      this.visibleTasks = function() {
-        var count = Object.keys(self.tasks).filter(function(key) {
-          return key && key[0] !== '$' && self.tasks[key] && !self.tasks[key].hidden;
-        }).length;
-
-        return count;
       };
 
       updateNavbar();
@@ -602,203 +552,6 @@
           spfAlert.error('Failed to save public id');
           return err;
         });
-      };
-
-      this.promptForLink = function(eventId, taskId, task, participant, userSolution) {
-        $mdDialog.show({
-          parent: $document.body,
-          templateUrl: 'classmentors/components/events/events-view-provide-link.html',
-          controller: DialogController,
-          controllerAs: 'ctrl'
-        });
-
-        function DialogController() {
-          this.task = task;
-          if (
-            userSolution &&
-            userSolution[taskId]
-          ) {
-            this.solution = userSolution[taskId];
-          }
-
-          this.save = function(link) {
-            clmDataStore.events.submitSolution(eventId, taskId, participant.$id, link).then(function() {
-              $mdDialog.hide();
-              spfAlert.success('Link is saved.');
-            }).catch(function(err) {
-              $log.error(err);
-              spfAlert.error('Failed to save the link.');
-              return err;
-            }).then(function() {
-              return self.update(
-                self.event, self.tasks, self.currentUserSolutions, self.profile, self.currentUserStats.progress
-              );
-            });
-          };
-
-          this.cancel = function() {
-            $mdDialog.hide();
-          };
-        }
-      };
-
-      this.promptForTextResponse = function(eventId, taskId, task, participant, userSolution) {
-        $mdDialog.show({
-          parent: $document.body,
-          templateUrl: 'classmentors/components/events/events-view-provide-response.html',
-          controller: DialogController,
-          controllerAs: 'ctrl'
-        });
-
-        function DialogController() {
-          this.task = task;
-          if (
-            userSolution &&
-            userSolution[taskId]
-          ) {
-            this.solution = userSolution[taskId];
-          }
-
-          this.save = function(response) {
-            clmDataStore.events.submitSolution(eventId, taskId, participant.$id, response).then(function() {
-              $mdDialog.hide();
-              spfAlert.success('Response is saved.');
-            }).catch(function(err) {
-              $log.error(err);
-              spfAlert.error('Failed to save your response.');
-              return err;
-            }).then(function() {
-              return self.update(
-                self.event, self.tasks, self.currentUserSolutions, self.profile, self.currentUserStats.progress
-              );
-            });
-          };
-
-          this.cancel = function() {
-            $mdDialog.hide();
-          };
-        }
-      };
-
-      this.update = function(event, tasks, userSolutions, profile, userProgress) {
-        return clmDataStore.events.updateCurrentUserProfile(
-          event, tasks, userSolutions, profile, userProgress
-        ).then(function(stats) {
-          self.currentUserStats = stats;
-          spfAlert.success('Profile updated');
-        }).catch(function(err) {
-          $log.error(err);
-          spfAlert.error('Failed to update profile');
-        });
-      };
-
-      this.completed = function(taskId, participants, progress) {
-        var participantCount, participantsIds;
-
-        if (!participants || !progress) {
-          return 0;
-        }
-
-        participantCount = participants.length;
-        participantsIds = participants.reduce(function(all, participant) {
-          if (participant.$id) {
-            all[participant.$id] = true;
-          }
-          return all;
-        }, {});
-
-        if (participantCount < 1) {
-          return 0;
-        }
-
-        return Object.keys(progress).filter(function(publicId) {
-          return (
-            participantsIds[publicId] && // Make sure user is still participating
-                                         // (user progress is kept when they leave)
-            progress[publicId] &&
-            progress[publicId][taskId] &&
-            progress[publicId][taskId].completed
-          );
-        }).length / participantCount * 100;
-      };
-
-      this.startLink = function(task, profile) {
-        var serviceProfile;
-
-        if (
-          !task ||
-          !task.serviceId ||
-          !linkers[task.serviceId]
-        ) {
-          return '';
-        }
-
-        serviceProfile = profile && profile.services && profile.services[task.serviceId];
-        return linkers[task.serviceId](task, serviceProfile);
-      };
-
-      var trackedServices = {
-        codeSchool: true,
-        codeCombat: true
-      };
-
-      this.mustRegister = function(task, profile) {
-        return (
-          task &&
-          task.serviceId &&
-          trackedServices[task.serviceId] && (
-            !profile ||
-            !profile.services ||
-            !profile.services[task.serviceId] ||
-            !profile.services[task.serviceId].details ||
-            !profile.services[task.serviceId].details.id
-          ) || false
-        );
-      };
-
-      function defaultLinker(task, serviceProfile) {
-        if (
-          !serviceProfile ||
-          !serviceProfile.details ||
-          !serviceProfile.details.id ||
-          !task ||
-          !task.badge ||
-          !task.badge.url
-        ) {
-          return '#' + routes.editProfile;
-        }
-
-        return task.badge.url;
-      }
-
-      linkers = {
-        codeSchool: defaultLinker,
-        codeCombat: defaultLinker,
-
-        singPath: function(task) {
-          if (!task || task.serviceId !== 'singPath') {
-            return '';
-          }
-
-          if (
-            !task.singPathProblem ||
-            !task.singPathProblem.path ||
-            !task.singPathProblem.path.id ||
-            !task.singPathProblem.level ||
-            !task.singPathProblem.level.id ||
-            !task.singPathProblem.problem ||
-            !task.singPathProblem.problem.id
-          ) {
-            return clmServicesUrl.singPath;
-          }
-
-          return (
-            clmServicesUrl.singPath + '/#' +
-            '/paths/' + task.singPathProblem.path.id +
-            '/levels/' + task.singPathProblem.level.id +
-            '/problems/' + task.singPathProblem.problem.id + '/play'
-          );
-        }
       };
 
       this.removeParticipant = function(e, event, participant) {
@@ -1244,6 +997,440 @@
           self.savingTask = false;
         });
       };
+    }
+  ]).
+
+  /**
+   * Show event tasks and participants progress in a paged table.
+   *
+   */
+  directive('clmEventTable', [
+    function clmEventTableFactory() {
+      return {
+        templateUrl: 'classmentors/components/events/events-view-event-table.html',
+        restrict: 'E',
+        bindToController: true,
+        scope: {
+          event: '=',
+          profile: '=',
+          participants: '=',
+          tasks: '=',
+          progress: '=',
+          solutions: '='
+        },
+        controller: 'ClmEventTableCtrl',
+        controllerAs: 'ctrl'
+      };
+    }
+  ]).
+
+  controller('ClmEventTableCtrl', [
+    '$scope',
+    '$q',
+    '$log',
+    '$mdDialog',
+    '$document',
+    'urlFor',
+    'spfAlert',
+    'clmServicesUrl',
+    'clmDataStore',
+    function ClmEventTableCtrl($scope, $q, $log, $mdDialog, $document, urlFor, spfAlert, clmServicesUrl, clmDataStore) {
+      var self = this;
+      var unwatchers = [];
+
+      this.selectedParticpants = [];
+      this.viewOptions = {
+        order: 'name',
+        rowCount: 0,
+        rowPerPage: 10,
+        range: {
+          start: 0,
+          end: 0
+        }
+      };
+
+      /**
+       * Get current user participant row
+       */
+      function currentUserParticipant() {
+        if (
+          !self.participants ||
+          !self.participants.$getRecord ||
+          !self.profile ||
+          !self.profile.$id
+        ) {
+          self.currentUserParticipant = undefined;
+        }
+
+        self.currentUserParticipant = self.participants.$getRecord(self.profile.$id);
+      }
+
+      /**
+       * Set list of visible tasks and the % completion.
+       *
+       */
+      function visibleTasks() {
+        if (!self.tasks || !self.tasks.filter) {
+          self.visibleTasks = [];
+          return;
+        }
+
+        self.visibleTasks = self.tasks.filter(function(t) {
+          return !t.hidden && !t.archived;
+        });
+
+        taskCompletion();
+      }
+
+      /**
+       * Calculate all visible tasks completion rate.
+       *
+       */
+      function taskCompletion() {
+        self.taskCompletion = self.visibleTasks.reduce(function(all, task) {
+          all[task.$id] = _taskCompletion(task.$id);
+          return all;
+        }, {});
+      }
+
+      /**
+       * Return the completion rate of a task.
+       *
+       */
+      function _taskCompletion(taskId) {
+        var participantCount, participantsIds;
+
+        if (!self.participants || !self.progress) {
+          return 0;
+        }
+
+        participantCount = self.participants.length;
+        participantsIds = self.participants.reduce(function(all, participant) {
+          if (participant.$id) {
+            all[participant.$id] = true;
+          }
+          return all;
+        }, {});
+
+        if (participantCount < 1) {
+          return 0;
+        }
+
+        return Object.keys(self.progress).filter(function(publicId) {
+          return (
+            participantsIds[publicId] && // Make sure user is still participating
+                                         // (user progress is kept when they leave)
+            self.progress[publicId] &&
+            self.progress[publicId][taskId] &&
+            self.progress[publicId][taskId].completed
+          );
+        }).length / participantCount * 100;
+      }
+
+      function getRows(participants) {
+        var rows = participants.filter(function(p) {
+          return p.$id !== self.profile.$id;
+        });
+
+        rows.sort(function(a, b) {
+          if (!a.user || a.user.displayName) {
+            return -1;
+          }
+
+          if (!b.user || b.user.displayName) {
+            return 1;
+          }
+
+          return a.user.displayName.localeCompare(b.user.displayName);
+        });
+
+        return rows;
+      }
+
+      function updateViewOptions(rows, options) {
+        options.rowCount = rows.length;
+
+        if (options.range.start < 0) {
+          options.range.start = 0;
+        }
+
+        options.range.end = options.range.start + options.rowPerPage;
+        if (options.range.end > rows.length) {
+          options.range.end = rows.length;
+        }
+      }
+
+      function participantsSlice(rows, options) {
+        return rows.slice(options.range.start, options.range.end);
+      }
+
+      /**
+       * Set the slice of participant to show.
+       *
+       * the viewOption should set the sorting order, the slice length
+       * and the slice offSet.
+       *
+       */
+      function participantsView() {
+        var rows = getRows(self.participants);
+
+        updateViewOptions(rows, self.viewOptions);
+        self.participantsView = participantsSlice(rows, self.viewOptions);
+      }
+
+      /**
+       * Signal the row per page model has been updated.
+       */
+      this.rowPerPageUpdated = function() {
+        self.viewOptions.rowPerPage = parseInt(self.viewOptions.rowPerPage, 10);
+        participantsView();
+      };
+
+      /**
+       * Advance the slice of participants to show.
+       *
+       */
+      this.nextPage = function() {
+        var rows = getRows(self.participants);
+
+        self.viewOptions.range.start = self.viewOptions.range.end;
+        updateViewOptions(rows, self.viewOptions);
+        self.participantsView = participantsSlice(rows, self.viewOptions);
+      };
+
+      /**
+       * Rewind the slice of participants to show.
+       *
+       */
+      this.prevPage = function() {
+        var rows = getRows(self.participants);
+
+        self.viewOptions.range.start = self.viewOptions.range.start - self.viewOptions.rowPerPage;
+        updateViewOptions(rows, self.viewOptions);
+        self.participantsView = participantsSlice(rows, self.viewOptions);
+      };
+
+      this.firstPage = function() {
+        self.viewOptions.range.start = 0;
+        participantsView();
+      };
+
+      this.lastPage = function() {
+        var rows = getRows(self.participants);
+
+        self.viewOptions.rowCount = rows.length;
+        self.viewOptions.range.start = Math.floor(rows.length / self.viewOptions.rowPerPage);
+
+        updateViewOptions(rows, self.viewOptions);
+        self.participantsView = participantsSlice(rows, self.viewOptions);
+      };
+
+      function defaultLinker(task, serviceProfile) {
+        if (
+          !serviceProfile ||
+          !serviceProfile.details ||
+          !serviceProfile.details.id ||
+          !task ||
+          !task.badge ||
+          !task.badge.url
+        ) {
+          return '#' + urlFor('editProfile');
+        }
+
+        return task.badge.url;
+      }
+
+      var linkers = {
+        codeSchool: defaultLinker,
+        codeCombat: defaultLinker,
+
+        singPath: function(task) {
+          if (!task || task.serviceId !== 'singPath') {
+            return '';
+          }
+
+          if (
+            !task.singPathProblem ||
+            !task.singPathProblem.path ||
+            !task.singPathProblem.path.id ||
+            !task.singPathProblem.level ||
+            !task.singPathProblem.level.id ||
+            !task.singPathProblem.problem ||
+            !task.singPathProblem.problem.id
+          ) {
+            return clmServicesUrl.singPath;
+          }
+
+          return (
+            clmServicesUrl.singPath + '/#' +
+            '/paths/' + task.singPathProblem.path.id +
+            '/levels/' + task.singPathProblem.level.id +
+            '/problems/' + task.singPathProblem.problem.id + '/play'
+          );
+        }
+      };
+
+      this.startLink = function(task, profile) {
+        var serviceProfile;
+
+        if (
+          !task ||
+          !task.serviceId ||
+          !linkers[task.serviceId]
+        ) {
+          return '';
+        }
+
+        serviceProfile = profile && profile.services && profile.services[task.serviceId];
+        return linkers[task.serviceId](task, serviceProfile);
+      };
+
+      var trackedServices = {
+        codeSchool: true,
+        codeCombat: true
+      };
+
+      this.mustRegister = function(task, profile) {
+        return (
+          task &&
+          task.serviceId &&
+          trackedServices[task.serviceId] && (
+            !profile ||
+            !profile.services ||
+            !profile.services[task.serviceId] ||
+            !profile.services[task.serviceId].details ||
+            !profile.services[task.serviceId].details.id
+          ) || false
+        );
+      };
+
+      this.promptForLink = function(eventId, taskId, task, participant, userSolution) {
+        $mdDialog.show({
+          parent: $document.body,
+          templateUrl: 'classmentors/components/events/events-view-provide-link.html',
+          controller: DialogController,
+          controllerAs: 'ctrl'
+        });
+
+        function DialogController() {
+          this.task = task;
+          if (
+            userSolution &&
+            userSolution[taskId]
+          ) {
+            this.solution = userSolution[taskId];
+          }
+
+          this.save = function(link) {
+            clmDataStore.events.submitSolution(eventId, taskId, participant.$id, link).then(function() {
+              $mdDialog.hide();
+              spfAlert.success('Link is saved.');
+            }).catch(function(err) {
+              $log.error(err);
+              spfAlert.error('Failed to save the link.');
+              return err;
+            });
+          };
+
+          this.cancel = function() {
+            $mdDialog.hide();
+          };
+        }
+      };
+
+      this.promptForTextResponse = function(eventId, taskId, task, participant, userSolution) {
+        $mdDialog.show({
+          parent: $document.body,
+          templateUrl: 'classmentors/components/events/events-view-provide-response.html',
+          controller: DialogController,
+          controllerAs: 'ctrl'
+        });
+
+        function DialogController() {
+          this.task = task;
+          if (
+            userSolution &&
+            userSolution[taskId]
+          ) {
+            this.solution = userSolution[taskId];
+          }
+
+          this.save = function(response) {
+            clmDataStore.events.submitSolution(eventId, taskId, participant.$id, response).then(function() {
+              $mdDialog.hide();
+              spfAlert.success('Response is saved.');
+            }).catch(function(err) {
+              $log.error(err);
+              spfAlert.error('Failed to save your response.');
+              return err;
+            });
+          };
+
+          this.cancel = function() {
+            $mdDialog.hide();
+          };
+        }
+      };
+
+      this.update = function(event, tasks, userSolutions, profile) {
+        return clmDataStore.events.updateCurrentUserProfile(
+          event, tasks, userSolutions, profile
+        ).then(function() {
+          spfAlert.success('Profile updated');
+        }).catch(function(err) {
+          $log.error(err);
+          spfAlert.error('Failed to update profile');
+        });
+      };
+
+      // load up resources and start firebase watcher
+      this.loading = true;
+      $q.all({
+        userProgress: clmDataStore.events.getUserProgress(this.event.$id, this.profile.$id).then(function(progress) {
+          self.currentUserProgress = progress;
+          unwatchers.push(self.currentUserProgress.$destroy);
+          return progress;
+        }),
+        userSolution: clmDataStore.events.getUserSolutions(this.event.$id, this.profile.$id).then(function(solutions) {
+          self.currentUserSolutions = solutions;
+          unwatchers.push(self.currentUserSolutions.$destroy);
+          return solutions;
+        })
+      }).then(function(results) {
+        return clmDataStore.events.updateCurrentUserProfile(
+          self.event,
+          self.tasks,
+          results.userSolution,
+          self.profile
+        );
+      }).finally(function() {
+        self.loading = false;
+
+        currentUserParticipant();
+        visibleTasks();
+        participantsView();
+
+        unwatchers.push(self.tasks.$watch(visibleTasks));
+        unwatchers.push(self.progress.$watch(taskCompletion));
+        unwatchers.push(self.participants.$watch(taskCompletion));
+        unwatchers.push(self.participants.$watch(participantsView));
+        unwatchers.push(self.participants.$watch(currentUserParticipant));
+      }).catch(function(err) {
+        $log.error(err);
+      });
+
+      // clean up.
+      $scope.$on('$destroy', function() {
+        unwatchers.forEach(function(f) {
+          if (f) {
+            try {
+              f();
+            } catch (err) {
+              $log.error(err);
+            }
+          }
+        });
+      });
     }
   ])
 

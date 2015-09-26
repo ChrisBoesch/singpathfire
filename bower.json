@@ -21,7 +21,6 @@
     "angular": "~1.4.5",
     "angular-loading-bar": "~0.8.0",
     "angular-material": "~0.10.1",
-    "angular-material-data-table": "~0.8.10",
     "angular-messages": "~1.4.5",
     "angular-route": "~1.4.5",
     "angularfire": "^1.0.0",
@@ -55,10 +54,6 @@
         "bower_components/crypto-js/pbkdf2.js",
         "bower_components/crypto-js/sha1.js",
         "bower_components/crypto-js/sha256.js"
-      ],
-      "angular-material-data-table": [
-        "bower_components/angular-material-data-table/dist/md-data-table.css",
-        "bower_components/angular-material-data-table/dist/md-data-table.js"
       ]
     }
   },
