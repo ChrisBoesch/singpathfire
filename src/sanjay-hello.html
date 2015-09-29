@@ -1,0 +1,77 @@
+<meta name="robots" content="noindex">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Singapore Schools</title>
+  <link rel="stylesheet" href=
+  "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" type=
+  "text/css" />
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.9/angular.min.js"
+  type="text/javascript">
+</script>
+    <script src="https://cdn.firebase.com/js/client/2.0.4/firebase.js"></script>
+    <script src="https://cdn.firebase.com/libs/angularfire/0.8.0/angularfire.min.js"></script>
+
+    <!--Google Analytics -->
+    <script src="https://dl.dropboxusercontent.com/u/4972572/temp/angulartics-master/dist/angulartics.min.js"></script>
+    <script src="https://dl.dropboxusercontent.com/u/4972572/temp/angulartics-master/dist/angulartics-ga.min.js"></script>
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-60478752-1', { 'cookieDomain': 'none' });
+    </script>
+    <!-- Anagular-char data -->
+    <link rel="stylesheet" href="https://cdn.rawgit.com/jtblin/angular-chart.js/master/dist/angular-chart.css" type="text/css" />  
+    <script src="https://cdn.rawgit.com/nnnick/Chart.js/master/Chart.min.js" type="text/javascript"></script>
+    <script src="https://cdn.rawgit.com/jtblin/angular-chart.js/master/dist/angular-chart.js" type="text/javascript"></script>
+
+</head>
+
+<body ng-app="schools">
+  <div ng-controller="TableCtrl">
+    <h3>Hello World</h3>
+    The body of this page uses the TableCtrl assigned below in the javascript block. <br>
+    This is not a great way to do this, but it is good for teaching and quick mockups. <br>
+    We can see that myMessage in the controller is <b>{{myMessage}}</b>.<br>
+    <br>
+    We can also use ng-repeat to iterate over a static list. <br> 
+    <ol>
+        <li ng-repeat="food in foods">
+            {{food}}
+        </li>
+    </ol>
+    
+    Or fetch data from Firebase and iterate over that. <br>
+
+    <ol>
+        <li ng-repeat="school in schools | limitTo:5">
+            {{school.name}}
+        </li>
+    </ol>
+    
+    <br>
+    <br>
+    You can mockup new HTML pages and Angularjs partials with static data in the controllers <br>
+    or by pulling static data from a hosted JSON file in the same directory. <br>
+    
+    
+    
+<script id="jsbin-javascript">
+
+    var app = angular.module("schools", ["firebase"]);
+    
+    app.controller("TableCtrl", ['$scope','$http','$firebase', function ($scope, $http, $firebase) {
+       
+       $scope.myMessage = "Message from the controller";
+       $scope.foods = ["Pizza", "Hot Dogs", "Hamburgers","Salad"];
+       
+        var theFirebaseURL = "https://codevantage.firebaseio.com";
+        var ref = new Firebase(theFirebaseURL);
+        $scope.schools = $firebase(ref.child("schools")).$asArray(); 
+        //Put the data at https://codevantage.firebaseio.com/schools.json into an array. 
+        
+    }]);
+</script>
+</body>
+</html>
