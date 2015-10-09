@@ -3,47 +3,36 @@
     <md-content class="md-padding">
         <table class="events tasks">
             <thead>
-                <tr>
-                    <th>
-                       Challenge
+                <tr ng-class="{'reversed': ctrl.viewOptions.reverseOrder}">
+                    <th rowspan="4" ng-class="{orderer: !ctrl.viewOptions.orderKey}">
+                        <md-button ng-click="ctrl.orderBy()">Participants</md-button>
                     </th>
                     <th ng-if="ctrl.visibleTasks.length == 0">
                         <em>No challenge</em>
                     </th>
-                    <th ng-repeat="task in ctrl.visibleTasks track by task.$id">
-                        {{ task.title }}
+                    <th ng-repeat="task in ctrl.visibleTasks track by task.$id"
+                        ng-class="{orderer: ctrl.viewOptions.orderKey == task.$id}"
+                    >
+                        <md-button ng-click="ctrl.orderBy(task.$id)">{{ task.title }}</md-button>
                     </th>
                 </tr>
                 <tr>
-                    <th>
-                       Details
-                    </th>
+                    <th ng-if="ctrl.visibleTasks.length == 0"></th>
                     <th ng-repeat="task in ctrl.visibleTasks track by task.$id">
                         {{ task.description }}
                     </th>
                 </tr>
                 <tr>
-                    <th>
-                        Help
-                    </th>
+                    <th ng-if="ctrl.visibleTasks.length == 0"></th>
                     <th ng-repeat="task in ctrl.visibleTasks track by task.$id">
                         <a ng-href="{{task.link}}" ng-if="task.link" target="_blank">More details</a>
                     </th>
                 </tr>
                 <tr>
-                    <th>
-                        Completed
-                    </th>
+                    <th ng-if="ctrl.visibleTasks.length == 0"></th>
                     <th ng-repeat="task in ctrl.visibleTasks track by task.$id">
                         {{ctrl.taskCompletion[task.$id] | number: 0}} %
                     </th>
-                </tr>
-                <tr>
-                    <th>
-                       Participants
-                    </th>
-                    <td ng-if="ctrl.visibleTasks.length == 0"></td>
-                    <td ng-attr-colspan="{{ctrl.visibleTasks.length}}" ng-if="ctrl.visibleTasks.length > 0"></td>
                 </tr>
             </thead>
             <tbody>
@@ -128,7 +117,7 @@
                     </td>
                 </tr>
 
-                <tr ng-repeat="participant in ctrl.participantsView track by participant.$id" ng-class="'index-' + $index + ' ' + ($index % 2 == 0? 'odd' : 'even')">
+                <tr ng-repeat="participant in ctrl.participantsView track by participant.$id" ng-class="'index-' + $index + ' ' + ($odd ? 'odd' : 'even')">
                     
                     <th layout="row" layout-align="start center">
                         <md-button class="name-button" ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$id} }}">
@@ -170,7 +159,7 @@
         <span flex></span>
         
         <span class="label md-padding">Row per page: </span>
-        <md-select ng-model="ctrl.viewOptions.rowPerPage" ng-change="ctrl.rowPerPageUpdated()">
+        <md-select ng-model="ctrl.viewOptions.rowPerPage" ng-change="ctrl.rowPerPageUpdated()" aria-label="row per page">
             <md-option value="5">5</md-option>
             <md-option value="10">10</md-option>
             <md-option value="25">25</md-option>

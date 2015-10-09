@@ -851,8 +851,13 @@
             });
           },
 
+          // to be true the task only need registration.
           _hasRegistered: function(task, clmProfile, spfProfile) {
             var serviceId = task.serviceId;
+
+            if (!task.serviceId || task.badge || task.singPathProblem) {
+              return false;
+            }
 
             if (serviceId === 'singPath') {
               return !!spfProfile;
@@ -963,18 +968,28 @@
             return tasks.reduce(function(progress, task) {
               // We never recheck archived task completeness
               if (task.archived) {
-                progress[task.$id] = data.progress[task.$id] || null;
+                if (data.progress && data.progress[task.$id]) {
+                  progress[task.$id] = data.progress[task.$id];
+                }
                 return progress;
               }
 
               // We recheck solved closed tasks in case requirements changed.
-              if (task.closed && !data.progress[task.$id].completed) {
+              if (
+                task.closedAt &&
+                !(
+                  data.progress &&
+                  data.progress[task.$id] &&
+                  data.progress[task.$id].completed
+                )
+              ) {
                 return progress;
               }
 
               var solved = (
                 clmDataStore.events._isSolutionLinkValid(task, data.solutions) ||
                 clmDataStore.events._isResponseValid(task, data.solutions) ||
+                clmDataStore.events._hasRegistered(task, data.classMentors, data.singPath) ||
                 clmDataStore.events._hasBadge(task, badges) ||
                 clmDataStore.events._hasSolvedSingpathProblem(task, data.singPath)
               );
@@ -1065,10 +1080,10 @@
                 // 2. check completness and update progress if needed.
                 $q.when(clmDataStore.events._getProgress(tasks, data)).then(function(progress) {
                   var updated = Object.keys(progress).some(function(taskId) {
-                    var wasCompleted = data.progress[taskId] && data.progress[taskId].completed;
-                    var isComplted = progress[taskId] && progress[taskId].completed;
+                    var wasCompleted = data.progress && data.progress[taskId] && data.progress[taskId].completed;
+                    var isCompleted = progress && progress[taskId] && progress[taskId].completed;
 
-                    return isComplted !== wasCompleted;
+                    return isCompleted !== wasCompleted;
                   });
 
                   if (updated) {
@@ -1132,6 +1147,7 @@
                 }
 
                 return (
+                  clmDataStore.events._hasRegistered(task, profile, data.singPath) ||
                   clmDataStore.events._hasSolvedSingpathProblem(task, data.singPath) ||
                   clmDataStore.events._hasBadge(task, data.badges)
                 );
@@ -1146,7 +1162,7 @@
 
               return updatedTasks;
             }).catch(function(err) {
-              $log.error('Failed to get progress of ' + profile.$id + ': ' + err.toString());
+              $log.error('Failed to update profile and soltuions of ' + profile.$id + ': ' + err.toString());
             });
           },
 

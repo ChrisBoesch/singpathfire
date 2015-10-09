@@ -64,9 +64,13 @@ table .md-button {
   margin: 4px;
 }
 
-@media (max-width: 600px){  
+@media (max-width: 600px){
   .responsive-button{
     min-width: initial;
     padding: 0 12px;
-  }  
+  }
+}
+
+thead th {
+  vertical-align: top;
 }

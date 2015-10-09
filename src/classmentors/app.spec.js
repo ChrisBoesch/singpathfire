@@ -1258,18 +1258,17 @@
             it('should retrieve an event tasks', function() {
               clmDataStore.events.getTasks('someEventId');
 
-              expect(spfFirebase.loadedObj.calls.count()).toBe(1);
-              expect(spfFirebase.loadedObj.calls.argsFor(0).length).toBe(2);
+              expect(spfFirebase.loadedArray.calls.count()).toBe(1);
+              expect(spfFirebase.loadedArray.calls.argsFor(0).length).toBe(2);
               expect(
-                spfFirebase.loadedObj.calls.argsFor(0)[0].join('/')
+                spfFirebase.loadedArray.calls.argsFor(0)[0].join('/')
               ).toBe(
                 'classMentors/eventTasks/someEventId'
               );
               expect(
-                spfFirebase.loadedObj.calls.argsFor(0)[1]
+                spfFirebase.loadedArray.calls.argsFor(0)[1]
               ).toEqual({
-                orderByChild: 'archived',
-                equalTo: false
+                orderByPriority: true
               });
             });
           });
@@ -1927,11 +1926,12 @@
               var err;
               var event = {$id: 'someEventId'};
               var solutions = {$id: 'someEventId'};
-              var tasks = {
-                someTaskId: {
+              var tasks = [
+                {
+                  $id: 'someTaskId',
                   serviceId: 'codeSchool'
                 }
-              };
+              ];
 
               clmDataStore.events.updateProgress(event, tasks, solutions).catch(function(_err) {
                 err = _err;
@@ -1944,11 +1944,12 @@
             it('should fetch the user profiles', function() {
               var event = {$id: 'someEventId'};
               var solutions = {$id: 'someEventId'};
-              var tasks = {
-                someTaskId: {
+              var tasks = [
+                {
+                  $id: 'someTaskId',
                   serviceId: 'codeSchool'
                 }
-              };
+              ];
               var profile = {
                 $id: 'bob',
                 user: {displayName: 'bob'}
@@ -1966,11 +1967,12 @@
             it('should fetch the user badges', function() {
               var event = {$id: 'someEventId'};
               var solutions = {$id: 'someEventId'};
-              var tasks = {
-                someTaskId: {
+              var tasks = [
+                {
+                  $id: 'someTaskId',
                   serviceId: 'codeSchool'
                 }
-              };
+              ];
               var profile = {
                 $id: 'bob',
                 user: {displayName: 'bob'}
@@ -1985,14 +1987,15 @@
               expect(clmDataStore.services.codeCombat.fetchBadges).toHaveBeenCalledWith(profile);
             });
 
-            it('should set progress, ranking and user details', function() {
+            it('should set ranking and user details if no progress', function() {
               var event = {$id: 'someEventId'};
               var solutions = {$id: 'someEventId'};
-              var tasks = {
-                someTaskId: {
+              var tasks = [
+                {
+                  $id: 'someTaskId',
                   serviceId: 'codeSchool'
                 }
-              };
+              ];
               var profile = {
                 $id: 'bob',
                 user: {displayName: 'bob', gravatar: 'someUrl'}
@@ -2004,36 +2007,28 @@
 
               $rootScope.$apply();
 
-              expect(spfFirebase.set.calls.count()).toBe(3);
+              expect(spfFirebase.set.calls.count()).toBe(2);
 
               expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
               expect(
                 spfFirebase.set.calls.argsFor(0)[0].join('/')
               ).toBe(
-                'classMentors/eventProgress/someEventId/bob'
+                'classMentors/eventRankings/someEventId/bob'
               );
-              expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({});
+              expect(
+                spfFirebase.set.calls.argsFor(0)[1]
+              ).toEqual(
+                {codeSchool: 0, codeCombat: 0, singPath: 0, total: 0, user: {displayName: 'bob', gravatar: 'someUrl'}}
+              );
 
               expect(spfFirebase.set.calls.argsFor(1).length).toBe(2);
               expect(
                 spfFirebase.set.calls.argsFor(1)[0].join('/')
               ).toBe(
-                'classMentors/eventRankings/someEventId/bob'
-              );
-              expect(
-                spfFirebase.set.calls.argsFor(1)[1]
-              ).toEqual(
-                {codeSchool: 0, codeCombat: 0, singPath: 0, total: 0, user: {displayName: 'bob', gravatar: 'someUrl'}}
-              );
-
-              expect(spfFirebase.set.calls.argsFor(2).length).toBe(2);
-              expect(
-                spfFirebase.set.calls.argsFor(2)[0].join('/')
-              ).toBe(
                 'classMentors/eventParticipants/someEventId/bob/user'
               );
               expect(
-                spfFirebase.set.calls.argsFor(2)[1]
+                spfFirebase.set.calls.argsFor(1)[1]
               ).toEqual(
                 {displayName: 'bob', gravatar: 'someUrl', school: null}
               );
@@ -2042,20 +2037,21 @@
             it('should update progress when task require user to join a service', function() {
               var event = {$id: 'someEventId'};
               var solutions = {$id: 'someEventId'};
-              var tasks = {
-                someTaskId: {
+              var tasks = [
+                {
+                  $id: 'someTaskId',
                   serviceId: 'codeSchool'
-                },
-                someOtherId: {
+                }, {
+                  $id: 'someOtherId',
                   serviceId: 'codeSchool',
                   badge: {
                     id: 'someBadgeId'
                   }
-                },
-                lastTaskId: {
+                }, {
+                  $id: 'lastTaskId',
                   serviceId: 'codeCombat'
                 }
-              };
+              ];
               var profile = {
                 $id: 'bob',
                 user: {displayName: 'bob'},
@@ -2072,8 +2068,14 @@
 
               expect(spfFirebase.set.calls.count()).toBe(3);
 
-              expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
-              expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
+              expect(spfFirebase.set.calls.argsFor(2).length).toBe(2);
+              expect(spfFirebase.set.calls.argsFor(2).length).toBe(2);
+              expect(
+                spfFirebase.set.calls.argsFor(2)[0].join('/')
+              ).toBe(
+                'classMentors/eventProgress/someEventId/bob'
+              );
+              expect(spfFirebase.set.calls.argsFor(2)[1]).toEqual({
                 someTaskId: {
                   completed: true
                 }
@@ -2083,11 +2085,11 @@
             it('should update progress when user earns a required badge', function() {
               var event = {$id: 'someEventId'};
               var solutions = {$id: 'someEventId'};
-              var tasks = {
-                someTaskId: {serviceId: 'codeSchool'},
-                someOtherId: {serviceId: 'codeSchool', badge: {id: 'someBadgeId'}},
-                lastId: {serviceId: 'codeSchool', badge: {id: 'someOtherBadgeId'}}
-              };
+              var tasks = [
+                {$id: 'someTaskId', serviceId: 'codeSchool'},
+                {$id: 'someOtherId', serviceId: 'codeSchool', badge: {id: 'someBadgeId'}},
+                {$id: 'lastId', serviceId: 'codeSchool', badge: {id: 'someOtherBadgeId'}}
+              ];
               var profile = {
                 $id: 'bob',
                 user: {},
@@ -2108,8 +2110,8 @@
 
               expect(spfFirebase.set.calls.count()).toBe(3);
 
-              expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
-              expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
+              expect(spfFirebase.set.calls.argsFor(2).length).toBe(2);
+              expect(spfFirebase.set.calls.argsFor(2)[1]).toEqual({
                 someTaskId: {
                   completed: true
                 },
@@ -2118,9 +2120,9 @@
                 }
               });
 
-              expect(spfFirebase.set.calls.argsFor(1).length).toBe(2);
+              expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
               expect(
-                spfFirebase.set.calls.argsFor(1)[1]
+                spfFirebase.set.calls.argsFor(0)[1]
               ).toEqual(
                 {codeSchool: 1, codeCombat: 0, singPath: 0, total: 1, user: {}}
               );
@@ -2129,11 +2131,11 @@
             it('should not update task progress when the task is closed', function() {
               var event = {$id: 'someEventId'};
               var solutions = {$id: 'someEventId'};
-              var tasks = {
-                someTaskId: {serviceId: 'codeSchool'},
-                someOtherId: {serviceId: 'codeSchool', badge: {id: 'someBadgeId'}, closedAt: 12345},
-                lastId: {serviceId: 'codeSchool', badge: {id: 'someOtherBadgeId'}}
-              };
+              var tasks = [
+                {$id: 'someTaskId', serviceId: 'codeSchool'},
+                {$id: 'someOtherId', serviceId: 'codeSchool', badge: {id: 'someBadgeId'}, closedAt: 12345},
+                {$id: 'lastId', serviceId: 'codeSchool', badge: {id: 'someOtherBadgeId'}}
+              ];
               var profile = {
                 $id: 'bob',
                 user: {},
@@ -2152,8 +2154,8 @@
 
               expect(spfFirebase.set.calls.count()).toBe(3);
 
-              expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
-              expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
+              expect(spfFirebase.set.calls.argsFor(2).length).toBe(2);
+              expect(spfFirebase.set.calls.argsFor(2)[1]).toEqual({
                 someTaskId: {completed: true}
               });
             });
@@ -2161,11 +2163,11 @@
             it('should not update task progress when the task is archived', function() {
               var event = {$id: 'someEventId'};
               var solutions = {$id: 'someEventId'};
-              var tasks = {
-                someTaskId: {serviceId: 'codeSchool'},
-                someOtherId: {serviceId: 'codeSchool', badge: {id: 'someBadgeId'}, archived: true},
-                lastId: {serviceId: 'codeSchool', badge: {id: 'someOtherBadgeId'}}
-              };
+              var tasks = [
+                {$id: 'someTaskId', serviceId: 'codeSchool'},
+                {$id: 'someOtherId', serviceId: 'codeSchool', badge: {id: 'someBadgeId'}, archived: true},
+                {$id: 'lastId', serviceId: 'codeSchool', badge: {id: 'someOtherBadgeId'}}
+              ];
               var profile = {
                 $id: 'bob',
                 user: {},
@@ -2184,8 +2186,8 @@
 
               expect(spfFirebase.set.calls.count()).toBe(3);
 
-              expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
-              expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
+              expect(spfFirebase.set.calls.argsFor(2).length).toBe(2);
+              expect(spfFirebase.set.calls.argsFor(2)[1]).toEqual({
                 someTaskId: {completed: true}
               });
             });
@@ -2193,11 +2195,11 @@
             it('should keep task progress when the task is closed', function() {
               var event = {$id: 'someEventId'};
               var solutions = {$id: 'someEventId'};
-              var tasks = {
-                someTaskId: {serviceId: 'codeSchool'},
-                someOtherId: {serviceId: 'codeSchool', badge: {id: 'someBadgeId'}, closedAt: 12345},
-                lastId: {serviceId: 'codeSchool', badge: {id: 'someOtherBadgeId'}}
-              };
+              var tasks = [
+                {$id: 'someTaskId', serviceId: 'codeSchool'},
+                {$id: 'someOtherId', serviceId: 'codeSchool', badge: {id: 'someBadgeId'}, closedAt: 12345},
+                {$id: 'lastId', serviceId: 'codeSchool', badge: {id: 'someOtherBadgeId'}}
+              ];
               var profile = {
                 $id: 'bob',
                 user: {},
@@ -2211,7 +2213,6 @@
               clmDataStore.services.codeSchool.fetchBadges.and.returnValue($q.when(csBadges));
 
               clmDataStore.events.updateProgress(event, tasks, solutions, 'bob', {
-                someTaskId: {completed: true},
                 someOtherId: {completed: true}
               });
 
@@ -2219,8 +2220,8 @@
 
               expect(spfFirebase.set.calls.count()).toBe(3);
 
-              expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
-              expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
+              expect(spfFirebase.set.calls.argsFor(2).length).toBe(2);
+              expect(spfFirebase.set.calls.argsFor(2)[1]).toEqual({
                 someTaskId: {completed: true},
                 someOtherId: {completed: true}
               });
@@ -2229,11 +2230,11 @@
             it('should keep task progress when the task is archived', function() {
               var event = {$id: 'someEventId'};
               var solutions = {$id: 'someEventId'};
-              var tasks = {
-                someTaskId: {serviceId: 'codeSchool'},
-                someOtherId: {serviceId: 'codeSchool', badge: {id: 'someBadgeId'}, archived: true},
-                lastId: {serviceId: 'codeSchool', badge: {id: 'someOtherBadgeId'}}
-              };
+              var tasks = [
+                {$id: 'someTaskId', serviceId: 'codeSchool'},
+                {$id: 'someOtherId', serviceId: 'codeSchool', badge: {id: 'someBadgeId'}, archived: true},
+                {$id: 'lastId', serviceId: 'codeSchool', badge: {id: 'someOtherBadgeId'}}
+              ];
               var profile = {
                 $id: 'bob',
                 user: {},
@@ -2241,13 +2242,14 @@
                   codeSchool: {details: {id: 'bob'}}
                 }
               };
-              var csBadges = [{id: 'someBadgeId'}];
+              // if the archived tasks was checked again the task would not be complete
+              // but we don't want it checked again.
+              var csBadges = [];
 
               clmDataStore.profile.and.returnValue($q.when(profile));
               clmDataStore.services.codeSchool.fetchBadges.and.returnValue($q.when(csBadges));
 
               clmDataStore.events.updateProgress(event, tasks, solutions, 'bob', {
-                someTaskId: {completed: true},
                 someOtherId: {completed: true}
               });
 
@@ -2255,8 +2257,8 @@
 
               expect(spfFirebase.set.calls.count()).toBe(3);
 
-              expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
-              expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
+              expect(spfFirebase.set.calls.argsFor(2).length).toBe(2);
+              expect(spfFirebase.set.calls.argsFor(2)[1]).toEqual({
                 someTaskId: {completed: true},
                 someOtherId: {completed: true}
               });
@@ -2264,37 +2266,35 @@
 
             it('should update progress when user solves a required problem', function() {
               var event = {$id: 'someEventId'};
-              var tasks = {
-                someTaskId: {
-                  serviceId: 'singPath',
-                  singPathProblem: {
-                    path: {
-                      id: 'pathId'
-                    },
-                    level: {
-                      id: 'levelId'
-                    },
-                    problem: {
-                      id: 'problemId'
-                    }
-                  }
-                },
-                someOtherTaskId: {
-                  serviceId: 'singPath',
-                  singPathProblem: {
-                    path: {
-                      id: 'pathId'
-                    },
-                    level: {
-                      id: 'levelId'
-                    },
-                    problem: {
-                      id: 'otherProblemId'
-                    }
+              var tasks = [{
+                $id: 'someTaskId',
+                serviceId: 'singPath',
+                singPathProblem: {
+                  path: {
+                    id: 'pathId'
+                  },
+                  level: {
+                    id: 'levelId'
+                  },
+                  problem: {
+                    id: 'problemId'
                   }
                 }
-
-              };
+              }, {
+                $id: 'someOtherTaskId',
+                serviceId: 'singPath',
+                singPathProblem: {
+                  path: {
+                    id: 'pathId'
+                  },
+                  level: {
+                    id: 'levelId'
+                  },
+                  problem: {
+                    id: 'otherProblemId'
+                  }
+                }
+              }];
               var solutions = {$id: 'someEventId'};
               var profile = {
                 user: {
@@ -2324,16 +2324,16 @@
 
               expect(spfFirebase.set.calls.count()).toBe(3);
 
-              expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
-              expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
+              expect(spfFirebase.set.calls.argsFor(2).length).toBe(2);
+              expect(spfFirebase.set.calls.argsFor(2)[1]).toEqual({
                 someTaskId: {
                   completed: true
                 }
               });
 
-              expect(spfFirebase.set.calls.argsFor(1).length).toBe(2);
+              expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
               expect(
-                spfFirebase.set.calls.argsFor(1)[1]
+                spfFirebase.set.calls.argsFor(0)[1]
               ).toEqual(
                 {codeSchool: 0, codeCombat: 0, singPath: 1, total: 1, user: {}}
               );
@@ -2341,10 +2341,10 @@
 
             it('should update progress when user submitted a valid link', function() {
               var event = {$id: 'someEventId'};
-              var tasks = {
-                someTaskId: {linkPattern: 'github.com'},
-                someOtherId: {linkPattern: 'bitbucket.org'}
-              };
+              var tasks = [
+                {$id: 'someTaskId', linkPattern: 'github.com'},
+                {$id: 'someOtherId', linkPattern: 'bitbucket.org'}
+              ];
               var profile = {
                 $id: 'bob',
                 user: {displayName: 'bob'}
@@ -2364,10 +2364,10 @@
 
               $rootScope.$apply();
 
-              expect(spfFirebase.set.calls.count()).toBeGreaterThan(0);
+              expect(spfFirebase.set.calls.count()).toBeGreaterThan(2);
 
-              expect(spfFirebase.set.calls.argsFor(0).length).toBe(2);
-              expect(spfFirebase.set.calls.argsFor(0)[1]).toEqual({
+              expect(spfFirebase.set.calls.argsFor(2).length).toBe(2);
+              expect(spfFirebase.set.calls.argsFor(2)[1]).toEqual({
                 someTaskId: {
                   completed: true
                 }
@@ -2398,7 +2398,7 @@
 
             it('should reject if event is missing', function() {
               var event = {};
-              var tasks = {$id: 'someEventId'};
+              var tasks = [];
               var solutions = {$id: 'someEventId'};
               var profile = {$id: 'bob'};
               var userProgress = {};
@@ -2414,9 +2414,9 @@
               expect(err).toBeDefined();
             });
 
-            it('should reject if event is missing', function() {
+            it('should reject if solutions are missing', function() {
               var event = {$id: 'someEventId'};
-              var tasks = {$id: 'someEventId'};
+              var tasks = [];
               var solutions = {};
               var profile = {$id: 'bob'};
               var userProgress = {};
@@ -2434,7 +2434,7 @@
 
             it('should reject if profile is missing', function() {
               var event = {$id: 'someEventId'};
-              var tasks = {$id: 'someEventId'};
+              var tasks = [];
               var solutions = {$id: 'someEventId'};
               var profile = {};
               var userProgress = {};
@@ -2450,7 +2450,7 @@
               expect(err).toBeDefined();
             });
 
-            it('should reject if update code school profile data', function() {
+            it('should update code school profile data', function() {
               var event = {$id: 'someEventId'};
               var tasks = {$id: 'someEventId'};
               var solutions = {$id: 'someEventId'};
@@ -2464,7 +2464,7 @@
               expect(clmDataStore.services.codeCombat.updateProfile).toHaveBeenCalledWith(profile);
             });
 
-            it('should reject if update code combat profile data', function() {
+            it('should update code combat profile data', function() {
               var event = {$id: 'someEventId'};
               var tasks = {$id: 'someEventId'};
               var solutions = {$id: 'someEventId'};
@@ -2492,96 +2492,17 @@
               expect(clmDataStore.singPath.profile).toHaveBeenCalledWith('bob');
             });
 
-            it('should get progress and ranking', function() {
-              var event = {$id: 'someEventId'};
-              var tasks = {
-                someTaskId: {
-                  serviceId: 'codeSchool'
-                }
-              };
-              var solutions = {$id: 'someEventId'};
-              var profile = {$id: 'bob', user: {}};
-              var userProgress = {};
-              var actual;
-
-              clmDataStore.events.updateCurrentUserProfile(
-                event, tasks, solutions, profile, userProgress
-              ).then(function(resp) {
-                actual = resp;
-              });
-
-              $rootScope.$apply();
-              expect(actual).toEqual({
-                ranking: {
-                  singPath: 0, codeCombat: 0, codeSchool: 0, total: 0, user: {}
-                },
-                progress: {}
-              });
-            });
-
-            it('should get updated progress when task user joined the required service', function() {
+            it('should update solution when profile got updated', function() {
               var event = {$id: 'someEventId'};
               var solutions = {
                 $id: 'someEventId',
                 $save: jasmine.createSpy('solutions.$save').and.returnValue($q.when())
               };
-              var tasks = {
-                someTaskId: {
-                  serviceId: 'codeSchool'
-                },
-                someOtherId: {
-                  serviceId: 'codeSchool',
-                  badge: {id: 'someBadgeId'}
-                },
-                lastTaskId: {
-                  serviceId: 'codeCombat'
-                }
-              };
-              var profile = {
-                $id: 'bob',
-                user: {},
-                services: {
-                  codeSchool: {details: {id: 'bob'}}
-                }
-              };
-              var userProgress = {};
-              var actual;
-
-              clmDataStore.events.updateCurrentUserProfile(
-                event, tasks, solutions, profile, userProgress
-              ).then(function(resp) {
-                actual = resp;
-              });
-
-              $rootScope.$apply();
-              expect(actual).toEqual({
-                ranking: {
-                  singPath: 0, codeCombat: 0, codeSchool: 0, total: 0, user: {}
-                },
-                progress: {
-                  someTaskId: {completed: true}
-                }
-              });
-            });
-
-            it('should update solution when the service task get updated', function() {
-              var event = {$id: 'someEventId'};
-              var solutions = {
-                $id: 'someEventId',
-                $save: jasmine.createSpy('solutions.$save').and.returnValue($q.when())
-              };
-              var tasks = {
-                someTaskId: {
-                  serviceId: 'codeSchool'
-                },
-                someOtherId: {
-                  serviceId: 'codeSchool',
-                  badge: {id: 'someBadgeId'}
-                },
-                lastTaskId: {
-                  serviceId: 'codeCombat'
-                }
-              };
+              var tasks = [
+                {$id: 'someTaskId', serviceId: 'codeSchool'},
+                {$id: 'someOtherId', serviceId: 'codeSchool', badge: {id: 'someBadgeId'}},
+                {$id: 'lastTaskId', serviceId: 'codeCombat'}
+              ];
               var profile = {
                 $id: 'bob',
                 user: {},
@@ -2598,28 +2519,23 @@
               $rootScope.$apply();
 
               expect(solutions.someTaskId).toBe(true);
+              expect(solutions.someOtherId).toBeUndefined();
+              expect(solutions.lastTaskId).toBeUndefined();
               expect(solutions.$save).toHaveBeenCalled();
             });
 
-            it('should not update solution when no service task get updated', function() {
+            it('should not update solutions when profiles get no update', function() {
               var event = {$id: 'someEventId'};
               var solutions = {
                 $id: 'someEventId',
                 someTaskId: true,
                 $save: jasmine.createSpy('solutions.$save').and.returnValue($q.when())
               };
-              var tasks = {
-                someTaskId: {
-                  serviceId: 'codeSchool'
-                },
-                someOtherId: {
-                  serviceId: 'codeSchool',
-                  badge: {id: 'someBadgeId'}
-                },
-                lastTaskId: {
-                  serviceId: 'codeCombat'
-                }
-              };
+              var tasks = [
+                {$id: 'someTaskId', serviceId: 'codeSchool'},
+                {$id: 'someOtherId', serviceId: 'codeSchool', badge: {id: 'someBadgeId'}},
+                {$id: 'lastTaskId', serviceId: 'codeCombat'}
+              ];
               var profile = {
                 $id: 'bob',
                 user: {},
@@ -2637,6 +2553,9 @@
 
               $rootScope.$apply();
 
+              expect(solutions.someTaskId).toBe(true);
+              expect(solutions.someOtherId).toBeUndefined();
+              expect(solutions.lastTaskId).toBeUndefined();
               expect(solutions.$save).not.toHaveBeenCalled();
             });
 
@@ -2714,17 +2633,18 @@
 
             it('should initialy update event progress', function() {
               var event = {};
-              var tasks = {};
-              var participants = {
-                0: {$id: 'bob'},
-                1: {$id: 'alice'},
-                $watch: jasmine.createSpy('participants.$watch')
-              };
+              var tasks = [];
               var solutions = jasmine.createSpyObj('solutions', ['$watch']);
               var progress = {
                 bob: {},
                 alice: {}
               };
+              var participants = [
+                {$id: 'bob'},
+                {$id: 'alice'}
+              ];
+
+              participants.$watch = jasmine.createSpy('participants.$watch');
 
               clmDataStore.events.monitorEvent(event, tasks, participants, solutions, progress);
 
@@ -2740,14 +2660,13 @@
 
             it('should watch for solutions update', function() {
               var event = {};
-              var tasks = {};
-              var participants = {
-                0: {$id: 'bob'},
-                $watch: jasmine.createSpy('participants.$watch')
-              };
+              var tasks = [];
               var solutions = jasmine.createSpyObj('solutions', ['$watch']);
               var progress = {bob: {}};
               var cb;
+              var participants = [{$id: 'bob'}];
+
+              participants.$watch = jasmine.createSpy('participants.$watch');
 
               clmDataStore.events.monitorEvent(event, tasks, participants, solutions, progress);
 
@@ -2764,14 +2683,13 @@
 
             it('should watch for participant update', function() {
               var event = {};
-              var tasks = {};
-              var participants = {
-                0: {$id: 'bob'},
-                $watch: jasmine.createSpy('participants.$watch')
-              };
+              var tasks = [];
               var solutions = jasmine.createSpyObj('solutions', ['$watch']);
               var progress = {bob: {}};
               var cb;
+              var participants = [{$id: 'bob'}];
+
+              participants.$watch = jasmine.createSpy('participants.$watch');
 
               clmDataStore.events.monitorEvent(event, tasks, participants, solutions, progress);
               clmDataStore.events.updateProgress.calls.reset();
@@ -2789,16 +2707,15 @@
 
             it('should return an unwatch function', function() {
               var event = {};
-              var tasks = {};
-              var participants = {
-                0: {$id: 'bob'},
-                $watch: jasmine.createSpy('participants.$watch')
-              };
+              var tasks = [];
               var solutions = jasmine.createSpyObj('solutions', ['$watch']);
               var progress = {bob: {}};
               var handlers;
               var unwatchSolution = jasmine.createSpy('unwatchSolution');
               var unwatchParticpants = jasmine.createSpy('unwatchParticpants');
+              var participants = [{$id: 'bob'}];
+
+              participants.$watch = jasmine.createSpy('participants.$watch');
 
               solutions.$watch.and.returnValue(unwatchSolution);
               participants.$watch.and.returnValue(unwatchParticpants);
@@ -2813,16 +2730,15 @@
 
             it('should return an update function', function() {
               var event = {};
-              var tasks = {};
-              var participants = {
-                0: {$id: 'bob'},
-                $watch: jasmine.createSpy('participants.$watch')
-              };
+              var tasks = [];
               var solutions = jasmine.createSpyObj('solutions', ['$watch']);
               var progress = {bob: {}};
               var handlers;
               var unwatchSolution = jasmine.createSpy('unwatchSolution');
               var unwatchParticpants = jasmine.createSpy('unwatchParticpants');
+              var participants = [{$id: 'bob'}];
+
+              participants.$watch = jasmine.createSpy('participants.$watch');
 
               solutions.$watch.and.returnValue(unwatchSolution);
               participants.$watch.and.returnValue(unwatchParticpants);
@@ -2843,16 +2759,15 @@
 
             it('should debounce update calls', function() {
               var event = {};
-              var tasks = {};
-              var participants = {
-                0: {$id: 'bob'},
-                $watch: jasmine.createSpy('participants.$watch')
-              };
+              var tasks = [];
               var solutions = jasmine.createSpyObj('solutions', ['$watch']);
               var progress = {bob: {}};
               var participantCb;
               var solutionCb;
               var handlers;
+              var participants = [{$id: 'bob'}];
+
+              participants.$watch = jasmine.createSpy('participants.$watch');
 
               handlers = clmDataStore.events.monitorEvent(event, tasks, participants, solutions, progress);
               clmDataStore.events.updateProgress.calls.reset();

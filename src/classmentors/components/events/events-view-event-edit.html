@@ -33,7 +33,7 @@
 
     <md-list>
         <md-subheader class="md-no-sticky">{{ ctrl.tasks | spfLength }} challenges</md-subheader>
-        <md-list-item class="md-3-line" ng-repeat="(taskId, task) in ctrl.tasks" ng-if="!task.archived">
+        <md-list-item class="md-3-line" ng-repeat="task in ctrl.tasks track by task.$id" ng-if="!task.archived">
             <div class="md-list-item-text">
                 <h3>
                     {{ task.title }}
@@ -45,11 +45,11 @@
             </div>
 
             <div layout="row">
-                <md-button ng-href="#{{ 'editEventTask'|urlFor: {eventId: ctrl.event.$id, taskId: taskId} }}" layout layout-align="center center" class="md-raised md-primary" aria-label="Edit">
+                <md-button ng-href="#{{ 'editEventTask'|urlFor: {eventId: ctrl.event.$id, taskId: task.$id} }}" layout layout-align="center center" class="md-raised md-primary" aria-label="Edit">
                     <md-icon md-svg-icon="create"></md-icon>
                     Edit
                 </md-button>
-                <md-button ng-click="ctrl.openTask(ctrl.event.$id, taskId)"
+                <md-button ng-click="ctrl.openTask(ctrl.event.$id, task.$id)"
                     ng-if="task.closedAt"
                     layout layout-align="center center" class="md-raised md-primary"
                     aria-label="open"
@@ -57,7 +57,7 @@
                     <md-icon md-svg-icon="done"></md-icon>
                     Open
                 </md-button>
-                <md-button ng-click="ctrl.closeTask(ctrl.event.$id, taskId)"
+                <md-button ng-click="ctrl.closeTask(ctrl.event.$id, task.$id)"
                     ng-if="task.openedAt"
                     layout layout-align="center center" class="md-raised md-primary"
                     aria-label="open"
@@ -65,7 +65,7 @@
                     <md-icon md-svg-icon="clear"></md-icon>
                     Close
                 </md-button>
-                <md-button ng-click="ctrl.showTask(ctrl.event.$id, taskId)"
+                <md-button ng-click="ctrl.showTask(ctrl.event.$id, task.$id)"
                     ng-if="task.hidden"
                     layout layout-align="center center" class="md-raised md-primary"
                     aria-label="open"
@@ -73,7 +73,7 @@
                     <md-icon md-svg-icon="done"></md-icon>
                     Show
                 </md-button>
-                <md-button ng-click="ctrl.hideTask(ctrl.event.$id, taskId)"
+                <md-button ng-click="ctrl.hideTask(ctrl.event.$id, task.$id)"
                     ng-if="!task.hidden"
                     layout layout-align="center center" class="md-raised md-primary"
                     aria-label="open"
@@ -81,7 +81,7 @@
                     <md-icon md-svg-icon="clear"></md-icon>
                     Hide
                 </md-button>
-                <md-button ng-click="ctrl.archiveTask(ctrl.event.$id, taskId)"
+                <md-button ng-click="ctrl.archiveTask(ctrl.event.$id, task.$id)"
                     layout layout-align="center center" class="md-raised md-primary"
                     aria-label="open"
                 >

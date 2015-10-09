@@ -1034,13 +1034,20 @@
     'spfAlert',
     'clmServicesUrl',
     'clmDataStore',
-    function ClmEventTableCtrl($scope, $q, $log, $mdDialog, $document, urlFor, spfAlert, clmServicesUrl, clmDataStore) {
+    function ClmEventTableCtrl(
+      $scope, $q, $log, $mdDialog, $document,
+      urlFor, spfAlert, clmServicesUrl, clmDataStore
+    ) {
       var self = this;
       var unwatchers = [];
 
-      this.selectedParticpants = [];
+      this.currentUserParticipant = undefined;
+      this.participantsView = [];
+      this.visibleTasks = [];
+      this.taskCompletion = {};
       this.viewOptions = {
-        order: 'name',
+        orderKey: undefined,
+        reverseOrder: false,
         rowCount: 0,
         rowPerPage: 10,
         range: {
@@ -1076,7 +1083,7 @@
         }
 
         self.visibleTasks = self.tasks.filter(function(t) {
-          return !t.hidden && !t.archived;
+          return !t.hidden && !t.archived && !t.closedAt;
         });
 
         taskCompletion();
@@ -1127,23 +1134,81 @@
         }).length / participantCount * 100;
       }
 
-      function getRows(participants) {
+      function _completionComparer(options) {
+        var taskId = options.orderKey;
+
+        return function(a, b) {
+          var aP = (
+            self.progress &&
+            self.progress[a.$id] &&
+            self.progress[a.$id][taskId] &&
+            self.progress[a.$id][taskId].completed
+          );
+          var bP = (
+            self.progress &&
+            self.progress[b.$id] &&
+            self.progress[b.$id][taskId] &&
+            self.progress[b.$id][taskId].completed
+          );
+
+          if (aP === bP) {
+            return 0;
+          } else if (aP) {
+            return 1;
+          } else {
+            return -1;
+          }
+        };
+      }
+
+      function _compareName(a, b) {
+        var aN = a.user && a.user.displayName || '';
+        var bN = b.user && b.user.displayName || '';
+
+        return aN.localeCompare(bN);
+      }
+
+      function reverseFilter(options, fn) {
+        if (!options.reverseOrder) {
+          return fn;
+        }
+
+        return function(a, b) {
+          var result = fn(a, b);
+          return result * -1;
+        };
+      }
+
+      function chainComparer() {
+        var filters = arguments;
+
+        return function(a, b) {
+          var i, result;
+
+          for (i = 0; i < filters.length; i++) {
+            result = filters[i](a, b);
+            if (result !== 0) {
+              return result;
+            }
+          }
+
+          return 0;
+        };
+      }
+
+      function getRows(participants, options) {
         var rows = participants.filter(function(p) {
           return p.$id !== self.profile.$id;
         });
+        var comparer;
 
-        rows.sort(function(a, b) {
-          if (!a.user || a.user.displayName) {
-            return -1;
-          }
+        if (options.orderKey) {
+          comparer = chainComparer(_completionComparer(options), _compareName);
+        } else {
+          comparer = _compareName;
+        }
 
-          if (!b.user || b.user.displayName) {
-            return 1;
-          }
-
-          return a.user.displayName.localeCompare(b.user.displayName);
-        });
-
+        rows.sort(reverseFilter(options, comparer));
         return rows;
       }
 
@@ -1172,11 +1237,29 @@
        *
        */
       function participantsView() {
-        var rows = getRows(self.participants);
+        var rows = getRows(self.participants, self.viewOptions);
 
         updateViewOptions(rows, self.viewOptions);
         self.participantsView = participantsSlice(rows, self.viewOptions);
       }
+
+      /**
+       * Switch ordering key or ordering direction.
+       *
+       * If the ordering key is changing, the ordering direction should be
+       * ascendent.
+       *
+       * If the order key is not changing, the direction should be switched.
+       *
+       */
+      this.orderBy = function(taskId) {
+        self.viewOptions.reverseOrder = (
+          !self.viewOptions.reverseOrder &&
+          (self.viewOptions.orderKey === taskId)
+        );
+        self.viewOptions.orderKey = taskId;
+        participantsView();
+      };
 
       /**
        * Signal the row per page model has been updated.
@@ -1191,7 +1274,7 @@
        *
        */
       this.nextPage = function() {
-        var rows = getRows(self.participants);
+        var rows = getRows(self.participants, self.viewOptions);
 
         self.viewOptions.range.start = self.viewOptions.range.end;
         updateViewOptions(rows, self.viewOptions);
@@ -1203,7 +1286,7 @@
        *
        */
       this.prevPage = function() {
-        var rows = getRows(self.participants);
+        var rows = getRows(self.participants, self.viewOptions);
 
         self.viewOptions.range.start = self.viewOptions.range.start - self.viewOptions.rowPerPage;
         updateViewOptions(rows, self.viewOptions);
@@ -1216,7 +1299,7 @@
       };
 
       this.lastPage = function() {
-        var rows = getRows(self.participants);
+        var rows = getRows(self.participants, self.viewOptions);
 
         self.viewOptions.rowCount = rows.length;
         self.viewOptions.range.start = Math.floor(rows.length / self.viewOptions.rowPerPage);
@@ -1380,6 +1463,21 @@
         }).catch(function(err) {
           $log.error(err);
           spfAlert.error('Failed to update profile');
+        });
+      };
+
+      this.removeParticipant = function(e, event, participant) {
+        var confirm = $mdDialog.confirm()
+          .parent(angular.element($document.body))
+          .title('Would you like to remove ' + participant.user.displayName + '?')
+          .content('The participant progress will be kept but he/she will not show as participant')
+          .ariaLabel('Remove participant')
+          .ok('Remove')
+          .cancel('Cancel')
+          .targetEvent(e);
+
+        $mdDialog.show(confirm).then(function() {
+          clmDataStore.events.removeParticpants(event.$id, participant.$id);
         });
       };
 

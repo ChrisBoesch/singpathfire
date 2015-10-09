@@ -3,7 +3,7 @@
     padding: 0 10px 0;
 }
 
-.tasks tr th:first-child {
+.tasks tbody th:first-child {
     text-align: left;
     padding-left: 0;
 }
