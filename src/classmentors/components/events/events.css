@@ -8,7 +8,12 @@
     padding-left: 0;
 }
 
-.reversed th.orderer .md-button:after, .reversed th.secondaryOrderer .md-button:after {
+.reversed th.orderer .md-button:after{
+    content: " \25BC";
+    font-size: 12px;
+}
+
+.secondaryReversed th.secondaryOrderer .md-button:after {
     content: " \25BC";
     font-size: 12px;
 }

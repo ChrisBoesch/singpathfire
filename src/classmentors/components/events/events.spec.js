@@ -480,40 +480,6 @@
 
       });
 
-      describe('orderBy', function() {
-
-        it('should setup orderKey, previousOrderKey and reverseOrder', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-
-          expect(ctrl.orderKey).toBe('total');
-          expect(ctrl.previousOrderKey).toBe('user.displayName');
-          expect(ctrl.reverseOrder).toBe(true);
-        });
-
-        it('should reverse order when the same key is selected again', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-
-          expect(ctrl.reverseOrder).toBe(true);
-          ctrl.orderBy(ctrl.orderKey);
-          expect(ctrl.reverseOrder).toBe(false);
-          ctrl.orderBy(ctrl.orderKey);
-          expect(ctrl.reverseOrder).toBe(true);
-        });
-
-        it('should set new key and previousOrderKey, and reset reverseOrder', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-
-          ctrl.reverseOrder = false;
-          ctrl.orderKey = 'originalKey';
-          ctrl.orderBy('newKey');
-
-          expect(ctrl.orderKey).toBe('newKey');
-          expect(ctrl.previousOrderKey).toBe('originalKey');
-          expect(ctrl.reverseOrder).toBe(true);
-        });
-
-      });
-
     });
 
     describe('EditEventCtrl', function() {
@@ -814,29 +780,39 @@
         expect(ctrl.visibleTasks).toEqual([]);
         expect(ctrl.taskCompletion).toEqual({});
         expect(ctrl.currentUserParticipant).toBeUndefined();
-        expect(ctrl.viewOptions.orderKey).toBeUndefined();
-        expect(ctrl.viewOptions.reverseOrder).toBe(false);
-        expect(ctrl.viewOptions.rowCount).toBe(0);
-        expect(ctrl.viewOptions.rowPerPage).toBe(10);
-        expect(ctrl.viewOptions.range.start).toBe(0);
-        expect(ctrl.viewOptions.range.end).toBe(0);
+        expect(ctrl.orderOptions.key).toBeUndefined();
+        expect(ctrl.orderOptions.reversed).toBe(false);
+        expect(ctrl.pagerOptions.rowCount).toBe(0);
+        expect(ctrl.pagerOptions.range.start).toBe(0);
+        expect(ctrl.pagerOptions.range.end).toBe(0);
       });
 
-      it('should update participant view when resources are loaded', function() {
+      it('should update pager option when resources are loaded', function() {
         var ctrl;
 
         ctrlFn.instance.participants.push({$id: 'bob', user: {}});
         ctrlFn.instance.participants.push({$id: 'alice', user: {}});
 
         ctrl = ctrlFn();
+        spyOn(ctrl.pagerOptions, 'setRowCount').and.callThrough();
+        $rootScope.$apply();
+
+        expect(ctrl.pagerOptions.rowCount).toBe(1);
+        expect(ctrl.pagerOptions.setRowCount).toHaveBeenCalledWith(1);
+      });
+
+      it('should update the participant view when resources are loaded', function() {
+        var ctrl;
+
+        ctrlFn.instance.participants.push({$id: 'bob', user: {}});
+        ctrlFn.instance.participants.push({$id: 'alice', user: {}});
+
+        ctrl = ctrlFn();
+        spyOn(ctrl.pagerOptions, 'setRowCount').and.callThrough();
         $rootScope.$apply();
 
         expect(ctrl.participantsView.length).toBe(1);
         expect(ctrl.participantsView[0].$id).toBe('alice');
-        expect(ctrl.viewOptions.rowCount).toBe(1);
-        expect(ctrl.viewOptions.rowPerPage).toBe(10);
-        expect(ctrl.viewOptions.range.start).toBe(0);
-        expect(ctrl.viewOptions.range.end).toBe(1);
       });
 
       it('should update the list of visible tasks', function() {
@@ -1025,10 +1001,9 @@
 
         expect(ctrl.participantsView.length).toBe(2);
         expect(ctrl.participantsView[1].$id).toBe('john');
-        expect(ctrl.viewOptions.rowCount).toBe(2);
-        expect(ctrl.viewOptions.rowPerPage).toBe(10);
-        expect(ctrl.viewOptions.range.start).toBe(0);
-        expect(ctrl.viewOptions.range.end).toBe(2);
+        expect(ctrl.pagerOptions.rowCount).toBe(2);
+        expect(ctrl.pagerOptions.range.start).toBe(0);
+        expect(ctrl.pagerOptions.range.end).toBe(2);
       });
 
       it('should update the current user participant state when the participants get updated', function() {
@@ -1068,15 +1043,15 @@
           $rootScope.$apply();
 
           expect(ctrl.participantsView.length).toBe(2);
-          expect(ctrl.viewOptions.reverseOrder).toBe(false);
+          expect(ctrl.orderOptions.reversed).toBe(false);
           expect(ctrl.participantsView[0].$id).toBe('alice');
 
-          ctrl.orderBy(ctrl.viewOptions.orderKey);
-          expect(ctrl.viewOptions.reverseOrder).toBe(true);
+          ctrl.orderBy(ctrl.orderOptions.key);
+          expect(ctrl.orderOptions.reversed).toBe(true);
           expect(ctrl.participantsView[0].$id).toBe('john');
 
-          ctrl.orderBy(ctrl.viewOptions.orderKey);
-          expect(ctrl.viewOptions.reverseOrder).toBe(false);
+          ctrl.orderBy(ctrl.orderOptions.key);
+          expect(ctrl.orderOptions.reversed).toBe(false);
           expect(ctrl.participantsView[0].$id).toBe('alice');
         });
 
@@ -1098,76 +1073,362 @@
           $rootScope.$apply();
 
           ctrl.orderBy('someTaskId');
-          expect(ctrl.viewOptions.reverseOrder).toBe(false);
+          expect(ctrl.orderOptions.reversed).toBe(false);
           expect(ctrl.participantsView[0].$id).toBe('john');
 
           ctrl.orderBy('someOtherTaskId');
-          expect(ctrl.viewOptions.reverseOrder).toBe(false);
+          expect(ctrl.orderOptions.reversed).toBe(false);
           expect(ctrl.participantsView[0].$id).toBe('alice');
 
           ctrl.orderBy('someOtherTaskId');
-          expect(ctrl.viewOptions.reverseOrder).toBe(true);
+          expect(ctrl.orderOptions.reversed).toBe(true);
           expect(ctrl.participantsView[0].$id).toBe('john');
         });
 
       });
 
-      describe('rowPerPageUpdated', function() {
+    });
 
-        it('should update participant view', function() {
-          var ctrl;
+    describe('ClmEventRankTableCtrl', function() {
+      var deps, ctrlFn, ranking;
 
-          ctrlFn.instance.participants.push({$id: 'john', user: {}});
-          ctrlFn.instance.participants.push({$id: 'alice', user: {}});
+      beforeEach(function() {
+        deps = {
+          $scope: jasmine.createSpyObj('$scope', ['$on']),
+          clmDataStore: {
+            events: jasmine.createSpyObj('events', ['getRanking'])
+          }
+        };
 
-          ctrl = ctrlFn();
-          $rootScope.$apply();
-          expect(ctrl.participantsView.length).toBe(2);
+        ranking = [];
+        ranking.$id = 'someEvent';
+        ranking.$destroy = jasmine.createSpy('rankingDestroy');
+        ranking.$watch = jasmine.createSpy('rankingWatch');
 
-          ctrl.viewOptions.rowPerPage = 1;
-          ctrl.rowPerPageUpdated();
-          expect(ctrl.participantsView.length).toBe(1);
+        deps.clmDataStore.events.getRanking.and.returnValue($q.when(ranking));
+
+        // Binding the directive attributes to the controller instance
+        // (undocumented feature of $controller).
+        ctrlFn = $controller('ClmEventRankTableCtrl', deps, true);
+        ctrlFn.instance.event = {$id: 'someEventId'};
+        ctrlFn.instance.profile = {$id: 'bob'};
+      });
+
+      it('should initiate ranking view', function() {
+        var ctrl = ctrlFn();
+
+        expect(ctrl.rankingView).toEqual([]);
+        expect(ctrl.currentUserRanking).toBeUndefined();
+        expect(ctrl.orderOpts.length).toBe(2);
+        expect(ctrl.orderOpts[0].key).toBe('total');
+        expect(ctrl.orderOpts[0].reversed).toBe(true);
+        expect(ctrl.orderOpts[1].key).toBe('name');
+        expect(ctrl.orderOpts[1].reversed).toBe(false);
+        expect(ctrl.pagerOpts.range.start).toBe(0);
+        expect(ctrl.pagerOpts.range.end).toBe(0);
+      });
+
+      it('should update the pager row count when the ranking is loaded', function() {
+        var ctrl = ctrlFn();
+
+        spyOn(ctrl.pagerOpts, 'setRowCount').and.callThrough();
+
+        ranking.push({$id: 'alice', user: {displayName: 'alice'}, total: 2});
+        $rootScope.$apply();
+
+        expect(ctrl.pagerOpts.rowCount).toBe(1);
+        expect(ctrl.pagerOpts.setRowCount).toHaveBeenCalledWith(1);
+      });
+
+      it('should update ranking view when the ranking is loaded', function() {
+        var ctrl = ctrlFn();
+        var onRankingUpdate;
+
+        spyOn(ctrl.pagerOpts, 'setRowCount').and.callThrough();
+
+        $rootScope.$apply();
+        expect(ctrl.rankingView.length).toBe(0);
+
+        onRankingUpdate = ctrl.ranking.$watch.calls.allArgs().map(function(args) {
+          var callback = args[0];
+
+          expect(callback).toEqual(jasmine.any(Function));
+          return callback;
         });
 
-        it('should parse the rowPerPage', function() {
+        ranking.push({$id: 'alice', user: {displayName: 'alice'}, total: 2});
+        onRankingUpdate.map(function(fn) {
+          fn();
+        });
+
+        expect(ctrl.rankingView.length).toBe(1);
+      });
+
+    });
+
+    describe('clmRowPerPage', function() {
+      var clmRowPerPage;
+
+      beforeEach(inject(function(_clmRowPerPage_) {
+        clmRowPerPage = _clmRowPerPage_;
+      }));
+
+      it('should set default value to 25', function() {
+        expect(clmRowPerPage.value).toBe(25);
+      });
+
+      it('should hold the suggested list of value option', function() {
+        expect(clmRowPerPage.options).toEqual(jasmine.any(Array));
+      });
+
+      describe('set', function() {
+
+        it('should set the row per page value', function() {
+          clmRowPerPage.set(10);
+          expect(clmRowPerPage.value).toBe(10);
+        });
+
+        it('should parse the value to an integer', function() {
+          clmRowPerPage.set('10');
+          expect(clmRowPerPage.value).toBe(10);
+        });
+
+      });
+
+      describe('onChange', function() {
+
+        it('should register callback function for the value update event', function() {
+          var cb = jasmine.createSpy('myCallback');
+          var clean = clmRowPerPage.onChange(cb);
+
+          try {
+            clmRowPerPage.set(10);
+            expect(cb).toHaveBeenCalledWith(10);
+          } finally {
+            clean();
+          }
+        });
+
+        it('should return a function to deregister the callback function', function() {
+          var cb = jasmine.createSpy('myCallback');
+          var clean = clmRowPerPage.onChange(cb);
+
+          clean();
+          clmRowPerPage.set(10);
+          expect(cb).not.toHaveBeenCalled();
+        });
+
+      });
+
+    });
+
+    describe('clmPagerOption', function() {
+      var clmPagerOption, clmRowPerPage;
+
+      beforeEach(inject(function(_clmPagerOption_, _clmRowPerPage_) {
+        clmPagerOption = _clmPagerOption_;
+        clmRowPerPage = _clmRowPerPage_;
+      }));
+
+      it('should initiate row count and range', function() {
+        var opts = clmPagerOption();
+
+        expect(opts.rowCount).toBe(0);
+        expect(opts.range.start).toBe(0);
+        expect(opts.range.end).toBe(0);
+      });
+
+      describe('setRowCount', function() {
+        var opts;
+
+        beforeEach(function() {
+          opts = clmPagerOption();
+        });
+
+        afterEach(function() {
+          opts.$destroy();
+        });
+
+        it('should update rowCount', function() {
+          opts.setRowCount(1);
+          expect(opts.rowCount).toBe(1);
+        });
+
+        it('should update range', function() {
+          opts.setRowCount(1);
+          expect(opts.range.end).toBe(1);
+        });
+
+      });
+
+      describe('setRange', function() {
+        var opts;
+
+        beforeEach(function() {
+          opts = clmPagerOption();
+          clmRowPerPage.value = 5;
+        });
+
+        afterEach(function() {
+          opts.$destroy();
+        });
+
+        it('should update range start', function() {
+          opts.rowCount = 10;
+
+          [0, 5, 10].forEach(function(i) {
+            opts.setRange(i);
+            expect(opts.range.start).toBe(i);
+          });
+        });
+
+        it('should limit range start to positive number', function() {
+          opts.rowCount = 5;
+          [0, -1, -5].forEach(function(i) {
+            opts.setRange(i);
+            expect(opts.range.start).toBe(0);
+          });
+        });
+
+        it('should limit range start to rowCount', function() {
+          opts.rowCount = 5;
+          [5, 6, 7].forEach(function(i) {
+            opts.setRange(i);
+            expect(opts.range.start).toBe(5);
+          });
+        });
+
+        it('should limit range start to a start of a page', function() {
+          opts.rowCount = 5;
+          [0, 1, 2, 3, 4].forEach(function(i) {
+            opts.setRange(i);
+            expect(opts.range.start).toBe(0);
+          });
+        });
+
+        it('should derive the range end', function() {
+          opts.rowCount = 20;
+          [0, 15].forEach(function(i) {
+            opts.setRange(i);
+            expect(opts.range.end).toBe(i + clmRowPerPage.value);
+          });
+        });
+
+        it('should limit range end to rowCount', function() {
+          opts.rowCount = 9;
+          [5, 10].forEach(function(i) {
+            opts.setRange(i);
+            expect(opts.range.end).toBe(9);
+          });
+        });
+
+      });
+
+      describe('onChange', function() {
+        var cb, opts, clean;
+
+        beforeEach(function() {
+          cb = jasmine.createSpy('myCallback');
+          opts = clmPagerOption();
+          clean = opts.onChange(cb);
+        });
+
+        afterEach(function() {
+          clean();
+          opts.$destroy();
+        });
+
+        it('should register a cb that will be called when rowCount is reset', function() {
+          opts.setRowCount(1);
+          expect(cb).toHaveBeenCalledWith(opts);
+        });
+
+        it('should register a cb that will be called when range is reset', function() {
+          opts.setRange(5);
+          expect(cb).toHaveBeenCalledWith(opts);
+        });
+
+        it('should register a cb that will be called when range is reset via a clmRowPerPage event', function() {
+          clmRowPerPage.set(5);
+          expect(cb).toHaveBeenCalledWith(opts);
+        });
+
+      });
+    });
+
+    describe('ClmPagerCtrl', function() {
+      var deps, ctrlFn, clmRowPerPage;
+
+      beforeEach(inject(function(clmPagerOption, _clmRowPerPage_) {
+        clmRowPerPage = _clmRowPerPage_;
+        clmRowPerPage.value = 5;
+        deps = {clmRowPerPage: clmRowPerPage};
+
+        // Binding the directive attributes to the controller instance
+        // (undocumented feature of $controller).
+        ctrlFn = $controller('ClmPagerCtrl', deps, true);
+        ctrlFn.instance.options = clmPagerOption();
+
+        spyOn(ctrlFn.instance.options, 'setRange').and.callThrough();
+      }));
+
+      it('should initiate rowPerPage', function() {
+        var ctrl = ctrlFn();
+
+        expect(ctrl.rowPerPage).toBe(clmRowPerPage);
+      });
+
+      describe('nextPage', function() {
+        it('should set range start from the what was the range end', function() {
           var ctrl = ctrlFn();
 
-          ctrl.viewOptions.rowPerPage = '2';
-          ctrl.rowPerPageUpdated();
-          expect(ctrl.viewOptions.rowPerPage).toBe(2);
-        });
+          ctrl.options.rowCount = 10;
+          ctrl.options.range = {start: 0, end: 5};
 
+          ctrl.nextPage(ctrl.options);
+
+          expect(ctrl.options.setRange).toHaveBeenCalledWith(5);
+        });
       });
 
-      describe('*Page', function() {
+      describe('prevPage', function() {
+        it('should set range start to value in the previous page', function() {
+          var ctrl = ctrlFn();
 
-        it('should navigate between participant pages', function() {
-          var ctrl;
+          ctrl.options.rowCount = 10;
+          ctrl.options.range = {start: 5, end: 10};
 
-          ctrlFn.instance.participants.push({$id: 'john', user: {displayName: 'john'}});
-          ctrlFn.instance.participants.push({$id: 'alice', user: {displayName: 'alice'}});
+          ctrl.prevPage(ctrl.options);
 
-          ctrl = ctrlFn();
-          ctrl.viewOptions.rowPerPage = 1;
-          $rootScope.$apply();
-          expect(ctrl.participantsView.length).toBe(1);
-          expect(ctrl.participantsView[0].$id).toBe('alice');
-
-          ctrl.nextPage();
-          expect(ctrl.participantsView[0].$id).toBe('john');
-
-          ctrl.prevPage();
-          expect(ctrl.participantsView[0].$id).toBe('alice');
-
-          ctrl.lastPage();
-          expect(ctrl.participantsView.length).toBe(0);
-
-          ctrl.firstPage();
-          expect(ctrl.participantsView[0].$id).toBe('alice');
+          expect(ctrl.options.setRange).toHaveBeenCalledWith(4);
         });
-
       });
 
+      describe('firstPage', function() {
+        it('should set range start from the what was the range end', function() {
+          var ctrl = ctrlFn();
+
+          ctrl.options.rowCount = 10;
+          ctrl.options.range = {start: 10, end: 10};
+
+          ctrl.firstPage(ctrl.options);
+
+          expect(ctrl.options.setRange).toHaveBeenCalledWith(0);
+        });
+      });
+
+      describe('lastPage', function() {
+        it('should set range start to a value in the last page', function() {
+          var ctrl = ctrlFn();
+
+          ctrl.options.rowCount = 10;
+          ctrl.options.range = {start: 0, end: 5};
+
+          ctrl.lastPage(ctrl.options);
+
+          expect(ctrl.options.setRange).toHaveBeenCalledWith(10);
+        });
+      });
     });
 
   });

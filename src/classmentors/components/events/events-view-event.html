@@ -5,9 +5,16 @@
     </h3>
 
     <md-tabs md-dynamic-height="true" md-border-bottom="true">
+        <md-tab label="Ranking">
+            <md-content layout-padding>
+                <clm-event-rank-table
+                    event="ctrl.event"
+                    profile="ctrl.profile"
+                ></clm-event-rank-table>
+            </md-content>
+        </md-tab>
         <md-tab label="Challenges" ng-disabled="!ctrl.participants">
             <md-content layout-padding>
-
                 <clm-event-table
                     ng-if="ctrl.canView" 
                     event="ctrl.event"
@@ -18,67 +25,6 @@
                     profile="ctrl.profile"
                 >
                 </clm-event-table>
-                
-            </md-content>
-        </md-tab>
-
-        <md-tab label="Ranking">
-            <md-content layout-padding>
-                <table class="events ranking">
-                    <thead>
-                        <tr ng-class="{'reversed': ctrl.reverseOrder}">
-                            <th>
-                                #
-                            </th>
-                            <th ng-class="{orderer: ctrl.orderKey == 'user.displayName', secondaryOrderer: ctrl.previousOrderKey == 'user.displayName'}">
-                                <md-button ng-click="ctrl.orderBy('user.displayName')">Participants</md-button>
-                            </th>
-                            <th ng-class="{orderer: ctrl.orderKey == 'user.school.name', secondaryOrderer: ctrl.previousOrderKey == 'user.school.name'}" ng-if="ctrl.event.schoolEvent">
-                                <md-button ng-click="ctrl.orderBy('user.school.name')">School</md-button>
-                            </th>
-                            <th ng-class="{orderer: ctrl.orderKey == '$rankInSchool', secondaryOrderer: ctrl.previousOrderKey == '$rankInSchool'}" ng-if="ctrl.event.schoolEvent">
-                                <md-button ng-click="ctrl.orderBy('$rankInSchool')">Rank in School</md-button>
-                            </th>
-                            <th ng-class="{orderer: ctrl.orderKey == 'total', secondaryOrderer: ctrl.previousOrderKey == 'total'}">
-                                <md-button ng-click="ctrl.orderBy('total')">Total</md-button>
-                            </th>
-                            <th ng-class="{orderer: ctrl.orderKey == 'codeCombat', secondaryOrderer: ctrl.previousOrderKey == 'codeCombat'}">
-                                <md-button ng-click="ctrl.orderBy('codeCombat')">Code Combat Badges</md-button>
-                            </th>
-                            <th ng-class="{orderer: ctrl.orderKey == 'codeSchool', secondaryOrderer: ctrl.previousOrderKey == 'codeSchool'}">
-                                <md-button ng-click="ctrl.orderBy('codeSchool')">Code School Badges</md-button>
-                            </th>
-                            <th ng-class="{orderer: ctrl.orderKey == 'singPath', secondaryOrderer: ctrl.previousOrderKey == 'singPath'}">
-                                <md-button ng-click="ctrl.orderBy('singPath')">SingPath Problems</md-button>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <th colspan="5" ng-if="(ctrl.ranking|spfEmpty)">
-                                No participants
-                            </th> 
-                        </tr>
-                        <tr ng-repeat="participant in (ctrl.ranking | spfToArray | orderBy:[ctrl.orderKey, ctrl.previousOrderKey]:ctrl.reverseOrder)" ng-class="'index-' + $index + ' ' + ($index % 2 == 0? 'even' : 'odd')">
-                            <th>
-                                {{ $index + 1 }}
-                            </th>
-                            <th>
-                                <!-- spfToArray adds the $$hashKey property to every element in the object -->
-                                <md-button class="name-button" ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$$hashKey} }}">
-                                    {{ participant.user.displayName }}
-                                </md-button>
-                            </th>
-                            <td ng-if="ctrl.event.schoolEvent">{{ participant.user.school.name }}</td>
-                            <td ng-if="ctrl.event.schoolEvent">{{ participant.$rankInSchool || 'N/A'}}</td>
-                            <td>{{ participant.total || 0}}</td>
-                            <td>{{ participant.codeCombat || 0 }}</td>
-                            <td>{{ participant.codeSchool || 0 }}</td>
-                            <td>{{ participant.singPath || 0 }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-
             </md-content>
         </md-tab>
     </md-tabs>

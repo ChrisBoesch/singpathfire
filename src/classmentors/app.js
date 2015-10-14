@@ -606,13 +606,12 @@
               function setRankInSchool() {
                 // 1. sort participant by school
                 var schoolRankings = Object.keys(ranking).filter(function(publicId) {
-                  return publicId.length > 0 && publicId[0] !== '$';
+                  return publicId.length > 0 && ranking[publicId] && ranking[publicId].user;
                 }).reduce(function(all, publicId) {
                   var participant = ranking[publicId];
                   var schoolId;
 
                   if (
-                    participant.user == null ||
                     participant.user.school == null ||
                     !participant.user.school.name ||
                     !participant.user.school.type

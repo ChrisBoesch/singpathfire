@@ -1,17 +1,21 @@
+<div ng-if="ctrl.loading" layout="row" layout-align="space-around" class="md-padding">
+    <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+</div>
+
 <div ng-if="!ctrl.loading">
     
     <md-content class="md-padding">
         <table class="events tasks">
             <thead>
-                <tr ng-class="{'reversed': ctrl.viewOptions.reverseOrder}">
-                    <th rowspan="4" ng-class="{orderer: !ctrl.viewOptions.orderKey}">
+                <tr ng-class="{'reversed': ctrl.orderOptions.reversed}">
+                    <th rowspan="4" ng-class="{orderer: !ctrl.orderOptions.key}">
                         <md-button ng-click="ctrl.orderBy()">Participants</md-button>
                     </th>
                     <th ng-if="ctrl.visibleTasks.length == 0">
                         <em>No challenge</em>
                     </th>
                     <th ng-repeat="task in ctrl.visibleTasks track by task.$id"
-                        ng-class="{orderer: ctrl.viewOptions.orderKey == task.$id}"
+                        ng-class="{orderer: ctrl.orderOptions.key == task.$id}"
                     >
                         <md-button ng-click="ctrl.orderBy(task.$id)">{{ task.title }}</md-button>
                     </th>
@@ -155,37 +159,6 @@
         </table>
     </md-content>
 
-    <md-content layout="row" layout-align="start center" class="md-padding">
-        <span flex></span>
-        
-        <span class="label md-padding">Row per page: </span>
-        <md-select ng-model="ctrl.viewOptions.rowPerPage" ng-change="ctrl.rowPerPageUpdated()" aria-label="row per page">
-            <md-option value="5">5</md-option>
-            <md-option value="10">10</md-option>
-            <md-option value="25">25</md-option>
-            <md-option value="50">50</md-option>
-        </md-select>
-
-        <span class="md-padding">
-            {{ ctrl.viewOptions.range.start }} - {{ ctrl.viewOptions.range.end }} of
-            {{ ctrl.viewOptions.rowCount }}
-        </span>
-
-        <md-button title="First page" aria-label="first page" class="md-icon-button" ng-click="ctrl.firstPage(ctrl.viewOptions)" ng-disabled="ctrl.viewOptions.range.start == 0">
-            <md-icon md-svg-icon="arrow-back"></md-icon>
-        </md-button>
-
-        <md-button title="Previous page" aria-label="previous page" class="md-icon-button" ng-click="ctrl.prevPage(ctrl.viewOptions)" ng-disabled="ctrl.viewOptions.range.start == 0">
-            <md-icon md-svg-icon="keyboard-arrow-left"></md-icon>
-        </md-button>
-        
-        <md-button title="Next page" aria-label="next page" class="md-icon-button" ng-click="ctrl.nextPage(ctrl.viewOptions)" ng-disabled="ctrl.viewOptions.range.end >= ctrl.viewOptions.rowCount">
-            <md-icon md-svg-icon="keyboard-arrow-right"></md-icon>
-        </md-button>
-
-        <md-button title="Last page" aria-label="last page" class="md-icon-button" ng-click="ctrl.lastPage(ctrl.viewOptions)" ng-disabled="ctrl.viewOptions.range.end >= ctrl.viewOptions.rowCount">
-            <md-icon md-svg-icon="arrow-forward"></md-icon>
-        </md-button>
-    </md-content>
+    <clm-pager options="ctrl.pagerOptions" class="md-padding"></clm-pager>
 
 </div>
