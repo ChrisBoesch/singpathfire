@@ -56,7 +56,7 @@
                         
                         <div ng-if="task.serviceId">
                             <span ng-if="ctrl.currentUserSolutions[task.$id]">
-                                Completed<span ng-if="ctrl.currentUserProgress[task.$id].completed">*</span>
+                                Completed<span ng-if="!ctrl.currentUserProgress[task.$id].completed">*</span>
                             </span>
                             <span ng-if="!ctrl.currentUserSolutions[task.$id]">
                                 <md-button class="md-raised md-primary" 
