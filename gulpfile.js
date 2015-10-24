@@ -47,6 +47,7 @@ var config = {
   ace: {
     assets: [
       'src/vendor/ace-builds/mode-html.js',
+      'src/vendor/ace-builds/mode-java.js',
       'src/vendor/ace-builds/mode-javascript.js',
       'src/vendor/ace-builds/mode-python.js',
       'src/vendor/ace-builds/theme-twilight.js',

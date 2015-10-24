@@ -41,6 +41,7 @@
         "bower_components/ace-builds/src-noconflict/ace.js",
         "bower_components/ace-builds/src-noconflict/mode-html.js",
         "bower_components/ace-builds/src-noconflict/mode-javascript.js",
+        "bower_components/ace-builds/src-noconflict/mode-java.js",
         "bower_components/ace-builds/src-noconflict/mode-python.js",
         "bower_components/ace-builds/src-noconflict/theme-twilight.js",
         "bower_components/ace-builds/src-noconflict/worker-html.js",

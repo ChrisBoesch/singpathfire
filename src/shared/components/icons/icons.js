@@ -36,6 +36,11 @@
           'language:javascript',
           'shared/components/icons/icons-javascript.svg',
           630
+        )
+        .icon(
+          'language:java',
+          'shared/components/icons/icons-java.svg',
+          128
         );
     }
   ])
