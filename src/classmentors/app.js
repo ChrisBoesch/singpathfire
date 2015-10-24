@@ -119,7 +119,7 @@
           /**
            * Return the list of saved badges for the service and user.
            *
-           * @return {[type]} [description]
+           * @return {object}
            */
           badges: function(profile) {
             if (
@@ -606,13 +606,12 @@
               function setRankInSchool() {
                 // 1. sort participant by school
                 var schoolRankings = Object.keys(ranking).filter(function(publicId) {
-                  return publicId.length > 0 && publicId[0] !== '$';
+                  return publicId.length > 0 && ranking[publicId] && ranking[publicId].user;
                 }).reduce(function(all, publicId) {
                   var participant = ranking[publicId];
                   var schoolId;
 
                   if (
-                    participant.user == null ||
                     participant.user.school == null ||
                     !participant.user.school.name ||
                     !participant.user.school.type
@@ -677,9 +676,8 @@
           },
 
           getTasks: function(eventId) {
-            return spfFirebase.loadedObj(['classMentors/eventTasks', eventId], {
-              orderByChild: 'archived',
-              equalTo: false
+            return spfFirebase.loadedArray(['classMentors/eventTasks', eventId], {
+              orderByPriority: true
             });
           },
 
@@ -852,8 +850,13 @@
             });
           },
 
+          // to be true the task only need registration.
           _hasRegistered: function(task, clmProfile, spfProfile) {
             var serviceId = task.serviceId;
+
+            if (!task.serviceId || task.badge || task.singPathProblem) {
+              return false;
+            }
 
             if (serviceId === 'singPath') {
               return !!spfProfile;
@@ -868,6 +871,13 @@
           },
 
           _hasBadge: function(task, badges) {
+            if (
+              !task.badge ||
+              !task.badge.id
+            ) {
+              return false;
+            }
+
             var serviceId = task.serviceId;
 
             return (
@@ -878,7 +888,20 @@
             );
           },
 
-          _hasSolved: function(task, profile) {
+          _hasSolvedSingpathProblem: function(task, profile) {
+
+            if (
+              !task.singPathProblem ||
+              !task.singPathProblem.path ||
+              !task.singPathProblem.path.id ||
+              !task.singPathProblem.level ||
+              !task.singPathProblem.level.id ||
+              !task.singPathProblem.problem ||
+              !task.singPathProblem.problem.id
+            ) {
+              return false;
+            }
+
             var path = task.singPathProblem.path.id;
             var level = task.singPathProblem.level.id;
             var problem = task.singPathProblem.problem.id;
@@ -889,6 +912,24 @@
               profile.solutions[path][level] &&
               profile.solutions[path][level][problem] &&
               profile.solutions[path][level][problem].solved
+            );
+          },
+
+          _isSolutionLinkValid: function(task, solutions) {
+            return (
+              task.linkPattern &&
+              solutions &&
+              solutions[task.$id] &&
+              angular.isFunction(solutions[task.$id].match) &&
+              solutions[task.$id].match(task.linkPattern)
+            );
+          },
+
+          _isResponseValid: function(task, solutions) {
+            return (
+              task.textResponse &&
+              solutions &&
+              solutions[task.$id]
             );
           },
 
@@ -923,87 +964,40 @@
               return serviceBadges;
             }, {});
 
-            // check completeness
-            return Object.keys(tasks || {}).filter(function(k) {
-              return k && k[0] !== '$';
-            }).reduce(function(results, taskId) {
-              var task = tasks[taskId];
-              var match;
+            return tasks.reduce(function(progress, task) {
+              // We never recheck archived task completeness
+              if (task.archived) {
+                if (data.progress && data.progress[task.$id]) {
+                  progress[task.$id] = data.progress[task.$id];
+                }
+                return progress;
+              }
 
-              // If the task is closed it cannot be completed unless it was already completed.
-              //
-              // Note that if was already completed we still test from completeness
-              // in case the requirement changed
+              // We recheck solved closed tasks in case requirements changed.
               if (
-                task.closedAt && (
-                  !data.progress ||
-                  !data.progress[taskId] ||
-                  !data.progress[taskId].completed
+                task.closedAt &&
+                !(
+                  data.progress &&
+                  data.progress[task.$id] &&
+                  data.progress[task.$id].completed
                 )
               ) {
-                return results;
+                return progress;
               }
 
-              // If the task is archived skip it.
-              // Keep the task as completed if the user did complete it in the past.
-              if (task.archived) {
-                if (data.progress && data.progress[taskId] && data.progress[taskId].completed) {
-                  results[taskId] = {completed: true};
-                }
-                return results;
+              var solved = (
+                clmDataStore.events._isSolutionLinkValid(task, data.solutions) ||
+                clmDataStore.events._isResponseValid(task, data.solutions) ||
+                clmDataStore.events._hasRegistered(task, data.classMentors, data.singPath) ||
+                clmDataStore.events._hasBadge(task, badges) ||
+                clmDataStore.events._hasSolvedSingpathProblem(task, data.singPath)
+              );
+
+              if (solved) {
+                progress[task.$id] = {completed: true};
               }
 
-              if (task.linkPattern) {
-                if (
-                  data.solutions &&
-                  data.solutions[taskId] &&
-                  angular.isFunction(data.solutions[taskId].match) &&
-                  data.solutions[taskId].match(task.linkPattern)
-                ) {
-                  results[taskId] = {completed: true};
-                }
-                return results;
-              }
-
-              if (task.textResponse) {
-                if (
-                  data.solutions &&
-                  data.solutions[taskId]
-                ) {
-                  results[taskId] = {completed: true};
-                }
-                return results;
-              }
-
-              if (!clmDataStore.events._hasRegistered(
-                task, data.classMentors, data.singPath
-              )) {
-                return results;
-              }
-
-              if (
-                task.badge &&
-                task.badge.id &&
-                !clmDataStore.events._hasBadge(task, badges)
-              ) {
-                return results;
-              }
-
-              if (
-                task.singPathProblem &&
-                task.singPathProblem.path &&
-                task.singPathProblem.path.id &&
-                task.singPathProblem.level &&
-                task.singPathProblem.level.id &&
-                task.singPathProblem.problem &&
-                task.singPathProblem.problem.id &&
-                !clmDataStore.events._hasSolved(task, data.singPath)
-              ) {
-                return results;
-              }
-
-              results[taskId] = {completed: true};
-              return results;
+              return progress;
             }, {});
           },
 
@@ -1030,16 +1024,11 @@
             var unWatchParticipants = participants.$watch(debouncedUpdate);
 
             function update() {
-              return $q.all(Object.keys(participants).filter(function(index) {
-                return index && index[0] !== '$';
-              }).map(function(index) {
-                return participants[index];
-              }).reduce(function(all, participant) {
-                all[participant.$id] = clmDataStore.events.updateProgress(
+              return participants.map(function(participant) {
+                return clmDataStore.events.updateProgress(
                   event, tasks, solutions, participant.$id, progress[participant.$id]
                 );
-                return all;
-              }, {}));
+              });
             }
 
             function debouncedUpdate() {
@@ -1087,14 +1076,25 @@
             }).then(function(data) {
               // 4. save data
               return $q.all([
-                spfFirebase.set(
-                  ['classMentors/eventProgress', event.$id, data.classMentors.$id],
-                  // 2. check completness
-                  clmDataStore.events._getProgress(tasks, data)
-                ),
+                // 2. check completness and update progress if needed.
+                $q.when(clmDataStore.events._getProgress(tasks, data)).then(function(progress) {
+                  var updated = Object.keys(progress).some(function(taskId) {
+                    var wasCompleted = data.progress && data.progress[taskId] && data.progress[taskId].completed;
+                    var isCompleted = progress && progress[taskId] && progress[taskId].completed;
+
+                    return isCompleted !== wasCompleted;
+                  });
+
+                  if (updated) {
+                    return spfFirebase.set(
+                      ['classMentors/eventProgress', event.$id, data.classMentors.$id],
+                      progress
+                    );
+                  }
+                }),
+                // 3. get ranking - if we get the ranking we could check it needs an update
                 spfFirebase.set(
                   ['classMentors/eventRankings', event.$id, data.classMentors.$id],
-                  // 3. get ranking
                   clmDataStore.events._getRanking(data)
                 ),
                 // 5. update participants data
@@ -1112,62 +1112,56 @@
           },
 
           /**
-           * Only update the the current user profile, its event badge/problem
-           * solution, and return his progress and ranking.
+           * Only update the the current user profile and his/her event badge/problem solution.
            *
            * Only admin and event onwer can save the progress and ranking.
            *
            */
-          updateCurrentUserProfile: function(event, tasks, userSolutions, profile, userProgress) {
+          updateCurrentUserProfile: function(event, tasks, userSolutions, profile) {
             if (!event || !event.$id || !userSolutions || !userSolutions.$id || !profile || !profile.$id) {
               return $q.reject(new Error('Event, userSolutions or profile are not valid firebase object'));
+            }
+
+            function solvedTask(task, solutions) {
+              return !!(solutions[task.$id]);
             }
 
             return $q.all({
               // 1. Update user profile
               codeCombat: clmDataStore.services.codeCombat.updateProfile(profile),
               codeSchool: clmDataStore.services.codeSchool.updateProfile(profile),
-              singPath: clmDataStore.singPath.profile(profile.$id),
-              solutions: userSolutions
+              singPath: clmDataStore.singPath.profile(profile.$id)
             }).then(function(data) {
               return $q.all({
                 singPath: data.singPath,
-                classMentors: profile, // assuming it got synched
                 badges: {
-                  codeCombat: objToArray(clmDataStore.services.codeCombat.badges(profile)),
-                  codeSchool: objToArray(clmDataStore.services.codeSchool.badges(profile))
-                },
-                solutions: data.solutions,
-                progress: userProgress
+                  codeCombat: clmDataStore.services.codeCombat.badges(profile),
+                  codeSchool: clmDataStore.services.codeSchool.badges(profile)
+                }
               });
             }).then(function(data) {
-              return {
-                progress: clmDataStore.events._getProgress(tasks, data),
-                ranking: clmDataStore.events._getRanking(data),
-                solutions: data.solutions
-              };
-            }).then(function(data) {
-              var result = {
-                progress: data.progress,
-                ranking: data.ranking
-              };
+              var updatedTasks = tasks.filter(function(task) {
+                if (solvedTask(task, userSolutions)) {
+                  return false;
+                }
 
-              // look for service task having just been completed.
-              var shouldSave = Object.keys(data.progress).filter(function(taskId) {
-                return data.solutions && data.solutions[taskId] == null;
-              }).map(function(taskId) {
-                data.solutions[taskId] = true;
-              }).length;
+                return (
+                  clmDataStore.events._hasRegistered(task, profile, data.singPath) ||
+                  clmDataStore.events._hasSolvedSingpathProblem(task, data.singPath) ||
+                  clmDataStore.events._hasBadge(task, data.badges)
+                );
+              }).map(function(task) {
+                userSolutions[task.$id] = true;
+                return task;
+              });
 
-              if (shouldSave > 0) {
-                data.solutions.$save().catch(function(e) {
-                  $log.error('Failed to update solutions: ' + e);
-                });
+              if (updatedTasks.length > 0) {
+                userSolutions.$save();
               }
 
-              return result;
+              return updatedTasks;
             }).catch(function(err) {
-              $log.error('Failed to get progress of ' + profile.$id + ': ' + err.toString());
+              $log.error('Failed to update profile and soltuions of ' + profile.$id + ': ' + err.toString());
             });
           },
 

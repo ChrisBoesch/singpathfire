@@ -1,0 +1,29 @@
+<md-content layout="row" layout-align="start center">
+    <span flex></span>
+    
+    <span class="label md-padding">Row per page: </span>
+    <md-select ng-model="ctrl.rowPerPage.value" ng-change="ctrl.rowPerPage.set(ctrl.rowPerPage.value)" aria-label="row per page">
+        <md-option value="{{opt}}" ng-repeat="opt in ctrl.rowPerPage.options">{{opt}}</md-option>
+    </md-select>
+
+    <span class="md-padding">
+        {{ ctrl.options.range.start }} - {{ ctrl.options.range.end }} of
+        {{ ctrl.options.rowCount }}
+    </span>
+
+    <md-button title="First page" aria-label="first page" class="md-icon-button" ng-click="ctrl.firstPage(ctrl.options)" ng-disabled="ctrl.options.range.start == 0">
+        <md-icon md-svg-icon="arrow-back"></md-icon>
+    </md-button>
+
+    <md-button title="Previous page" aria-label="previous page" class="md-icon-button" ng-click="ctrl.prevPage(ctrl.options)" ng-disabled="ctrl.options.range.start == 0">
+        <md-icon md-svg-icon="keyboard-arrow-left"></md-icon>
+    </md-button>
+    
+    <md-button title="Next page" aria-label="next page" class="md-icon-button" ng-click="ctrl.nextPage(ctrl.options)" ng-disabled="ctrl.options.range.end >= ctrl.options.rowCount">
+        <md-icon md-svg-icon="keyboard-arrow-right"></md-icon>
+    </md-button>
+
+    <md-button title="Last page" aria-label="last page" class="md-icon-button" ng-click="ctrl.lastPage(ctrl.options)" ng-disabled="ctrl.options.range.end >= ctrl.options.rowCount">
+        <md-icon md-svg-icon="arrow-forward"></md-icon>
+    </md-button>
+</md-content>

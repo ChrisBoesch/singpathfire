@@ -4,7 +4,7 @@
 (function() {
   'use strict';
 
-  describe('clm class mentors home components', function() {
+  describe('clm class mentors events components', function() {
     var $controller, $rootScope, $q, spfAuth, spfAuthData, clmDataStore;
 
     beforeEach(module('clm'));
@@ -261,18 +261,16 @@
               $id: 'someEventId',
               owner: {publicId: 'bob'}
             },
+            ranking: {},
+            canView: false,
             tasks: {},
             participants: {},
-            ranking: {},
-            solution: {},
             progress: {},
-            currentUserProgress: {},
-            currentUserSolutions: {},
-            currentUserStats: {}
+            solution: {}
           },
           $document: {},
-          $route: jasmine.createSpyObj('$route', ['reload']),
           $mdDialog: jasmine.createSpyObj('$mdDialog', ['show', 'hide']),
+          $route: jasmine.createSpyObj('$route', ['reload']),
           spfAlert: jasmine.createSpyObj('spfAlert', ['info', 'success', 'error', 'warning']),
           spfFirebase: jasmine.createSpyObj('spfFirebase', ['cleanObj']),
           spfAuthData: jasmine.createSpyObj('spfAuthData', ['publicId']),
@@ -480,302 +478,6 @@
           expect(deps.spfAlert.error).toHaveBeenCalled();
         });
 
-      });
-
-      describe('completed', function() {
-
-        it('should return 100 if there is no participants', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-
-          expect(ctrl.completed('12345')).toBe(0);
-        });
-
-        it('should return percentage of participants having completed the task', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-
-          ctrl.participants = [{$id: 'bob'}, {$id: 'alice'}];
-          ctrl.participants.$id = 'eventId';
-
-          ctrl.progress = {
-            bob: {
-              someTaskId: {completed: true},
-              someOtherTaskId: {completed: true}
-            },
-            alice: {
-              someOtherTaskId: {completed: true}
-            },
-            tom: {
-              someTaskId: {completed: true},
-              someOtherTaskId: {completed: true}
-            }
-          };
-          expect(ctrl.completed('someTaskId', ctrl.participants, ctrl.progress)).toBe(50);
-        });
-
-      });
-
-      describe('startLink', function() {
-        var routes;
-
-        beforeEach(inject(function(_routes_) {
-          routes = _routes_;
-        }));
-
-        it('should return an empty string if the task does not involve a service', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-          var task = {linkPattern: 'foo'};
-          var profile = {};
-
-          expect(ctrl.startLink(task, profile)).toBe('');
-        });
-
-        it('should return an empty string if the task involved an unknown service', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-          var task = {serviceId: 'foo'};
-          var profile = {};
-
-          expect(ctrl.startLink(task, profile)).toBe('');
-        });
-
-        it('should return a link to a singpath problem', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-          var task = {
-            serviceId: 'singPath',
-            singPathProblem: {path: {id: 'pathId'}, level: {id: 'levelId'}, problem: {id: 'problemId'}}
-          };
-          var profile = {};
-
-          expect(ctrl.startLink(task, profile)).toBe(
-            'http://www.singpath.com//#/paths/pathId/levels/levelId/problems/problemId/play'
-          );
-        });
-
-        it('should return an url to the profile view if the task involve registering', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-          var task = {serviceId: 'codeSchool'};
-          var profile = {};
-
-          expect(ctrl.startLink(task, profile)).toBe('#' + routes.editProfile);
-        });
-
-        it('should return an url to the profile view if the task involve badge but the user is not registered',
-          function() {
-            var ctrl = $controller('ViewEventCtrl', deps);
-            var task = {
-              serviceId: 'codeSchool',
-              badge: {url: 'https://www.codeschool.com/courses/some-level-name'}
-            };
-            var profile = {};
-
-            expect(ctrl.startLink(task, profile)).toBe('#' + routes.editProfile);
-          }
-        );
-
-        it('should return a link to a code school course', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-          var task = {
-            serviceId: 'codeSchool',
-            badge: {url: 'https://www.codeschool.com/courses/some-level-name'}
-          };
-          var profile = {
-            services: {codeSchool: {details: {id: 'bob'}}}
-          };
-
-          expect(ctrl.startLink(task, profile)).toBe(
-            'https://www.codeschool.com/courses/some-level-name'
-          );
-        });
-
-        it('should return a link to a code combat level', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-          var task = {
-            serviceId: 'codeCombat',
-            badge: {url: 'https://www.codescombat.com/level/some-level-name'}
-          };
-          var profile = {
-            services: {codeCombat: {details: {id: 'bob'}}}
-          };
-
-          expect(ctrl.startLink(task, profile)).toBe(
-            'https://www.codescombat.com/level/some-level-name'
-          );
-        });
-
-      });
-
-      describe('mustRegister', function() {
-
-        it('should return false if the task does not involve a service', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-          var task = {linkPattern: 'foo'};
-          var profile = {};
-
-          expect(ctrl.mustRegister(task, profile)).toBe(false);
-        });
-
-        it('should return false if the task service involved is not tracked', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-          var task = {serviceId: 'singPath'};
-          var profile = {};
-
-          expect(ctrl.mustRegister(task, profile)).toBe(false);
-        });
-
-        it('should return false if the user is already registered', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-          var task = {serviceId: 'codeSchool'};
-          var profile = {services: {
-            codeSchool: {details: {id: 'bob'}}
-          }};
-
-          expect(ctrl.mustRegister(task, profile)).toBe(false);
-        });
-
-        it('should return true if the user is not already registered', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-          var task = {serviceId: 'codeSchool'};
-          var profile = {services: {
-            codeCombat: {details: {id: 'bob'}}
-          }};
-
-          expect(ctrl.mustRegister(task, profile)).toBe(true);
-        });
-
-        it('should return true if the user is not registered to any services', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-          var task = {serviceId: 'codeSchool'};
-          var profile = {$id: 'bob'};
-
-          expect(ctrl.mustRegister(task, profile)).toBe(true);
-        });
-
-      });
-
-      describe('update', function() {
-
-        it('should update the current user task completeness', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-          var event = {};
-          var tasks = {};
-          var solutions = {};
-          var profile = {};
-          var userProgress = {};
-
-          deps.clmDataStore.events.updateCurrentUserProfile.and.returnValue($q.when());
-
-          ctrl.update(event, tasks, solutions, profile, userProgress);
-
-          expect(deps.clmDataStore.events.updateCurrentUserProfile).toHaveBeenCalledWith(
-            event, tasks, solutions, profile, userProgress
-          );
-        });
-
-        it('should show success message on success', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-
-          deps.clmDataStore.events.updateCurrentUserProfile.and.returnValue($q.when({}));
-
-          ctrl.update({}, {}, {});
-          $rootScope.$apply();
-
-          expect(deps.spfAlert.success).toHaveBeenCalled();
-        });
-
-        it('should should set currentUserStats on success', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-          var expected = {};
-
-          deps.clmDataStore.events.updateCurrentUserProfile.and.returnValue(
-            $q.when(expected)
-          );
-
-          ctrl.update({}, {}, {});
-          $rootScope.$apply();
-
-          expect(ctrl.currentUserStats).toBe(expected);
-        });
-
-        it('should show error message on failure', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-
-          deps.clmDataStore.events.updateCurrentUserProfile.and.returnValue($q.reject());
-
-          ctrl.update({}, {}, {});
-          $rootScope.$apply();
-
-          expect(deps.spfAlert.error).toHaveBeenCalled();
-        });
-
-      });
-
-      describe('orderBy', function() {
-
-        it('should setup orderKey, previousOrderKey and reverseOrder', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-
-          expect(ctrl.orderKey).toBe('total');
-          expect(ctrl.previousOrderKey).toBe('user.displayName');
-          expect(ctrl.reverseOrder).toBe(true);
-        });
-
-        it('should reverse order when the same key is selected again', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-
-          expect(ctrl.reverseOrder).toBe(true);
-          ctrl.orderBy(ctrl.orderKey);
-          expect(ctrl.reverseOrder).toBe(false);
-          ctrl.orderBy(ctrl.orderKey);
-          expect(ctrl.reverseOrder).toBe(true);
-        });
-
-        it('should set new key and previousOrderKey, and reset reverseOrder', function() {
-          var ctrl = $controller('ViewEventCtrl', deps);
-
-          ctrl.reverseOrder = false;
-          ctrl.orderKey = 'originalKey';
-          ctrl.orderBy('newKey');
-
-          expect(ctrl.orderKey).toBe('newKey');
-          expect(ctrl.previousOrderKey).toBe('originalKey');
-          expect(ctrl.reverseOrder).toBe(true);
-        });
-
-      });
-
-      describe('visibleTasks', function() {
-        it('should return 0 when there is no tasks ', function() {
-          var ctrl;
-
-          deps.initialData.tasks = {$id: 'someEventId'};
-
-          ctrl = $controller('ViewEventCtrl', deps);
-          expect(ctrl.visibleTasks()).toBe(0);
-        });
-
-        it('should return 0 when all tasks are hidden', function() {
-          var ctrl;
-
-          deps.initialData.tasks = {
-            $id: 'someEventId',
-            someTaskId: {description: 'some desc.', hidden: true}
-          };
-
-          ctrl = $controller('ViewEventCtrl', deps);
-          expect(ctrl.visibleTasks()).toBe(0);
-        });
-
-        it('should return the number of tasks which are not hidden', function() {
-          var ctrl;
-
-          deps.initialData.tasks = {
-            $id: 'someEventId',
-            someTaskId: {description: 'some desc.'},
-            someOtherTaskId: {description: 'some desc.', hidden: true}
-          };
-
-          ctrl = $controller('ViewEventCtrl', deps);
-          expect(ctrl.visibleTasks()).toBe(1);
-        });
       });
 
     });
@@ -1026,6 +728,707 @@
         });
       });
 
+    });
+
+    describe('ClmEventTableCtrl', function() {
+      var deps, ctrlFn, userProgress, userSolutions;
+
+      beforeEach(function() {
+        deps = {
+          $scope: jasmine.createSpyObj('$scope', ['$on']),
+          $mdDialog: jasmine.createSpyObj('$mdDialog', ['show', 'hide']),
+          $document: {},
+          urlFor: jasmine.createSpy('urlFor'),
+          spfAlert: jasmine.createSpyObj('spfAlert', ['info', 'success', 'error', 'warning']),
+          spfNavBarService: jasmine.createSpyObj('spfNavBarService', ['update']),
+          clmDataStore: {
+            events: jasmine.createSpyObj('events', [
+              'submitSolution', 'updateCurrentUserProfile', 'removeParticpants',
+              'getUserProgress', 'getUserSolutions'
+            ])
+          }
+        };
+
+        userProgress = {$id: 'bob', $destroy: jasmine.createSpy('userProgressDestroy')};
+        userSolutions = {$id: 'bob', $destroy: jasmine.createSpy('userSolutionsDestroy')};
+        deps.clmDataStore.events.getUserProgress.and.returnValue($q.when(userProgress));
+        deps.clmDataStore.events.getUserSolutions.and.returnValue($q.when(userSolutions));
+
+        // Binding the directive attributes to the controller instance
+        // (undocumented feature of $controller).
+        ctrlFn = $controller('ClmEventTableCtrl', deps, true);
+        ctrlFn.instance.event = {$id: 'someEventId'};
+        ctrlFn.instance.profile = {$id: 'bob'};
+        ctrlFn.instance.participants = [];
+        ctrlFn.instance.tasks = [];
+        ctrlFn.instance.progress = {$id: 'someEventId', $watch: jasmine.createSpy('progressWatch')};
+        ctrlFn.instance.solutions = {$id: 'someEventId'};
+
+        ctrlFn.instance.participants.$getRecord = function(id) {
+          return this.find(function(p) {
+            return p.$id === id;
+          });
+        };
+        ctrlFn.instance.participants.$watch = jasmine.createSpy('participantsWatch');
+        ctrlFn.instance.tasks.$watch = jasmine.createSpy('tasksWatch');
+      });
+
+      it('should initiate participant and tasks views', function() {
+        var ctrl = ctrlFn();
+
+        expect(ctrl.participantsView).toEqual([]);
+        expect(ctrl.visibleTasks).toEqual([]);
+        expect(ctrl.taskCompletion).toEqual({});
+        expect(ctrl.currentUserParticipant).toBeUndefined();
+        expect(ctrl.orderOptions.key).toBeUndefined();
+        expect(ctrl.orderOptions.reversed).toBe(false);
+        expect(ctrl.pagerOptions.rowCount).toBe(0);
+        expect(ctrl.pagerOptions.range.start).toBe(0);
+        expect(ctrl.pagerOptions.range.end).toBe(0);
+      });
+
+      it('should update pager option when resources are loaded', function() {
+        var ctrl;
+
+        ctrlFn.instance.participants.push({$id: 'bob', user: {}});
+        ctrlFn.instance.participants.push({$id: 'alice', user: {}});
+
+        ctrl = ctrlFn();
+        spyOn(ctrl.pagerOptions, 'setRowCount').and.callThrough();
+        $rootScope.$apply();
+
+        expect(ctrl.pagerOptions.rowCount).toBe(1);
+        expect(ctrl.pagerOptions.setRowCount).toHaveBeenCalledWith(1);
+      });
+
+      it('should update the participant view when resources are loaded', function() {
+        var ctrl;
+
+        ctrlFn.instance.participants.push({$id: 'bob', user: {}});
+        ctrlFn.instance.participants.push({$id: 'alice', user: {}});
+
+        ctrl = ctrlFn();
+        spyOn(ctrl.pagerOptions, 'setRowCount').and.callThrough();
+        $rootScope.$apply();
+
+        expect(ctrl.participantsView.length).toBe(1);
+        expect(ctrl.participantsView[0].$id).toBe('alice');
+      });
+
+      it('should update the list of visible tasks', function() {
+        var ctrl;
+
+        ctrlFn.instance.tasks.push({$id: 'someTaskId'});
+        ctrlFn.instance.tasks.push({$id: 'someClosedTaskId', closedAt: 123456});
+        ctrlFn.instance.tasks.push({$id: 'someHiddenTaskId', hidden: true});
+        ctrlFn.instance.tasks.push({$id: 'someArchivedTaskId', archived: true});
+
+        ctrl = ctrlFn();
+        $rootScope.$apply();
+
+        expect(ctrl.visibleTasks.length).toBe(1);
+        expect(ctrl.visibleTasks[0].$id).toBe('someTaskId');
+      });
+
+      it('should set current user participation state', function() {
+        var ctrl;
+
+        ctrlFn.instance.participants.push({$id: 'bob', user: {}});
+
+        ctrl = ctrlFn();
+        $rootScope.$apply();
+
+        expect(ctrl.currentUserParticipant).toBeDefined();
+        expect(ctrl.currentUserParticipant.$id).toBe('bob');
+      });
+
+      it('should set tasks\' completion rates', function() {
+        var ctrl;
+
+        ctrlFn.instance.participants.push({$id: 'bob', user: {}});
+        ctrlFn.instance.participants.push({$id: 'alice', user: {}});
+        ctrlFn.instance.tasks.push({$id: 'someTaskId'});
+        ctrlFn.instance.tasks.push({$id: 'someOtherTaskId'});
+        ctrlFn.instance.tasks.push({$id: 'someLastTaskId'});
+        ctrlFn.instance.tasks.push({$id: 'someClosedTaskId', closedAt: 123456});
+        ctrlFn.instance.progress.bob = {
+          someTaskId: {completed: true},
+          someOtherTaskId: {completed: true}
+        };
+        ctrlFn.instance.progress.alice = {
+          someTaskId: {completed: true}
+        };
+
+        ctrl = ctrlFn();
+        $rootScope.$apply();
+
+        expect(ctrl.taskCompletion.someTaskId).toBe(100);
+        expect(ctrl.taskCompletion.someOtherTaskId).toBe(50);
+        expect(ctrl.taskCompletion.someLastTaskId).toBe(0);
+        expect(ctrl.taskCompletion.someClosedTaskId).toBeUndefined();
+      });
+
+      it('should update task view when the tasks get updated', function() {
+        var ctrl = ctrlFn();
+        var onTaskUpdate;
+
+        $rootScope.$apply();
+
+        onTaskUpdate = ctrl.tasks.$watch.calls.allArgs().map(function(args) {
+          var callback = args[0];
+
+          expect(callback).toEqual(jasmine.any(Function));
+          return callback;
+        });
+
+        ctrlFn.instance.tasks.push({$id: 'someTaskId'});
+        ctrlFn.instance.tasks.push({$id: 'someClosedTaskId', closedAt: 123456});
+        ctrlFn.instance.tasks.push({$id: 'someHiddenTaskId', hidden: true});
+        ctrlFn.instance.tasks.push({$id: 'someArchivedTaskId', archived: true});
+
+        onTaskUpdate.forEach(function(fn) {
+          fn();
+        });
+
+        expect(ctrl.visibleTasks.length).toBe(1);
+        expect(ctrl.visibleTasks[0].$id).toBe('someTaskId');
+      });
+
+      it('should update task completion rate when the tasks get updated', function() {
+        var ctrl, onTaskUpdate;
+
+        ctrlFn.instance.tasks.push({$id: 'someTaskId'});
+        ctrlFn.instance.participants.push({$id: 'bob', user: {}});
+        ctrlFn.instance.progress.bob = {
+          someTaskId: {completed: true}
+        };
+
+        ctrl = ctrlFn();
+        $rootScope.$apply();
+
+        onTaskUpdate = ctrl.tasks.$watch.calls.allArgs().map(function(args) {
+          var callback = args[0];
+
+          expect(callback).toEqual(jasmine.any(Function));
+          return callback;
+        });
+
+        ctrl.tasks.push({$id: 'someOtherTaskId'});
+
+        onTaskUpdate.forEach(function(fn) {
+          fn();
+        });
+
+        expect(ctrl.taskCompletion.someOtherTaskId).toBe(0);
+      });
+
+      it('should update task completion rate when the progress get updated', function() {
+        var ctrl, onProgressUpdate;
+
+        ctrlFn.instance.tasks.push({$id: 'someTaskId'});
+        ctrlFn.instance.participants.push({$id: 'bob', user: {}});
+
+        ctrl = ctrlFn();
+        $rootScope.$apply();
+
+        onProgressUpdate = ctrl.progress.$watch.calls.allArgs().map(function(args) {
+          var callback = args[0];
+
+          expect(callback).toEqual(jasmine.any(Function));
+          return callback;
+        });
+
+        ctrl.progress.bob = {
+          someTaskId: {completed: true}
+        };
+
+        onProgressUpdate.forEach(function(fn) {
+          fn();
+        });
+
+        expect(ctrl.taskCompletion.someTaskId).toBe(100);
+      });
+
+      it('should update task completion rate when the participant list get updated', function() {
+        var ctrl, onParticpantsUpdate;
+
+        ctrlFn.instance.tasks.push({$id: 'someTaskId'});
+        ctrlFn.instance.participants.push({$id: 'bob', user: {}});
+        ctrlFn.instance.progress.bob = {
+          someTaskId: {completed: true}
+        };
+
+        ctrl = ctrlFn();
+        $rootScope.$apply();
+
+        onParticpantsUpdate = ctrl.participants.$watch.calls.allArgs().map(function(args) {
+          var callback = args[0];
+
+          expect(callback).toEqual(jasmine.any(Function));
+          return callback;
+        });
+
+        ctrlFn.instance.participants.push({$id: 'alice', user: {}});
+
+        onParticpantsUpdate.forEach(function(fn) {
+          fn();
+        });
+
+        expect(ctrl.taskCompletion.someTaskId).toBe(50);
+      });
+
+      it('should update the participant view when participants get updated', function() {
+        var ctrl, onParticpantsUpdate;
+
+        ctrlFn.instance.participants.push({$id: 'bob', user: {}});
+        ctrlFn.instance.participants.push({$id: 'alice', user: {}});
+
+        ctrl = ctrlFn();
+        $rootScope.$apply();
+
+        onParticpantsUpdate = ctrl.participants.$watch.calls.allArgs().map(function(args) {
+          var callback = args[0];
+
+          expect(callback).toEqual(jasmine.any(Function));
+          return callback;
+        });
+
+        ctrlFn.instance.participants.push({$id: 'john', user: {}});
+
+        onParticpantsUpdate.forEach(function(fn) {
+          fn();
+        });
+
+        expect(ctrl.participantsView.length).toBe(2);
+        expect(ctrl.participantsView[1].$id).toBe('john');
+        expect(ctrl.pagerOptions.rowCount).toBe(2);
+        expect(ctrl.pagerOptions.range.start).toBe(0);
+        expect(ctrl.pagerOptions.range.end).toBe(2);
+      });
+
+      it('should update the current user participant state when the participants get updated', function() {
+        var ctrl, onParticpantsUpdate;
+
+        ctrlFn.instance.participants.push({$id: 'alice', user: {}});
+
+        ctrl = ctrlFn();
+        $rootScope.$apply();
+
+        onParticpantsUpdate = ctrl.participants.$watch.calls.allArgs().map(function(args) {
+          var callback = args[0];
+
+          expect(callback).toEqual(jasmine.any(Function));
+          return callback;
+        });
+
+        ctrlFn.instance.participants.push({$id: 'bob', user: {}});
+
+        onParticpantsUpdate.forEach(function(fn) {
+          fn();
+        });
+
+        expect(ctrl.currentUserParticipant).toBeDefined();
+        expect(ctrl.currentUserParticipant.$id).toBe('bob');
+      });
+
+      describe('orderBy', function() {
+
+        it('should switch order when called with the same order key', function() {
+          var ctrl;
+
+          ctrlFn.instance.participants.push({$id: 'john', user: {displayName: 'john'}});
+          ctrlFn.instance.participants.push({$id: 'alice', user: {displayName: 'alice'}});
+
+          ctrl = ctrlFn();
+          $rootScope.$apply();
+
+          expect(ctrl.participantsView.length).toBe(2);
+          expect(ctrl.orderOptions.reversed).toBe(false);
+          expect(ctrl.participantsView[0].$id).toBe('alice');
+
+          ctrl.orderBy(ctrl.orderOptions.key);
+          expect(ctrl.orderOptions.reversed).toBe(true);
+          expect(ctrl.participantsView[0].$id).toBe('john');
+
+          ctrl.orderBy(ctrl.orderOptions.key);
+          expect(ctrl.orderOptions.reversed).toBe(false);
+          expect(ctrl.participantsView[0].$id).toBe('alice');
+        });
+
+        it('should change order key', function() {
+          var ctrl;
+
+          ctrlFn.instance.participants.push({$id: 'john', user: {displayName: 'john'}});
+          ctrlFn.instance.participants.push({$id: 'alice', user: {displayName: 'alice'}});
+          ctrlFn.instance.tasks.push({$id: 'someTaskId'});
+          ctrlFn.instance.tasks.push({$id: 'someOtherTaskId'});
+          ctrlFn.instance.progress.john = {
+            someOtherTaskId: {completed: true}
+          };
+          ctrlFn.instance.progress.alice = {
+            someTaskId: {completed: true}
+          };
+
+          ctrl = ctrlFn();
+          $rootScope.$apply();
+
+          ctrl.orderBy('someTaskId');
+          expect(ctrl.orderOptions.reversed).toBe(false);
+          expect(ctrl.participantsView[0].$id).toBe('john');
+
+          ctrl.orderBy('someOtherTaskId');
+          expect(ctrl.orderOptions.reversed).toBe(false);
+          expect(ctrl.participantsView[0].$id).toBe('alice');
+
+          ctrl.orderBy('someOtherTaskId');
+          expect(ctrl.orderOptions.reversed).toBe(true);
+          expect(ctrl.participantsView[0].$id).toBe('john');
+        });
+
+      });
+
+    });
+
+    describe('ClmEventRankTableCtrl', function() {
+      var deps, ctrlFn, ranking;
+
+      beforeEach(function() {
+        deps = {
+          $scope: jasmine.createSpyObj('$scope', ['$on']),
+          clmDataStore: {
+            events: jasmine.createSpyObj('events', ['getRanking'])
+          }
+        };
+
+        ranking = [];
+        ranking.$id = 'someEvent';
+        ranking.$destroy = jasmine.createSpy('rankingDestroy');
+        ranking.$watch = jasmine.createSpy('rankingWatch');
+
+        deps.clmDataStore.events.getRanking.and.returnValue($q.when(ranking));
+
+        // Binding the directive attributes to the controller instance
+        // (undocumented feature of $controller).
+        ctrlFn = $controller('ClmEventRankTableCtrl', deps, true);
+        ctrlFn.instance.event = {$id: 'someEventId'};
+        ctrlFn.instance.profile = {$id: 'bob'};
+      });
+
+      it('should initiate ranking view', function() {
+        var ctrl = ctrlFn();
+
+        expect(ctrl.rankingView).toEqual([]);
+        expect(ctrl.currentUserRanking).toBeUndefined();
+        expect(ctrl.orderOpts.length).toBe(2);
+        expect(ctrl.orderOpts[0].key).toBe('total');
+        expect(ctrl.orderOpts[0].reversed).toBe(true);
+        expect(ctrl.orderOpts[1].key).toBe('name');
+        expect(ctrl.orderOpts[1].reversed).toBe(false);
+        expect(ctrl.pagerOpts.range.start).toBe(0);
+        expect(ctrl.pagerOpts.range.end).toBe(0);
+      });
+
+      it('should update the pager row count when the ranking is loaded', function() {
+        var ctrl = ctrlFn();
+
+        spyOn(ctrl.pagerOpts, 'setRowCount').and.callThrough();
+
+        ranking.push({$id: 'alice', user: {displayName: 'alice'}, total: 2});
+        $rootScope.$apply();
+
+        expect(ctrl.pagerOpts.rowCount).toBe(1);
+        expect(ctrl.pagerOpts.setRowCount).toHaveBeenCalledWith(1);
+      });
+
+      it('should update ranking view when the ranking is loaded', function() {
+        var ctrl = ctrlFn();
+        var onRankingUpdate;
+
+        spyOn(ctrl.pagerOpts, 'setRowCount').and.callThrough();
+
+        $rootScope.$apply();
+        expect(ctrl.rankingView.length).toBe(0);
+
+        onRankingUpdate = ctrl.ranking.$watch.calls.allArgs().map(function(args) {
+          var callback = args[0];
+
+          expect(callback).toEqual(jasmine.any(Function));
+          return callback;
+        });
+
+        ranking.push({$id: 'alice', user: {displayName: 'alice'}, total: 2});
+        onRankingUpdate.map(function(fn) {
+          fn();
+        });
+
+        expect(ctrl.rankingView.length).toBe(1);
+      });
+
+    });
+
+    describe('clmRowPerPage', function() {
+      var clmRowPerPage;
+
+      beforeEach(inject(function(_clmRowPerPage_) {
+        clmRowPerPage = _clmRowPerPage_;
+      }));
+
+      it('should set default value to 25', function() {
+        expect(clmRowPerPage.value).toBe(25);
+      });
+
+      it('should hold the suggested list of value option', function() {
+        expect(clmRowPerPage.options).toEqual(jasmine.any(Array));
+      });
+
+      describe('set', function() {
+
+        it('should set the row per page value', function() {
+          clmRowPerPage.set(10);
+          expect(clmRowPerPage.value).toBe(10);
+        });
+
+        it('should parse the value to an integer', function() {
+          clmRowPerPage.set('10');
+          expect(clmRowPerPage.value).toBe(10);
+        });
+
+      });
+
+      describe('onChange', function() {
+
+        it('should register callback function for the value update event', function() {
+          var cb = jasmine.createSpy('myCallback');
+          var clean = clmRowPerPage.onChange(cb);
+
+          try {
+            clmRowPerPage.set(10);
+            expect(cb).toHaveBeenCalledWith(10);
+          } finally {
+            clean();
+          }
+        });
+
+        it('should return a function to deregister the callback function', function() {
+          var cb = jasmine.createSpy('myCallback');
+          var clean = clmRowPerPage.onChange(cb);
+
+          clean();
+          clmRowPerPage.set(10);
+          expect(cb).not.toHaveBeenCalled();
+        });
+
+      });
+
+    });
+
+    describe('clmPagerOption', function() {
+      var clmPagerOption, clmRowPerPage;
+
+      beforeEach(inject(function(_clmPagerOption_, _clmRowPerPage_) {
+        clmPagerOption = _clmPagerOption_;
+        clmRowPerPage = _clmRowPerPage_;
+      }));
+
+      it('should initiate row count and range', function() {
+        var opts = clmPagerOption();
+
+        expect(opts.rowCount).toBe(0);
+        expect(opts.range.start).toBe(0);
+        expect(opts.range.end).toBe(0);
+      });
+
+      describe('setRowCount', function() {
+        var opts;
+
+        beforeEach(function() {
+          opts = clmPagerOption();
+        });
+
+        afterEach(function() {
+          opts.$destroy();
+        });
+
+        it('should update rowCount', function() {
+          opts.setRowCount(1);
+          expect(opts.rowCount).toBe(1);
+        });
+
+        it('should update range', function() {
+          opts.setRowCount(1);
+          expect(opts.range.end).toBe(1);
+        });
+
+      });
+
+      describe('setRange', function() {
+        var opts;
+
+        beforeEach(function() {
+          opts = clmPagerOption();
+          clmRowPerPage.value = 5;
+        });
+
+        afterEach(function() {
+          opts.$destroy();
+        });
+
+        it('should update range start', function() {
+          opts.rowCount = 10;
+
+          [0, 5, 10].forEach(function(i) {
+            opts.setRange(i);
+            expect(opts.range.start).toBe(i);
+          });
+        });
+
+        it('should limit range start to positive number', function() {
+          opts.rowCount = 5;
+          [0, -1, -5].forEach(function(i) {
+            opts.setRange(i);
+            expect(opts.range.start).toBe(0);
+          });
+        });
+
+        it('should limit range start to rowCount', function() {
+          opts.rowCount = 5;
+          [5, 6, 7].forEach(function(i) {
+            opts.setRange(i);
+            expect(opts.range.start).toBe(5);
+          });
+        });
+
+        it('should limit range start to a start of a page', function() {
+          opts.rowCount = 5;
+          [0, 1, 2, 3, 4].forEach(function(i) {
+            opts.setRange(i);
+            expect(opts.range.start).toBe(0);
+          });
+        });
+
+        it('should derive the range end', function() {
+          opts.rowCount = 20;
+          [0, 15].forEach(function(i) {
+            opts.setRange(i);
+            expect(opts.range.end).toBe(i + clmRowPerPage.value);
+          });
+        });
+
+        it('should limit range end to rowCount', function() {
+          opts.rowCount = 9;
+          [5, 10].forEach(function(i) {
+            opts.setRange(i);
+            expect(opts.range.end).toBe(9);
+          });
+        });
+
+      });
+
+      describe('onChange', function() {
+        var cb, opts, clean;
+
+        beforeEach(function() {
+          cb = jasmine.createSpy('myCallback');
+          opts = clmPagerOption();
+          clean = opts.onChange(cb);
+        });
+
+        afterEach(function() {
+          clean();
+          opts.$destroy();
+        });
+
+        it('should register a cb that will be called when rowCount is reset', function() {
+          opts.setRowCount(1);
+          expect(cb).toHaveBeenCalledWith(opts);
+        });
+
+        it('should register a cb that will be called when range is reset', function() {
+          opts.setRange(5);
+          expect(cb).toHaveBeenCalledWith(opts);
+        });
+
+        it('should register a cb that will be called when range is reset via a clmRowPerPage event', function() {
+          clmRowPerPage.set(5);
+          expect(cb).toHaveBeenCalledWith(opts);
+        });
+
+      });
+    });
+
+    describe('ClmPagerCtrl', function() {
+      var deps, ctrlFn, clmRowPerPage;
+
+      beforeEach(inject(function(clmPagerOption, _clmRowPerPage_) {
+        clmRowPerPage = _clmRowPerPage_;
+        clmRowPerPage.value = 5;
+        deps = {clmRowPerPage: clmRowPerPage};
+
+        // Binding the directive attributes to the controller instance
+        // (undocumented feature of $controller).
+        ctrlFn = $controller('ClmPagerCtrl', deps, true);
+        ctrlFn.instance.options = clmPagerOption();
+
+        spyOn(ctrlFn.instance.options, 'setRange').and.callThrough();
+      }));
+
+      it('should initiate rowPerPage', function() {
+        var ctrl = ctrlFn();
+
+        expect(ctrl.rowPerPage).toBe(clmRowPerPage);
+      });
+
+      describe('nextPage', function() {
+        it('should set range start from the what was the range end', function() {
+          var ctrl = ctrlFn();
+
+          ctrl.options.rowCount = 10;
+          ctrl.options.range = {start: 0, end: 5};
+
+          ctrl.nextPage(ctrl.options);
+
+          expect(ctrl.options.setRange).toHaveBeenCalledWith(5);
+        });
+      });
+
+      describe('prevPage', function() {
+        it('should set range start to value in the previous page', function() {
+          var ctrl = ctrlFn();
+
+          ctrl.options.rowCount = 10;
+          ctrl.options.range = {start: 5, end: 10};
+
+          ctrl.prevPage(ctrl.options);
+
+          expect(ctrl.options.setRange).toHaveBeenCalledWith(4);
+        });
+      });
+
+      describe('firstPage', function() {
+        it('should set range start from the what was the range end', function() {
+          var ctrl = ctrlFn();
+
+          ctrl.options.rowCount = 10;
+          ctrl.options.range = {start: 10, end: 10};
+
+          ctrl.firstPage(ctrl.options);
+
+          expect(ctrl.options.setRange).toHaveBeenCalledWith(0);
+        });
+      });
+
+      describe('lastPage', function() {
+        it('should set range start to a value in the last page', function() {
+          var ctrl = ctrlFn();
+
+          ctrl.options.rowCount = 10;
+          ctrl.options.range = {start: 0, end: 5};
+
+          ctrl.lastPage(ctrl.options);
+
+          expect(ctrl.options.setRange).toHaveBeenCalledWith(10);
+        });
+      });
     });
 
   });

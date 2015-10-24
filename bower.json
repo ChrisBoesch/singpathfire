@@ -17,15 +17,15 @@
     "tests"
   ],
   "dependencies": {
+    "ace-builds": "~1.2.0",
     "angular": "~1.4.5",
     "angular-loading-bar": "~0.8.0",
+    "angular-material": "~0.10.1",
     "angular-messages": "~1.4.5",
     "angular-route": "~1.4.5",
     "angularfire": "^1.0.0",
     "crypto-js": "git://github.com/evanvosberg/crypto-js#~3.1.2",
-    "moment": "~2.10.6",
-    "angular-material": "~0.10.1",
-    "ace-builds": "~1.2.0"
+    "moment": "~2.10.6"
   },
   "devDependencies": {
     "angular-mocks": "~1.4.5"

@@ -1,0 +1,109 @@
+<div ng-if="ctrl.loading" layout="row" layout-align="space-around" class="md-padding">
+    <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+</div>
+
+<div ng-if="!ctrl.loading">
+    <md-content class="md-padding">
+        <table class="events ranking">
+            <thead>
+                <tr ng-class="{'reversed': ctrl.orderOpts[0].reversed, secondaryReversed: ctrl.orderOpts[1].reversed}">
+                    <th></th>
+                    <th ng-class="{orderer: ctrl.orderOpts[0].key == 'name', secondaryOrderer: ctrl.orderOpts[1].key == 'name'}">
+                        <md-button ng-click="ctrl.orderBy('name')">Participants</md-button>
+                    </th>
+                    <th ng-class="{orderer: ctrl.orderOpts[0].key == 'schoolName', secondaryOrderer: ctrl.orderOpts[1].key == 'schoolName'}" ng-if="ctrl.event.schoolEvent">
+                        <md-button ng-click="ctrl.orderBy('schoolName')">School</md-button>
+                    </th>
+                    <th ng-class="{orderer: ctrl.orderOpts[0].key == 'schoolRank', secondaryOrderer: ctrl.orderOpts[1].key == 'schoolRank'}" ng-if="ctrl.event.schoolEvent">
+                        <md-button ng-click="ctrl.orderBy('schoolRank')">Rank in School</md-button>
+                    </th>
+                    <th ng-class="{orderer: ctrl.orderOpts[0].key == 'total', secondaryOrderer: ctrl.orderOpts[1].key == 'total'}">
+                        <md-button ng-click="ctrl.orderBy('total')">Total</md-button>
+                    </th>
+                    <th ng-class="{orderer: ctrl.orderOpts[0].key == 'codeCombat', secondaryOrderer: ctrl.orderOpts[1].key == 'codeCombat'}">
+                        <md-button ng-click="ctrl.orderBy('codeCombat')">Code Combat Badges</md-button>
+                    </th>
+                    <th ng-class="{orderer: ctrl.orderOpts[0].key == 'codeSchool', secondaryOrderer: ctrl.orderOpts[1].key == 'codeSchool'}">
+                        <md-button ng-click="ctrl.orderBy('codeSchool')">Code School Badges</md-button>
+                    </th>
+                    <th ng-class="{orderer: ctrl.orderOpts[0].key == 'singPath', secondaryOrderer: ctrl.orderOpts[1].key == 'singPath'}">
+                        <md-button ng-click="ctrl.orderBy('singPath')">SingPath Problems</md-button>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th colspan="5" ng-if="(ctrl.rankingView|spfEmpty)">
+                        No participants
+                    </th> 
+                </tr>
+
+                <tr ng-if="ctrl.currentUserRanking &amp;&amp; (ctrl.currentUserRanking.$ranking - 1) < ctrl.pagerOpts.range.start">
+                    <th>
+                        {{ ctrl.currentUserRanking.$ranking }}
+                    </th>
+                    <th>
+                        <!-- spfToArray adds the $$hashKey property to every element in the object -->
+                        <md-button class="name-button" 
+                            ng-href="#{{ 'profile' | urlFor:{'publicId': ctrl.currentUserRanking.$$hashKey} }}"
+                            ng-attr-aria-label="profile of {{ctrl.currentUserRanking.user.displayName}}"
+                        >
+                            Yourself
+                        </md-button>
+                    </th>
+                    <td ng-if="ctrl.event.schoolEvent">{{ ctrl.currentUserRanking.user.school.name }}</td>
+                    <td ng-if="ctrl.event.schoolEvent">{{ ctrl.currentUserRanking.$rankInSchool || 'N/A'}}</td>
+                    <td>{{ ctrl.currentUserRanking.total || 0}}</td>
+                    <td>{{ ctrl.currentUserRanking.codeCombat || 0 }}</td>
+                    <td>{{ ctrl.currentUserRanking.codeSchool || 0 }}</td>
+                    <td>{{ ctrl.currentUserRanking.singPath || 0 }}</td>
+                </tr>
+
+                <tr ng-repeat="participant in ctrl.rankingView track by participant.$id" ng-class="'index-' + $index + ' ' + ($odd ? 'odd' : 'even')">
+                    <th>
+                        {{ participant.$ranking }}
+                    </th>
+                    <th>
+                        <!-- spfToArray adds the $$hashKey property to every element in the object -->
+                        <md-button class="name-button" 
+                            ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$$hashKey} }}"
+                            ng-attr-aria-label="profile of {{participant.user.displayName}}"
+                        >
+                            <span ng-if="participant.$id != ctrl.profile.$id">{{ participant.user.displayName }}</span>
+                            <span ng-if="participant.$id == ctrl.profile.$id">Yourself</span>
+                        </md-button>
+                    </th>
+                    <td ng-if="ctrl.event.schoolEvent">{{ participant.user.school.name }}</td>
+                    <td ng-if="ctrl.event.schoolEvent">{{ participant.$rankInSchool || 'N/A'}}</td>
+                    <td>{{ participant.total || 0}}</td>
+                    <td>{{ participant.codeCombat || 0 }}</td>
+                    <td>{{ participant.codeSchool || 0 }}</td>
+                    <td>{{ participant.singPath || 0 }}</td>
+                </tr>
+
+                <tr ng-if="ctrl.currentUserRanking &amp;&amp; ctrl.currentUserRanking.$ranking > ctrl.pagerOpts.range.end">
+                    <th>
+                        {{ ctrl.currentUserRanking.$ranking }}
+                    </th>
+                    <th>
+                        <!-- spfToArray adds the $$hashKey property to every element in the object -->
+                        <md-button class="name-button" 
+                            ng-href="#{{ 'profile' | urlFor:{'publicId': ctrl.currentUserRanking.$$hashKey} }}"
+                            ng-attr-aria-label="profile of {{ctrl.currentUserRanking.user.displayName}}"
+                        >
+                            Yourself
+                        </md-button>
+                    </th>
+                    <td ng-if="ctrl.event.schoolEvent">{{ ctrl.currentUserRanking.user.school.name }}</td>
+                    <td ng-if="ctrl.event.schoolEvent">{{ ctrl.currentUserRanking.$rankInSchool || 'N/A'}}</td>
+                    <td>{{ ctrl.currentUserRanking.total || 0}}</td>
+                    <td>{{ ctrl.currentUserRanking.codeCombat || 0 }}</td>
+                    <td>{{ ctrl.currentUserRanking.codeSchool || 0 }}</td>
+                    <td>{{ ctrl.currentUserRanking.singPath || 0 }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </md-content>
+
+    <clm-pager options="ctrl.pagerOpts" class="md-padding"></clm-pager>
+</div>

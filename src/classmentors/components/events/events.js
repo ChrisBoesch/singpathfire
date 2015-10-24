@@ -316,11 +316,8 @@
       return function viewEventCtrlInitialData() {
         var errNoEvent = new Error('Event not found');
         var eventId = $route.current.params.eventId;
-        var profilePromise = clmDataStore.currentUserProfile().catch(rescue);
 
-        function rescue() {
-          return;
-        }
+        var profilePromise = clmDataStore.currentUserProfile().catch(angular.noop);
 
         var eventPromise = clmDataStore.events.get(eventId).then(function(event) {
           if (event.$value === null) {
@@ -336,43 +333,21 @@
           return $q.when(data.profile && data.profile.canView(data.event));
         });
 
-        var tasksPromise = canviewPromise.then(function(canView) {
-          if (canView) {
-            return clmDataStore.events.getTasks(eventId);
-          }
-        });
-
-        var participantsPromise = canviewPromise.then(function(canView) {
-          if (canView) {
-            return clmDataStore.events.participants(eventId);
-          }
-        });
-
-        var userSolutionsPromise = $q.all({
-          profile: profilePromise,
-          canview: canviewPromise
-        }).then(function(result) {
-          if (result.canview && result.profile && result.profile.$id) {
-            return clmDataStore.events.getUserSolutions(eventId, result.profile.$id);
-          }
-        });
-
-        var currentUserProgressPromise = $q.all({
-          profile: profilePromise,
-          canview: canviewPromise
-        }).then(function(result) {
-          if (result.canview && result.profile && result.profile.$id) {
-            return clmDataStore.events.getUserProgress(eventId, result.profile.$id);
-          }
-        });
-
         return $q.all({
-          currentUser: spfAuthData.user().catch(rescue),
+          currentUser: spfAuthData.user().catch(angular.noop),
           profile: profilePromise,
           event: eventPromise,
-          tasks: tasksPromise,
-          participants: participantsPromise,
-          ranking: clmDataStore.events.getRanking(eventId),
+          canView: canviewPromise,
+          tasks: canviewPromise.then(function(canView) {
+            if (canView) {
+              return clmDataStore.events.getTasks(eventId);
+            }
+          }),
+          participants: canviewPromise.then(function(canView) {
+            if (canView) {
+              return clmDataStore.events.participants(eventId);
+            }
+          }),
           progress: canviewPromise.then(function(canView) {
             if (canView) {
               return clmDataStore.events.getProgress(eventId);
@@ -382,16 +357,6 @@
             if (canView) {
               return clmDataStore.events.getSolutions(eventId);
             }
-          }),
-          currentUserProgress: currentUserProgressPromise,
-          currentUserSolutions: userSolutionsPromise,
-          currentUserStats: $q.all([
-            canviewPromise, eventPromise, tasksPromise, userSolutionsPromise, profilePromise
-          ]).then(function(data) {
-            if (!data || !data[0] || !data[3] || !data[4]) {
-              return {};
-            }
-            return clmDataStore.events.updateCurrentUserProfile.apply(clmDataStore.events, data.slice(1));
           })
         });
       };
@@ -405,40 +370,30 @@
   controller('ViewEventCtrl', [
     '$scope',
     'initialData',
-    '$q',
-    '$log',
     '$document',
     '$mdDialog',
     '$route',
     'spfAlert',
     'urlFor',
-    'routes',
     'spfFirebase',
     'spfAuthData',
     'spfNavBarService',
     'clmDataStore',
-    'clmServicesUrl',
     function ViewEventCtrl(
-      $scope, initialData, $q, $log, $document, $mdDialog, $route,
-      spfAlert, urlFor, routes, spfFirebase, spfAuthData, spfNavBarService, clmDataStore, clmServicesUrl
+      $scope, initialData, $document, $mdDialog, $route,
+      spfAlert, urlFor, spfFirebase, spfAuthData, spfNavBarService, clmDataStore
     ) {
       var self = this;
-      var linkers, monitorHandler;
+      var monitorHandler;
 
       this.currentUser = initialData.currentUser;
-      this.profile = initialData.profile;
       this.event = initialData.event;
-      this.tasks = initialData.tasks;
-      this.ranking = initialData.ranking;
-      this.currentUserStats = initialData.currentUserStats;
       this.participants = initialData.participants;
+      this.profile = initialData.profile;
+      this.tasks = initialData.tasks;
       this.progress = initialData.progress;
       this.solutions = initialData.solutions;
-      this.currentUserProgress = initialData.currentUserProgress;
-      this.currentUserSolutions = initialData.currentUserSolutions;
-      this.orderKey = 'total';
-      this.previousOrderKey = 'user.displayName';
-      this.reverseOrder = true;
+      this.canView = initialData.canView;
 
       if (
         self.event &&
@@ -460,33 +415,12 @@
       $scope.$on('$destroy', function() {
         /* eslint no-unused-expressions: 0 */
         monitorHandler.unwatch();
+        self.event && self.event.$destroy && self.event.$destroy();
+        self.participants && self.participants.$destroy && self.participants.$destroy();
         self.profile && self.profile.$destroy && self.profile.$destroy();
-        self.tasks && self.tasks.$destroy();
-        self.ranking && self.ranking.$destroy();
-        self.participants && self.participants.$destroy();
-        self.progress && self.progress.$destroy();
-        self.solutions && self.solutions.$destroy();
-        self.currentUserProgress && self.currentUserProgress.$destroy();
-        self.currentUserSolutions && self.currentUserSolutions.$destroy();
+        self.progress && self.progress.$destroy && self.progress.$destroy();
+        self.solutions && self.solutions.$destroy && self.solutions.$destroy();
       });
-
-      this.orderBy = function(key) {
-        if (this.orderKey === key) {
-          this.reverseOrder = !this.reverseOrder;
-        } else {
-          this.previousOrderKey = this.orderKey;
-          this.orderKey = key;
-          this.reverseOrder = true;
-        }
-      };
-
-      this.visibleTasks = function() {
-        var count = Object.keys(self.tasks).filter(function(key) {
-          return key && key[0] !== '$' && self.tasks[key] && !self.tasks[key].hidden;
-        }).length;
-
-        return count;
-      };
 
       updateNavbar();
 
@@ -602,203 +536,6 @@
           spfAlert.error('Failed to save public id');
           return err;
         });
-      };
-
-      this.promptForLink = function(eventId, taskId, task, participant, userSolution) {
-        $mdDialog.show({
-          parent: $document.body,
-          templateUrl: 'classmentors/components/events/events-view-provide-link.html',
-          controller: DialogController,
-          controllerAs: 'ctrl'
-        });
-
-        function DialogController() {
-          this.task = task;
-          if (
-            userSolution &&
-            userSolution[taskId]
-          ) {
-            this.solution = userSolution[taskId];
-          }
-
-          this.save = function(link) {
-            clmDataStore.events.submitSolution(eventId, taskId, participant.$id, link).then(function() {
-              $mdDialog.hide();
-              spfAlert.success('Link is saved.');
-            }).catch(function(err) {
-              $log.error(err);
-              spfAlert.error('Failed to save the link.');
-              return err;
-            }).then(function() {
-              return self.update(
-                self.event, self.tasks, self.currentUserSolutions, self.profile, self.currentUserStats.progress
-              );
-            });
-          };
-
-          this.cancel = function() {
-            $mdDialog.hide();
-          };
-        }
-      };
-
-      this.promptForTextResponse = function(eventId, taskId, task, participant, userSolution) {
-        $mdDialog.show({
-          parent: $document.body,
-          templateUrl: 'classmentors/components/events/events-view-provide-response.html',
-          controller: DialogController,
-          controllerAs: 'ctrl'
-        });
-
-        function DialogController() {
-          this.task = task;
-          if (
-            userSolution &&
-            userSolution[taskId]
-          ) {
-            this.solution = userSolution[taskId];
-          }
-
-          this.save = function(response) {
-            clmDataStore.events.submitSolution(eventId, taskId, participant.$id, response).then(function() {
-              $mdDialog.hide();
-              spfAlert.success('Response is saved.');
-            }).catch(function(err) {
-              $log.error(err);
-              spfAlert.error('Failed to save your response.');
-              return err;
-            }).then(function() {
-              return self.update(
-                self.event, self.tasks, self.currentUserSolutions, self.profile, self.currentUserStats.progress
-              );
-            });
-          };
-
-          this.cancel = function() {
-            $mdDialog.hide();
-          };
-        }
-      };
-
-      this.update = function(event, tasks, userSolutions, profile, userProgress) {
-        return clmDataStore.events.updateCurrentUserProfile(
-          event, tasks, userSolutions, profile, userProgress
-        ).then(function(stats) {
-          self.currentUserStats = stats;
-          spfAlert.success('Profile updated');
-        }).catch(function(err) {
-          $log.error(err);
-          spfAlert.error('Failed to update profile');
-        });
-      };
-
-      this.completed = function(taskId, participants, progress) {
-        var participantCount, participantsIds;
-
-        if (!participants || !progress) {
-          return 0;
-        }
-
-        participantCount = participants.length;
-        participantsIds = participants.reduce(function(all, participant) {
-          if (participant.$id) {
-            all[participant.$id] = true;
-          }
-          return all;
-        }, {});
-
-        if (participantCount < 1) {
-          return 0;
-        }
-
-        return Object.keys(progress).filter(function(publicId) {
-          return (
-            participantsIds[publicId] && // Make sure user is still participating
-                                         // (user progress is kept when they leave)
-            progress[publicId] &&
-            progress[publicId][taskId] &&
-            progress[publicId][taskId].completed
-          );
-        }).length / participantCount * 100;
-      };
-
-      this.startLink = function(task, profile) {
-        var serviceProfile;
-
-        if (
-          !task ||
-          !task.serviceId ||
-          !linkers[task.serviceId]
-        ) {
-          return '';
-        }
-
-        serviceProfile = profile && profile.services && profile.services[task.serviceId];
-        return linkers[task.serviceId](task, serviceProfile);
-      };
-
-      var trackedServices = {
-        codeSchool: true,
-        codeCombat: true
-      };
-
-      this.mustRegister = function(task, profile) {
-        return (
-          task &&
-          task.serviceId &&
-          trackedServices[task.serviceId] && (
-            !profile ||
-            !profile.services ||
-            !profile.services[task.serviceId] ||
-            !profile.services[task.serviceId].details ||
-            !profile.services[task.serviceId].details.id
-          ) || false
-        );
-      };
-
-      function defaultLinker(task, serviceProfile) {
-        if (
-          !serviceProfile ||
-          !serviceProfile.details ||
-          !serviceProfile.details.id ||
-          !task ||
-          !task.badge ||
-          !task.badge.url
-        ) {
-          return '#' + routes.editProfile;
-        }
-
-        return task.badge.url;
-      }
-
-      linkers = {
-        codeSchool: defaultLinker,
-        codeCombat: defaultLinker,
-
-        singPath: function(task) {
-          if (!task || task.serviceId !== 'singPath') {
-            return '';
-          }
-
-          if (
-            !task.singPathProblem ||
-            !task.singPathProblem.path ||
-            !task.singPathProblem.path.id ||
-            !task.singPathProblem.level ||
-            !task.singPathProblem.level.id ||
-            !task.singPathProblem.problem ||
-            !task.singPathProblem.problem.id
-          ) {
-            return clmServicesUrl.singPath;
-          }
-
-          return (
-            clmServicesUrl.singPath + '/#' +
-            '/paths/' + task.singPathProblem.path.id +
-            '/levels/' + task.singPathProblem.level.id +
-            '/problems/' + task.singPathProblem.problem.id + '/play'
-          );
-        }
       };
 
       this.removeParticipant = function(e, event, participant) {
@@ -1245,8 +982,858 @@
         });
       };
     }
+  ]).
+
+  /**
+   * Show event tasks and participants progress in a paged table.
+   *
+   */
+  directive('clmEventTable', [
+    function clmEventTableFactory() {
+      return {
+        templateUrl: 'classmentors/components/events/events-view-event-table-participants.html',
+        restrict: 'E',
+        bindToController: true,
+        scope: {
+          event: '=',
+          profile: '=',
+          participants: '=',
+          tasks: '=',
+          progress: '=',
+          solutions: '='
+        },
+        controller: 'ClmEventTableCtrl',
+        controllerAs: 'ctrl'
+      };
+    }
+  ]).
+
+  controller('ClmEventTableCtrl', [
+    '$scope',
+    '$q',
+    '$log',
+    '$mdDialog',
+    '$document',
+    'urlFor',
+    'spfAlert',
+    'clmServicesUrl',
+    'clmDataStore',
+    'clmPagerOption',
+    function ClmEventTableCtrl(
+      $scope, $q, $log, $mdDialog, $document,
+      urlFor, spfAlert, clmServicesUrl, clmDataStore, clmPagerOption
+    ) {
+      var self = this;
+      var unwatchers = [];
+
+      this.currentUserParticipant = undefined;
+      this.participantsView = [];
+      this.visibleTasks = [];
+      this.taskCompletion = {};
+
+      this.orderOptions = {
+        key: undefined,
+        reversed: false
+      };
+
+      this.pagerOptions = clmPagerOption();
+      unwatchers.push(self.pagerOptions.$destroy);
+
+      /**
+       * Get current user participant row
+       */
+      function currentUserParticipant() {
+        if (
+          !self.participants ||
+          !self.participants.$getRecord ||
+          !self.profile ||
+          !self.profile.$id
+        ) {
+          self.currentUserParticipant = undefined;
+        }
+
+        self.currentUserParticipant = self.participants.$getRecord(self.profile.$id);
+      }
+
+      /**
+       * Set list of visible tasks and the % completion.
+       *
+       */
+      function visibleTasks() {
+        if (!self.tasks || !self.tasks.filter) {
+          self.visibleTasks = [];
+          return;
+        }
+
+        self.visibleTasks = self.tasks.filter(function(t) {
+          return !t.hidden && !t.archived && !t.closedAt;
+        });
+
+        taskCompletion();
+      }
+
+      /**
+       * Calculate all visible tasks completion rate.
+       *
+       */
+      function taskCompletion() {
+        self.taskCompletion = self.visibleTasks.reduce(function(all, task) {
+          all[task.$id] = _taskCompletion(task.$id);
+          return all;
+        }, {});
+      }
+
+      /**
+       * Return the completion rate of a task.
+       *
+       */
+      function _taskCompletion(taskId) {
+        var participantCount, participantsIds;
+
+        if (!self.participants || !self.progress) {
+          return 0;
+        }
+
+        participantCount = self.participants.length;
+        participantsIds = self.participants.reduce(function(all, participant) {
+          if (participant.$id) {
+            all[participant.$id] = true;
+          }
+          return all;
+        }, {});
+
+        if (participantCount < 1) {
+          return 0;
+        }
+
+        return Object.keys(self.progress).filter(function(publicId) {
+          return (
+            participantsIds[publicId] && // Make sure user is still participating
+                                         // (user progress is kept when they leave)
+            self.progress[publicId] &&
+            self.progress[publicId][taskId] &&
+            self.progress[publicId][taskId].completed
+          );
+        }).length / participantCount * 100;
+      }
+
+      function _completionComparer(options) {
+        var taskId = options.key;
+
+        return function(a, b) {
+          var aP = (
+            self.progress &&
+            self.progress[a.$id] &&
+            self.progress[a.$id][taskId] &&
+            self.progress[a.$id][taskId].completed
+          );
+          var bP = (
+            self.progress &&
+            self.progress[b.$id] &&
+            self.progress[b.$id][taskId] &&
+            self.progress[b.$id][taskId].completed
+          );
+
+          if (aP === bP) {
+            return 0;
+          } else if (aP) {
+            return 1;
+          } else {
+            return -1;
+          }
+        };
+      }
+
+      function _compareName(a, b) {
+        var aN = a.user && a.user.displayName || '';
+        var bN = b.user && b.user.displayName || '';
+
+        return aN.localeCompare(bN);
+      }
+
+      function sortedParticipants(participants, options) {
+        var rows = participants.filter(function(p) {
+          return p.$id !== self.profile.$id;
+        });
+        var comparer;
+
+        if (options.key) {
+          comparer = chainComparer([_completionComparer(options), _compareName]);
+        } else {
+          comparer = _compareName;
+        }
+
+        rows.sort(reverseComparer(options.reversed, comparer));
+        return rows;
+      }
+
+      // Update the pager rowCount
+      // (the pager should trigger a range update which will call participantsView)
+      function updateParticipantRowCount() {
+        currentUserParticipant();
+
+        if (self.currentUserParticipant) {
+          self.pagerOptions.setRowCount(self.participants.length - 1);
+        } else {
+          self.pagerOptions.setRowCount(self.participants.length);
+        }
+      }
+
+      /**
+       * Set the slice of participant to show.
+       *
+       */
+      function participantsView() {
+        var rows = sortedParticipants(self.participants, self.orderOptions);
+
+        self.participantsView = rows.slice(self.pagerOptions.range.start, self.pagerOptions.range.end);
+      }
+
+      /**
+       * Switch ordering key or ordering direction.
+       *
+       * If the ordering key is changing, the ordering direction should be
+       * ascendent.
+       *
+       * If the order key is not changing, the direction should be switched.
+       *
+       */
+      this.orderBy = function(taskId) {
+        self.orderOptions.reversed = (
+          !self.orderOptions.reversed &&
+          (self.orderOptions.key === taskId)
+        );
+        self.orderOptions.key = taskId;
+        participantsView();
+      };
+
+      function defaultLinker(task, serviceProfile) {
+        if (
+          !serviceProfile ||
+          !serviceProfile.details ||
+          !serviceProfile.details.id ||
+          !task ||
+          !task.badge ||
+          !task.badge.url
+        ) {
+          return '#' + urlFor('editProfile');
+        }
+
+        return task.badge.url;
+      }
+
+      var linkers = {
+        codeSchool: defaultLinker,
+        codeCombat: defaultLinker,
+
+        singPath: function(task) {
+          if (!task || task.serviceId !== 'singPath') {
+            return '';
+          }
+
+          if (
+            !task.singPathProblem ||
+            !task.singPathProblem.path ||
+            !task.singPathProblem.path.id ||
+            !task.singPathProblem.level ||
+            !task.singPathProblem.level.id ||
+            !task.singPathProblem.problem ||
+            !task.singPathProblem.problem.id
+          ) {
+            return clmServicesUrl.singPath;
+          }
+
+          return (
+            clmServicesUrl.singPath + '/#' +
+            '/paths/' + task.singPathProblem.path.id +
+            '/levels/' + task.singPathProblem.level.id +
+            '/problems/' + task.singPathProblem.problem.id + '/play'
+          );
+        }
+      };
+
+      this.startLink = function(task, profile) {
+        var serviceProfile;
+
+        if (
+          !task ||
+          !task.serviceId ||
+          !linkers[task.serviceId]
+        ) {
+          return '';
+        }
+
+        serviceProfile = profile && profile.services && profile.services[task.serviceId];
+        return linkers[task.serviceId](task, serviceProfile);
+      };
+
+      var trackedServices = {
+        codeSchool: true,
+        codeCombat: true
+      };
+
+      this.mustRegister = function(task, profile) {
+        return (
+          task &&
+          task.serviceId &&
+          trackedServices[task.serviceId] && (
+            !profile ||
+            !profile.services ||
+            !profile.services[task.serviceId] ||
+            !profile.services[task.serviceId].details ||
+            !profile.services[task.serviceId].details.id
+          ) || false
+        );
+      };
+
+      this.promptForLink = function(eventId, taskId, task, participant, userSolution) {
+        $mdDialog.show({
+          parent: $document.body,
+          templateUrl: 'classmentors/components/events/events-view-provide-link.html',
+          controller: DialogController,
+          controllerAs: 'ctrl'
+        });
+
+        function DialogController() {
+          this.task = task;
+          if (
+            userSolution &&
+            userSolution[taskId]
+          ) {
+            this.solution = userSolution[taskId];
+          }
+
+          this.save = function(link) {
+            clmDataStore.events.submitSolution(eventId, taskId, participant.$id, link).then(function() {
+              $mdDialog.hide();
+              spfAlert.success('Link is saved.');
+            }).catch(function(err) {
+              $log.error(err);
+              spfAlert.error('Failed to save the link.');
+              return err;
+            });
+          };
+
+          this.cancel = function() {
+            $mdDialog.hide();
+          };
+        }
+      };
+
+      this.promptForTextResponse = function(eventId, taskId, task, participant, userSolution) {
+        $mdDialog.show({
+          parent: $document.body,
+          templateUrl: 'classmentors/components/events/events-view-provide-response.html',
+          controller: DialogController,
+          controllerAs: 'ctrl'
+        });
+
+        function DialogController() {
+          this.task = task;
+          if (
+            userSolution &&
+            userSolution[taskId]
+          ) {
+            this.solution = userSolution[taskId];
+          }
+
+          this.save = function(response) {
+            clmDataStore.events.submitSolution(eventId, taskId, participant.$id, response).then(function() {
+              $mdDialog.hide();
+              spfAlert.success('Response is saved.');
+            }).catch(function(err) {
+              $log.error(err);
+              spfAlert.error('Failed to save your response.');
+              return err;
+            });
+          };
+
+          this.cancel = function() {
+            $mdDialog.hide();
+          };
+        }
+      };
+
+      this.update = function(event, tasks, userSolutions, profile) {
+        return clmDataStore.events.updateCurrentUserProfile(
+          event, tasks, userSolutions, profile
+        ).then(function() {
+          spfAlert.success('Profile updated');
+        }).catch(function(err) {
+          $log.error(err);
+          spfAlert.error('Failed to update profile');
+        });
+      };
+
+      this.removeParticipant = function(e, event, participant) {
+        var confirm = $mdDialog.confirm()
+          .parent(angular.element($document.body))
+          .title('Would you like to remove ' + participant.user.displayName + '?')
+          .content('The participant progress will be kept but he/she will not show as participant')
+          .ariaLabel('Remove participant')
+          .ok('Remove')
+          .cancel('Cancel')
+          .targetEvent(e);
+
+        $mdDialog.show(confirm).then(function() {
+          clmDataStore.events.removeParticpants(event.$id, participant.$id);
+        });
+      };
+
+      // load up resources and start firebase watcher
+      this.loading = true;
+      $q.all({
+        userProgress: clmDataStore.events.getUserProgress(this.event.$id, this.profile.$id).then(function(progress) {
+          self.currentUserProgress = progress;
+          unwatchers.push(self.currentUserProgress.$destroy);
+          return progress;
+        }),
+        userSolution: clmDataStore.events.getUserSolutions(this.event.$id, this.profile.$id).then(function(solutions) {
+          self.currentUserSolutions = solutions;
+          unwatchers.push(self.currentUserSolutions.$destroy);
+          return solutions;
+        })
+      }).then(function(results) {
+        visibleTasks();
+
+        // Set the participant view (via the pager range update event)
+        unwatchers.push(self.pagerOptions.onChange(participantsView));
+        updateParticipantRowCount();
+
+        // Monitor updates on task progress and participants list.
+        unwatchers.push(self.tasks.$watch(visibleTasks));
+        unwatchers.push(self.progress.$watch(taskCompletion));
+        unwatchers.push(self.participants.$watch(taskCompletion));
+        unwatchers.push(self.participants.$watch(updateParticipantRowCount));
+
+        return results;
+      }).finally(function() {
+        self.loading = false;
+      }).then(function(results) {
+        return clmDataStore.events.updateCurrentUserProfile(
+          self.event,
+          self.tasks,
+          results.userSolution,
+          self.profile
+        );
+      }).catch(function(err) {
+        $log.error(err);
+      });
+
+      // clean up.
+      $scope.$on('$destroy', function() {
+        unwatchers.forEach(function(f) {
+          if (f) {
+            try {
+              f();
+            } catch (err) {
+              $log.error(err);
+            }
+          }
+        });
+      });
+    }
+  ]).
+
+  directive('clmEventRankTable', [
+    function clmEventRankTableFactory() {
+      return {
+        templateUrl: 'classmentors/components/events/events-view-event-table-rank.html',
+        restrict: 'E',
+        bindToController: true,
+        scope: {
+          event: '=',
+          profile: '='
+        },
+        controller: 'ClmEventRankTableCtrl',
+        controllerAs: 'ctrl'
+      };
+    }
+  ]).
+
+  controller('ClmEventRankTableCtrl', [
+    '$scope',
+    '$log',
+    'clmDataStore',
+    'clmPagerOption',
+    function ClmEventRankTableCtrl($scope, $log, clmDataStore, clmPagerOption) {
+      var self = this;
+      var unwatchers = [];
+      var rankingList = [];
+      var _comparers = {
+        name: function(a, b) {
+          var aN = a.user && a.user.displayName || '';
+          var bN = b.user && b.user.displayName || '';
+
+          return aN.localeCompare(bN);
+        },
+
+        schoolName: function(a, b) {
+          var aN = a.user && a.user.school && a.user.school.name || '';
+          var bN = b.user && b.user.school && b.user.school.name || '';
+
+          return aN.localeCompare(bN);
+        },
+
+        schoolRank: function(a, b) {
+          var aR = a.$rankInSchool || 2147483648;
+          var bR = b.$rankInSchool || 2147483648;
+
+          return aR - bR;
+        },
+
+        total: badgeComparer('total'),
+        codeCombat: badgeComparer('codeCombat'),
+        codeSchool: badgeComparer('codeSchool'),
+        singPath: badgeComparer('singPath')
+      };
+
+      this.rankingView = [];
+      this.loading = true;
+      this.currentUserRanking = undefined;
+      this.orderOpts = [{
+        key: 'total',
+        reversed: true
+      }, {
+        key: 'name',
+        reversed: false
+      }];
+      this.pagerOpts = clmPagerOption();
+      unwatchers.push(self.pagerOpts.$destroy);
+
+      load();
+
+      function load() {
+        $scope.$on('$destroy', unload);
+
+        return clmDataStore.events.getRanking(self.event.$id).then(function(ranking) {
+          self.ranking = ranking;
+
+          // Update ranking view via the pager range update event.
+          unwatchers.push(self.pagerOpts.onChange(rankingView));
+          updateRowCount();
+
+          unwatchers.push(self.ranking.$destroy);
+          unwatchers.push(self.ranking.$watch(updateRowCount));
+        }).finally(function() {
+          self.loading = false;
+        }).catch(function(e) {
+          $log.error(e);
+        });
+      }
+
+      function unload() {
+        unwatchers.forEach(function(f) {
+          if (f) {
+            try {
+              f();
+            } catch (err) {
+              $log.error(err);
+            }
+          }
+        });
+      }
+
+      function badgeComparer(propId) {
+        return function(a, b) {
+          var aB = a[propId] || 0;
+          var bB = b[propId] || 0;
+
+          return aB - bB;
+        };
+      }
+
+      function comparer(options) {
+        return chainComparer(options.map(function(opt) {
+          return reverseComparer(opt.reversed, _comparers[opt.key] || _comparers.total);
+        }));
+      }
+
+      function currentUserRanking() {
+        self.currentUserRanking = undefined;
+        rankingList.some(function(p) {
+          if (!self.profile) {
+            return true;
+          }
+
+          if (p.$id === self.profile.$id) {
+            self.currentUserRanking = p;
+            return true;
+          }
+        });
+      }
+
+      function rankingView() {
+        rankingList.sort(comparer(self.orderOpts)).forEach(function(p, i) {
+          p.$ranking = i + 1;
+        });
+
+        self.rankingView = rankingList.slice(
+          self.pagerOpts.range.start,
+          self.pagerOpts.range.end
+        );
+
+        currentUserRanking();
+      }
+
+      // Update pager's row count
+      // (the pager should trigger a range update and call rankingView)
+      function updateRowCount() {
+        if (!self.ranking) {
+          rankingList = [];
+          self.pagerOpts.setRowCount(0);
+          return;
+        }
+
+        rankingList = Object.keys(self.ranking).filter(function(publicId) {
+          return self.ranking[publicId] && self.ranking[publicId].user;
+        }).map(function(publicId) {
+          self.ranking[publicId].$id = publicId;
+          return self.ranking[publicId];
+        });
+
+        self.pagerOpts.setRowCount(rankingList.length);
+      }
+
+      this.orderBy = function(key) {
+        if (self.orderOpts[0] && self.orderOpts[0].key === key) {
+          self.orderOpts[0].reversed = !self.orderOpts[0].reversed;
+        } else {
+          self.orderOpts.unshift({
+            key: key,
+            reversed: false
+          });
+          self.orderOpts = self.orderOpts.slice(0, 2);
+        }
+
+        rankingView();
+      };
+
+    }
+  ]).
+
+  directive('clmPager', [
+    function clmPagerFactory() {
+      return {
+        templateUrl: 'classmentors/components/events/events-view-pager.html',
+        restrict: 'E',
+        bindToController: true,
+        scope: {
+          options: '='
+        },
+        controller: 'ClmPagerCtrl',
+        controllerAs: 'ctrl'
+      };
+    }
+  ]).
+
+  // Keep row per page selection acrossviews.
+  factory('clmRowPerPage', [
+    '$log',
+    function clmRowPerPageFactory($log) {
+      var cb = [];
+      var opts = {
+        value: 25,
+        options: [5, 10, 25, 50],
+
+        set: function(value) {
+          opts.value = parseInt(value, 10);
+          if (opts.value < 1) {
+            opts.value = 1;
+          }
+          opts.triggerChange();
+        },
+
+        /**
+         * Register a function to call synchronously whn roePerPage is set.
+         *
+         * If the function needs to modify the rowPerPage it shouldn't use the
+         * setter or do it asynchronously.
+         *
+         * @param  {Function} fn [description]
+         * @return {[type]}      [description]
+         */
+        onChange: function(fn) {
+          cb.push(fn);
+
+          return function() {
+            cb = cb.filter(function(f) {
+              return f !== fn;
+            });
+          };
+        },
+
+        triggerChange: function() {
+          cb.forEach(function(fn) {
+            try {
+              fn(opts.value);
+            } catch (err) {
+              $log.error(err);
+            }
+          });
+        }
+
+      };
+
+      return opts;
+    }
+  ]).
+
+  factory('clmPagerOption', [
+    '$log',
+    'clmRowPerPage',
+    function clmPagerOptionFactory($log, clmRowPerPage) {
+      return function clmPagerOption() {
+        var rangeCBs = [];
+        var unwatch;
+        var opts = {
+          rowCount: 0,
+          range: {
+            start: 0,
+            end: 0
+          },
+
+          /**
+           * Set rowCount and reset range.
+           *
+           * Trigger a change "event".
+           *
+           * @param {number} count
+           */
+          setRowCount: function(count) {
+            opts.rowCount = count;
+            opts.setRange(opts.range.start);
+          },
+
+          /**
+           * Set range from its starting index and `clmRowPerPage.value`.
+           *
+           * The range start index will be set to the start of a page, with the
+           * first page starting at zero and the second page starting at
+           * `clmRowPerPage.value`, etc...
+           *
+           * @param {number} start.
+           */
+          setRange: function(start) {
+            var end;
+
+            start = start || 0;
+            if (start < 0) {
+              start = 0;
+            }
+
+            start = start - (start % clmRowPerPage.value);
+            if (start > opts.rowCount) {
+              start = opts.rowCount;
+            }
+
+            end = start + clmRowPerPage.value;
+            if (end > opts.rowCount) {
+              end = opts.rowCount;
+            }
+
+            opts.range.start = start;
+            opts.range.end = end;
+
+            opts.triggerChange();
+          },
+
+          /**
+           * Register a function to be called each time the the pager data
+           * are set.
+           *
+           * Setting the rowCount, the range or setting `clmRowPerPage.value`
+           * will trigger a call synchronously.
+           *
+           * The calls must not update rowCount or the range using the setters
+           * (or if it does it use them asynchronously).
+           *
+           * @param  {Function} cb Function to register.
+           * @return {Function}    Deregister the function.
+           */
+          onChange: function(cb) {
+            rangeCBs.push(cb);
+            return function() {
+              rangeCBs = rangeCBs.filter(function(fn) {
+                return fn !== cb;
+              });
+            };
+          },
+
+          triggerChange: function() {
+            rangeCBs.forEach(callCB);
+          },
+
+          $destroy: function() {
+            unwatch();
+          }
+        };
+
+        unwatch = clmRowPerPage.onChange(function() {
+          opts.setRange(opts.range.start);
+        });
+
+        function callCB(cb) {
+          try {
+            cb(opts);
+          } catch (err) {
+            $log.error(err);
+          }
+        }
+
+        return opts;
+      };
+    }
+  ]).
+
+  controller('ClmPagerCtrl', [
+    'clmRowPerPage',
+    function ClmPagerCtrl(clmRowPerPage) {
+      this.rowPerPage = clmRowPerPage;
+
+      this.nextPage = function(options) {
+        options.setRange(options.range.end);
+      };
+
+      this.prevPage = function(options) {
+        options.setRange(options.range.start - 1);
+      };
+
+      this.firstPage = function(options) {
+        options.setRange(0);
+      };
+
+      this.lastPage = function(options) {
+        options.setRange(options.rowCount);
+      };
+    }
   ])
 
   ;
 
+  function reverseComparer(reverse, fn) {
+    if (!reverse) {
+      return fn;
+    }
+
+    return function(a, b) {
+      var result = fn(a, b);
+      return result * -1;
+    };
+  }
+
+  function chainComparer(comparerList) {
+    return function(a, b) {
+      var i, result;
+
+      for (i = 0; i < comparerList.length; i++) {
+        result = comparerList[i](a, b);
+        if (result !== 0) {
+          return result;
+        }
+      }
+
+      return 0;
+    };
+  }
 })();

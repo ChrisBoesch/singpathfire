@@ -1,0 +1,164 @@
+<div ng-if="ctrl.loading" layout="row" layout-align="space-around" class="md-padding">
+    <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+</div>
+
+<div ng-if="!ctrl.loading">
+    
+    <md-content class="md-padding">
+        <table class="events tasks">
+            <thead>
+                <tr ng-class="{'reversed': ctrl.orderOptions.reversed}">
+                    <th rowspan="4" ng-class="{orderer: !ctrl.orderOptions.key}">
+                        <md-button ng-click="ctrl.orderBy()">Participants</md-button>
+                    </th>
+                    <th ng-if="ctrl.visibleTasks.length == 0">
+                        <em>No challenge</em>
+                    </th>
+                    <th ng-repeat="task in ctrl.visibleTasks track by task.$id"
+                        ng-class="{orderer: ctrl.orderOptions.key == task.$id}"
+                    >
+                        <md-button ng-click="ctrl.orderBy(task.$id)">{{ task.title }}</md-button>
+                    </th>
+                </tr>
+                <tr>
+                    <th ng-if="ctrl.visibleTasks.length == 0"></th>
+                    <th ng-repeat="task in ctrl.visibleTasks track by task.$id">
+                        {{ task.description }}
+                    </th>
+                </tr>
+                <tr>
+                    <th ng-if="ctrl.visibleTasks.length == 0"></th>
+                    <th ng-repeat="task in ctrl.visibleTasks track by task.$id">
+                        <a ng-href="{{task.link}}" ng-if="task.link" target="_blank">More details</a>
+                    </th>
+                </tr>
+                <tr>
+                    <th ng-if="ctrl.visibleTasks.length == 0"></th>
+                    <th ng-repeat="task in ctrl.visibleTasks track by task.$id">
+                        {{ctrl.taskCompletion[task.$id] | number: 0}} %
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-if="ctrl.currentUserParticipant">
+                    <th layout="row" layout-align="start center">
+                        <md-button class="name-button" ng-href="#{{ 'profile' | urlFor:{'publicId': ctrl.currentUserParticipant.$id} }}">
+                            Yourself
+                        </md-button>
+
+                        <md-button class="md-icon-button md-primary small-icon" aria-label="Update" ng-click="ctrl.update(ctrl.event, ctrl.tasks, ctrl.currentUserSolutions, ctrl.profile)">
+                            <md-icon md-svg-icon="loop"></md-icon>
+                        </md-button>
+
+                    </th>
+
+                    <td ng-repeat="task in ctrl.visibleTasks track by task.$id">
+                        
+                        <div ng-if="task.serviceId">
+                            <span ng-if="ctrl.currentUserSolutions[task.$id]">
+                                Completed<span ng-if="ctrl.currentUserProgress[task.$id].completed">*</span>
+                            </span>
+                            <span ng-if="!ctrl.currentUserSolutions[task.$id]">
+                                <md-button class="md-raised md-primary" 
+                                    ng-href="{{ctrl.startLink(task, ctrl.profile)}}" 
+                                    target="_blank"
+                                    ng-disabled="task.closedAt"
+                                    aria-label="Start challenge"
+                                >
+                                    <span ng-switch on="ctrl.mustRegister(task, ctrl.profile)">
+                                        <span ng-switch-when="true">Register</span>
+                                        <span ng-switch-default>Start challenge</span>
+                                    </span>
+                                </md-button>
+                            </span>
+                        </div>
+
+                        <div ng-if="task.textResponse">
+                            <span ng-if="ctrl.currentUserSolutions[task.$id]">
+                                {{ ctrl.currentUserSolutions[task.$id] | cmTruncate: 10 }}<span ng-if="!ctrl.currentUserProgress[task.$id].completed">*</span>
+                                <md-button class="md-icon-button md-primary small-icon"
+                                    aria-label="Update response"
+                                    ng-click="ctrl.promptForTextResponse(ctrl.event.$id, task.$id, task, ctrl.currentUserParticipant, ctrl.currentUserSolutions)"
+                                    ng-if="task.openedAt"
+                                >
+                                    <md-icon md-svg-icon="create"></md-icon>
+                                </md-button>
+                            </span>
+
+                            <span ng-if="!ctrl.currentUserSolutions[task.$id]">
+                                <md-button class="md-raised md-primary"
+                                    aria-label="Submit response"
+                                    ng-click="ctrl.promptForTextResponse(ctrl.event.$id, task.$id, task, ctrl.currentUserParticipant, ctrl.currentUserSolutions)"
+                                    ng-disabled="task.closedAt"
+                                >
+                                    Submit Response
+                                </md-button>
+                            </span>
+                        </div>
+
+                        <div ng-if="task.linkPattern">
+                            <span ng-if="ctrl.currentUserSolutions[task.$id]">
+                                <a ng-href="{{ctrl.currentUserSolutions[task.$id]}}" target="_blank">Completed<span ng-if="!ctrl.currentUserProgress[task.$id].completed">*</span></a>
+                                <md-button class="md-icon-button md-primary small-icon"
+                                    aria-label="Update link"
+                                    ng-click="ctrl.promptForLink(ctrl.event.$id, task.$id, task, ctrl.currentUserParticipant, ctrl.currentUserSolutions)"
+                                    ng-if="task.openedAt"
+                                >
+                                    <md-icon md-svg-icon="create"></md-icon>
+                                </md-button>
+                            </span>
+
+                            <span ng-if="!ctrl.currentUserSolutions[task.$id]">
+                                <md-button class="md-raised md-primary"
+                                    aria-label="Submit link"
+                                    ng-click="ctrl.promptForLink(ctrl.event.$id, task.$id, task, ctrl.currentUserParticipant, ctrl.currentUserSolutions)"
+                                    ng-disabled="task.closedAt"
+                                >
+                                    Submit Link
+                                </md-button>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr ng-repeat="participant in ctrl.participantsView track by participant.$id" ng-class="'index-' + $index + ' ' + ($odd ? 'odd' : 'even')">
+                    
+                    <th layout="row" layout-align="start center">
+                        <md-button class="name-button" ng-href="#{{ 'profile' | urlFor:{'publicId': participant.$id} }}">
+                            {{ participant.user.displayName }}
+                        </md-button>
+
+                        <span ng-if="ctrl.profile.$id == ctrl.event.owner.publicId &amp;&amp; participant.$id != ctrl.profile.$id">
+                            <md-button class="md-icon-button md-primary small-icon" aria-label="Delete" ng-click="ctrl.removeParticipant($event, ctrl.event, participant)">
+                                <md-icon md-svg-icon="clear"></md-icon>
+                            </md-button>
+                        </span>
+                    </th>
+
+                    <td ng-repeat="task in ctrl.visibleTasks track by task.$id">
+                        <div ng-if="ctrl.progress[participant.$id][task.$id].completed &amp;&amp; (ctrl.profile.$id == ctrl.event.owner.publicId || task.showProgress)">
+                            <span ng-if="!task.showLinks || (!task.textResponse &amp;&amp; !task.linkPattern)">
+                                Completed
+                            </span>
+
+                            <span ng-if="task.textResponse &amp;&amp; task.showLinks">
+                                {{ ctrl.solutions[participant.$id][task.$id] | cmTruncate: 10 }}
+                            </span>
+
+                            <span ng-if="task.linkPattern &amp;&amp; task.showLinks">
+                                <a ng-href="{{ctrl.solutions[participant.$id][task.$id]}}" target="_blank">completed</a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr ng-if="ctrl.participantsView | spfEmpty">
+                    <td>No<span ng-if="ctrl.ctrl.currentUserParticipant"> other</span> participants</td>
+                </tr>
+            </tbody>
+        </table>
+    </md-content>
+
+    <clm-pager options="ctrl.pagerOptions" class="md-padding"></clm-pager>
+
+</div>
