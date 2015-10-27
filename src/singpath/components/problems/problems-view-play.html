@@ -102,6 +102,25 @@
                         </tbody>
                     </table>
                 </div>
+                <div ng-switch-when="java" layout layout-align="center center" class="solution-result java-result">
+
+                    <div ng-if="ctrl.resolution.output.errors" class="md-whiteframe-z1 solution-errors">
+                        {{ctrl.resolution.output.errors}}
+                    </div>
+
+                    <table class="md-whiteframe-z1" ng-class="{'solved': ctrl.resolution.$solved()}" ng-if="!(ctrl.resolution.output.results|spfEmpty)">
+                        <thead>
+                            <th>Call</th>
+                            <th>Correct</th>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="test in ctrl.resolution.output.results" ng-class="{'failed': !test.correct}">
+                                <td>{{test.call}}</td>
+                                <td>{{test.correct}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
                 <div ng-switch-when="javascript" layout layout-align="center center" class="solution-result javascript-result">
 
                     <div ng-if="ctrl.resolution.output.errors" class="md-whiteframe-z1 solution-errors">
