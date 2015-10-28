@@ -1144,6 +1144,32 @@
         };
       }
 
+      function _solutionComparer(options) {
+        var taskId = options.key;
+        var task = self.tasks.$getRecord(taskId);
+
+        if (!task || (!task.textResponse && !task.linkPattern)) {
+          return angular.noop;
+        }
+
+        return function(a, b) {
+          var aS = (
+            self.solutions &&
+            self.solutions[a.$id] &&
+            self.solutions[a.$id][taskId] ||
+            ''
+          );
+          var bS = (
+            self.solutions &&
+            self.solutions[b.$id] &&
+            self.solutions[b.$id][taskId] ||
+            ''
+          );
+
+          return aS.localeCompare(bS);
+        };
+      }
+
       function _compareName(a, b) {
         var aN = a.user && a.user.displayName || '';
         var bN = b.user && b.user.displayName || '';
@@ -1158,7 +1184,7 @@
         var comparer;
 
         if (options.key) {
-          comparer = chainComparer([_completionComparer(options), _compareName]);
+          comparer = chainComparer([_completionComparer(options), _solutionComparer(options), _compareName]);
         } else {
           comparer = _compareName;
         }
@@ -1633,8 +1659,8 @@
     function clmRowPerPageFactory($log) {
       var cb = [];
       var opts = {
-        value: 25,
-        options: [5, 10, 25, 50],
+        value: 50,
+        options: [5, 10, 25, 50, 75, 100],
 
         set: function(value) {
           opts.value = parseInt(value, 10);
@@ -1828,7 +1854,7 @@
 
       for (i = 0; i < comparerList.length; i++) {
         result = comparerList[i](a, b);
-        if (result !== 0) {
+        if (result) {
           return result;
         }
       }

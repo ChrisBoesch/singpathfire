@@ -771,6 +771,7 @@
         };
         ctrlFn.instance.participants.$watch = jasmine.createSpy('participantsWatch');
         ctrlFn.instance.tasks.$watch = jasmine.createSpy('tasksWatch');
+        ctrlFn.instance.tasks.$getRecord = jasmine.createSpy('tasksWatch');
       });
 
       it('should initiate participant and tasks views', function() {
@@ -1174,7 +1175,7 @@
       }));
 
       it('should set default value to 25', function() {
-        expect(clmRowPerPage.value).toBe(25);
+        expect(clmRowPerPage.value).toBe(50);
       });
 
       it('should hold the suggested list of value option', function() {
