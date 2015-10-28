@@ -1633,8 +1633,8 @@
     function clmRowPerPageFactory($log) {
       var cb = [];
       var opts = {
-        value: 25,
-        options: [5, 10, 25, 50],
+        value: 50,
+        options: [5, 10, 25, 50, 75, 100],
 
         set: function(value) {
           opts.value = parseInt(value, 10);
