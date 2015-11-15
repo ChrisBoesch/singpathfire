@@ -2300,16 +2300,20 @@
                 user: {
                   displayName: 'bob'
                 },
-                solutions: {
+                queuedSolutions: {
                   pathId: {
                     levelId: {
                       problemId: {
-                        started: 1234,
-                        solved: true,
-                        duration: 10000
+                        'default': {
+                          started: 1234,
+                          solved: true,
+                          duration: 10000
+                        }
                       },
                       otherProblemId: {
-                        started: 1234
+                        'default': {
+                          started: 1234
+                        }
                       }
                     }
                   }

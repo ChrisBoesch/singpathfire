@@ -329,20 +329,27 @@
       });
 
       describe('ClmSpfProfileCtrl', function() {
-        var deps, initCtrl, problems, ctrl;
+        var deps, initCtrl, profile, problems, ctrl;
 
         beforeEach(function() {
           problems = {};
+          profile = {},
           deps = {
             $log: jasmine.createSpyObj('$log', ['error']),
             clmDataStore: {
-              singPath: jasmine.createSpyObj('clmDataStore.singPath', ['allProblems', 'profile'])
+              singPath: jasmine.createSpyObj('clmDataStore.singPath', [
+                'allProblems',
+                'profile',
+                'countProblems',
+                'countSolvedSolutionPerLanguage'
+              ])
             }
           };
 
           initCtrl = $controller('ClmSpfProfileCtrl', deps, true);
           initCtrl.instance.publicId = 'bob';
 
+          deps.clmDataStore.singPath.profile.and.returnValue($q.when(profile));
           deps.clmDataStore.singPath.allProblems.and.returnValue($q.when(problems));
         });
 
@@ -358,7 +365,6 @@
         });
 
         it('should set loading to false once problems and profile is loaded', function() {
-          deps.clmDataStore.singPath.profile.and.returnValue({});
           ctrl = initCtrl();
 
           $rootScope.$apply();
@@ -371,75 +377,35 @@
         });
 
         it('should set stats.total', function() {
-          deps.clmDataStore.singPath.profile.and.returnValue({});
-          problems.pythonPathId = {
-            someLevelId: {
-              someProblemId: {language: 'python'},
-              someOtherProblemId: {language: 'python'}
-            },
-            someOtherLevelId: {
-              someProblemId: {language: 'python'}
-            }
+          var expected = {
+            python: 3,
+            angularjs: 1
           };
-          problems.angularjsPathId = {
-            someLevelId: {
-              someProblemId: {language: 'angularjs'}
-            }
-          };
+
+          deps.clmDataStore.singPath.countProblems.and.returnValue(expected);
 
           ctrl = initCtrl();
 
           $rootScope.$apply();
+          expect(deps.clmDataStore.singPath.countProblems).toHaveBeenCalledWith(problems);
           expect(ctrl.stats).toBeDefined();
-          expect(ctrl.stats.total).toEqual({
-            python: 3,
-            angularjs: 1
-          });
+          expect(ctrl.stats.total).toEqual(expected);
         });
 
         it('should set stats.user', function() {
-          deps.clmDataStore.singPath.profile.and.returnValue($q.when({
-            solutions: {
-              pythonPathId: {
-                someLevelId: {
-                  someProblemId: {solved: true},
-                  someOtherProblemId: {started: 1234}
-                },
-                someOtherLevelId: {
-                  someProblemId: {solved: true}
-                }
-              },
+          var expected = {
+            python: 3,
+            angularjs: 1
+          };
 
-              angularjsPathId: {
-                someLevelId: {
-                  someProblemId: {solved: true}
-                }
-              }
-            }
-          }));
-          problems.pythonPathId = {
-            someLevelId: {
-              someProblemId: {language: 'python'},
-              someOtherProblemId: {language: 'python'}
-            },
-            someOtherLevelId: {
-              someProblemId: {language: 'python'}
-            }
-          };
-          problems.angularjsPathId = {
-            someLevelId: {
-              someProblemId: {language: 'angularjs'}
-            }
-          };
+          deps.clmDataStore.singPath.countSolvedSolutionPerLanguage.and.returnValue(expected);
 
           ctrl = initCtrl();
 
           $rootScope.$apply();
+          expect(deps.clmDataStore.singPath.countSolvedSolutionPerLanguage).toHaveBeenCalledWith(profile);
           expect(ctrl.stats).toBeDefined();
-          expect(ctrl.stats.user).toEqual({
-            python: 2,
-            angularjs: 1
-          });
+          expect(ctrl.stats.user).toEqual(expected);
         });
 
       });

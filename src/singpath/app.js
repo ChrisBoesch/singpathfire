@@ -90,12 +90,15 @@
           },
 
           $solution: function(problem) {
+            var queueId = 'default';
+
             return (
               problem &&
-              this.solutions &&
-              this.solutions[problem.$pathId] &&
-              this.solutions[problem.$pathId][problem.$levelId] &&
-              this.solutions[problem.$pathId][problem.$levelId][problem.$id]
+              this.queuedSolutions &&
+              this.queuedSolutions[problem.$pathId] &&
+              this.queuedSolutions[problem.$pathId][problem.$levelId] &&
+              this.queuedSolutions[problem.$pathId][problem.$levelId][problem.$id] &&
+              this.queuedSolutions[problem.$pathId][problem.$levelId][problem.$id][queueId]
             );
           }
 
@@ -312,135 +315,328 @@
          */
         solutions: {
           errMissingPublicId: new Error('No public id for the solution'),
-          errMissingProblemId: new Error('The problem has no id. Is it saved?'),
-          errSaveSolution: new Error('Failed to save solution.'),
+          errMissingUserData: new Error('No current user data. Is the user logged in?'),
+          errMissingUserPublicId: new Error('The current user data have no public Id. Is the user registered?'),
 
           /**
-           * Return an unsolved solution; a solution that has failed
-           * verification.
+           * Return a solution object composed a meta, payload and results
+           * firebase objects field, and of method to update them.
+           *
+           * @param {firebaseObject} [problem]  Problem the solution is for.
+           * @param {firebaseObject} [userData] User registration data (not his profile).
+           * @return {Promise}
            */
-          get: function(pathId, levelId, problemId, publicId) {
-            if (!publicId) {
-              return $q.reject(spfDataStore.solutions.errMissingPublicId);
+          get: function(problem, userData) {
+            var queueId = 'default';
+            var pathId, levelId, problemId, publicId, userUid;
+
+            if (!problem || !problem.$id || !problem.$ref) {
+              return $q.reject(new Error('The problem is missing or is not an firebase object.'));
             }
 
-            if (!problemId) {
-              return $q.reject(spfDataStore.solutions.errMissingProblemId);
+            if (!userData || !userData.$id) {
+              return $q.reject(spfDataStore.solutions.errMissingUserData);
             }
 
-            return spfFirebase.loadedObj(
-              ['singpath/solutions', pathId, levelId, problemId, publicId]
-            );
-          },
-
-          create: function(problem, publicId, solution) {
-            var level = problem.$ref().parent();
-            var path = level.parent();
-
-            if (!publicId) {
-              return $q.reject(spfDataStore.solutions.errMissingPublicId);
+            if (!userData.publicId) {
+              return $q.reject(spfDataStore.solutions.errMissingUserPublicId);
             }
 
-            if (!problem.$id) {
-              return $q.reject(spfDataStore.solutions.errMissingProblemId);
+            problemId = problem.$id;
+            levelId = problem.$ref().parent().key();
+            pathId = problem.$ref().parent().parent().key();
+            publicId = userData.publicId;
+            userUid = userData.$id;
+
+            function getPayload() {
+              return spfFirebase.loadedObj(
+                ['singpath/queuedSolutions', pathId, levelId, problemId, publicId, queueId, 'payload']
+              ).catch(angular.noop);
             }
 
-            return spfFirebase.set(
-              ['singpath/solutions', path.key(), level.key(), problem.$id, publicId], {
-                language: problem.language,
-                solution: solution.solution,
-                tests: problem.tests
+            return $q.all({
+              payload: getPayload(),
+              meta: spfFirebase.loadedObj(
+                ['singpath/queuedSolutions', pathId, levelId, problemId, publicId, queueId, 'meta']
+              ),
+              results: spfFirebase.loadedObj(
+                ['singpath/queuedSolutions', pathId, levelId, problemId, publicId, queueId, 'results']
+              ),
+
+              /**
+               * Check if the problem is started (includes the solved state).
+               *
+               * @return {Boolean}
+               */
+              $isStarted: function() {
+                return this.meta && this.meta.startedAt;
+              },
+
+              /**
+               * Check if the problem is solved.
+               *
+               * @return {Boolean}
+               */
+              $isSolved: function() {
+                return this.meta && this.meta.solved;
+              },
+
+              /**
+               * Check the state of the user solution is correctly registed
+               * in the user solution history and its profile.
+               *
+               * @param  {firebaseObject}  profile
+               * @return {Boolean}
+               */
+              $isRegistered: function(profile) {
+                var profileData;
+
+                if (
+                  this.meta.solved && (
+                    !this.meta.history ||
+                    !this.meta.history[this.meta.startedAt]
+                  )
+                ) {
+                  return false;
+                }
+
+                if (
+                  !profile ||
+                  !profile.queuedSolutions ||
+                  !profile.queuedSolutions[pathId] ||
+                  !profile.queuedSolutions[pathId][levelId] ||
+                  !profile.queuedSolutions[pathId][levelId][problemId] ||
+                  !profile.queuedSolutions[pathId][levelId][problemId][queueId]
+                ) {
+                  return false;
+                }
+
+                profileData = profile.queuedSolutions[pathId][levelId][problemId][queueId];
+
+                return (
+                  profileData.solved === this.meta.solved &&
+                  profileData.startedAt === this.meta.startedAt
+                );
+              },
+
+              /**
+               * Start/restart a solution.
+               *
+               * @return {Promise} Resolves whan the solution and user profile
+               *                   are updated.
+               */
+              $reset: function() {
+                var self = this;
+
+                if (this.$isStarted() && !this.$isSolved()) {
+                  return $q.reject(new Error('A problem can only be reset if it is solved'));
+                }
+
+                // 1. reset solution.
+                return spfFirebase.patch([
+                  'singpath/queuedSolutions', pathId, levelId, problemId, publicId, queueId
+                ], {
+                  'meta/startedAt': spfFirebase.ServerValue.TIMESTAMP,
+                  'meta/endedAt': null,
+                  'meta/verified': false,
+                  'meta/solved': false,
+                  'meta/taskId': null,
+                  'payload': null,
+                  'results': null
+                }).then(function() {
+                  return {
+                    // 2a. load the payload empty record if it was missing
+                    // (payload is not readeable when the solution is solved)
+                    payload: self.payload ? self.payload : getPayload(),
+
+                    // 2b. update the solution state in the user profile.
+                    profile: self.$registerAsStarted()
+                  };
+                }).then(function(data) {
+                  // 3. add the payload firebaseObj to our solution object
+                  self.payload = data.payload;
+                  return self;
+                });
+              },
+
+              /**
+               * Saves the solution payload and enqueue a task to verify it.
+               *
+               * @param  {string}      solution
+               * @return {Promise}              Resolves when the task is enqueued.
+               */
+              $submit: function(solution) {
+                var self = this;
+                var taskId, payload;
+
+                payload = {
+                  language: problem.language,
+                  solution: solution,
+                  tests: problem.tests
+                };
+                taskId = spfFirebase.ref(['singpath/queues', queueId, 'tasks']).push().key();
+
+                return this.$saveSolution(taskId, payload).then(function(path) {
+                  return self.$saveTask(taskId, userUid, path, payload);
+                });
+              },
+
+              /**
+               * Monitor the solution until it is solved and then register it
+               * as solved.
+               *
+               * @param  {Function} cb Called once the solution is registed as solved.
+               * @return {Function}    Function which cancels the watch when called.
+               */
+              $monitorTask: function(cb) {
+                cb = cb || angular.noop;
+
+                var self = this;
+                var cancel = this.meta.$watch(function() {
+                  if (self.meta.solved) {
+                    cancel();
+                    self.$registerAsSolved().then(cb);
+                  }
+                });
+
+                return cancel;
+              },
+
+              /**
+               * Update the solution and the user profile if necessary
+               *
+               * @param  {firebaseObject}  profile
+               * @return {Promise}
+               */
+              $register: function(profile) {
+                if (this.$isRegistered(profile)) {
+                  return $q.when(this);
+                }
+
+                if (this.$isSolved()) {
+                  return this.$registerAsSolved();
+                } else {
+                  return this.$registerAsStarted();
+                }
+              },
+
+              $destroy: function() {
+                this.meta.$destroy();
+                this.results.$destroy();
+                if (this.payload) {
+                  this.payload.$destroy();
+                }
+              },
+
+              /**
+               * Update the user profile
+               *
+               * @private
+               */
+              $updateProfile: function(solved, duration) {
+                var self = this;
+
+                return spfFirebase.set([
+                  'singpath/userProfiles', publicId, 'queuedSolutions',
+                  pathId, levelId, problemId, queueId
+                ], {
+                  startedAt: self.meta.startedAt,
+                  solved: solved || false,
+                  duration: duration || null,
+                  language: problem.language
+                });
+              },
+
+              /**
+               * Update the solution history
+               *
+               * @private
+               */
+              $updateHistory: function(duration) {
+                spfFirebase.set([
+                  'singpath/queuedSolutions',
+                  pathId, levelId, problemId, publicId, queueId,
+                  'meta/history', this.meta.startedAt
+                ], duration || null);
+              },
+
+              /**
+               * Update user profile to flag the problem as started.
+               *
+               * @private
+               */
+              $registerAsStarted: function() {
+                var self = this;
+
+                return this.$updateProfile(false, null).then(function() {
+                  return self;
+                });
+              },
+
+              /**
+               * Updates the the solution history and the user profile to flag
+               * the problem as solved.
+               *
+               * @private
+               */
+              $registerAsSolved: function() {
+                var self = this;
+
+                if (!this.meta || !this.meta.solved) {
+                  return $q.reject(new Error('The solution did not solved the problem'));
+                }
+
+                var duration = this.meta.endedAt - this.meta.startedAt;
+
+                return $q.all(
+                  this.$updateProfile(true, duration),
+                  this.$updateHistory(duration)
+                ).then(function() {
+                  return self;
+                });
+              },
+
+              /**
+               * Save the solution payload.
+               *
+               * @private
+               */
+              $saveSolution: function(taskId, payload) {
+                var solutionPath = [
+                  'singpath/queuedSolutions',
+                  pathId, levelId, problemId, publicId, queueId
+                ];
+
+                return spfFirebase.patch(solutionPath, {
+                  'meta/endedAt': spfFirebase.ServerValue.TIMESTAMP,
+                  'meta/taskId': taskId,
+                  'meta/verified': false,
+                  'meta/solved': false,
+                  'payload': payload
+                }).then(function() {
+                  return solutionPath;
+                });
+              },
+
+              /**
+               * Add the task to the task queue.
+               *
+               * @private
+               */
+              $saveTask: function(taskId, ownerId, solutionPath, payload) {
+                return spfFirebase.set([
+                  'singpath/queues', queueId, 'tasks', taskId
+                ], {
+                  owner: ownerId,
+                  payload: payload,
+                  solutionRef: solutionPath.join('/'),
+                  started: false,
+                  completed: false,
+                  consumed: false
+                });
               }
-            ).then(function() {
-              return $http.post([
-                '/api/paths', path.key(),
-                'levels', level.key(),
-                'problems', problem.$id,
-                'solutions', publicId
-              ].join('/'));
-            }).then(function(resp) {
-              return resp.data;
-            }).catch(function(err) {
-              $log.error(err);
-              return $q.reject(spfDataStore.solutions.errSaveSolution);
             });
           }
-        },
-
-        resolutions: {
-          errCannotStart: new Error(
-            'The resolution is already started. ' +
-            'You can restart a solution once you solved it.'
-          ),
-          errCannotReset: new Error(
-            'The solution needs to be solved to be reset.'
-          ),
-          errNotResolved: new Error('The solution is not resolved yet.'),
-
-          _Factory: spfFirebase.objFactory({
-            $init: function() {
-              var problem = this.$ref().parent();
-              var level = problem.parent();
-              var path = level.parent();
-              var publicId = this.$id;
-
-              if (this.$value !== null) {
-                return $q.reject(spfDataStore.resolutions.errCannotStart);
-              }
-
-              this.startedAt = {
-                '.sv': 'timestamp'
-              };
-
-              return this.$save().then(function(ref) {
-                return $q(function(resolve, reject) {
-                  ref.once('value', resolve, reject);
-                });
-              }).then(function(snapshot) {
-                return spfFirebase.set([
-                  'singpath/userProfiles',
-                  publicId,
-                  'solutions',
-                  path.key(),
-                  level.key(),
-                  problem.key()
-                ], {
-                  startedAt: snapshot.val().startedAt
-                });
-              });
-            },
-
-            $reset: function() {
-              if (!this.output && !this.output.solved) {
-                return $q.reject(spfDataStore.resolutions.errCannotReset);
-              }
-
-              $firebaseUtils.updateRec(this, {
-                startedAt: {
-                  '.sv': 'timestamp'
-                }
-              });
-              return this.$save();
-            },
-
-            $solved: function() {
-              return this.output && this.output.solved;
-            },
-
-            $duration: function() {
-              if (!this.solved) {
-                throw spfDataStore.resolutions.errNotResolved;
-              }
-              return $window.moment.duration(this.endedAt - this.startedAt).humanize();
-            }
-          }),
-
-          get: function(pathId, levelId, problemId, publicId) {
-            return spfDataStore.resolutions._Factory(
-              ['singpath/resolutions', pathId, levelId, problemId, publicId]
-            ).$loaded();
-          }
-
         }
       };
 

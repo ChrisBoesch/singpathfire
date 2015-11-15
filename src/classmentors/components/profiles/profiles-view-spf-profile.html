@@ -3,18 +3,18 @@
 
     <div layout="column" ng-if="!ctrl.loading">
 
+        <div class="language java" flex>
+            <div class="language-icon">
+                <md-icon md-svg-icon="language:java" alt="java"></md-icon>
+                {{ctrl.stats.user.java || 0}} / {{ctrl.stats.total.java || 0}} problems solved
+            </div>
+        </div>
+
         <div class="language python" flex>
             <div class="language-icon">
                 <md-icon md-svg-icon="language:python" alt="python"></md-icon>
                 {{ctrl.stats.user.python || 0}} / {{ctrl.stats.total.python || 0}} problems solved
             </div>
-        </div>
-
-        <div class="language angularjs" flex>
-            <div class="language-icon">
-                <md-icon md-svg-icon="language:angularjs" alt="javascript"></md-icon>
-                {{ctrl.stats.user.angularjs || 0}} / {{ctrl.stats.total.angularjs || 0}} problems solved
-            </div>              
         </div>
 
         <div class="language javascript" flex>

@@ -193,16 +193,19 @@
    *
    */
   module.factory('spfFirebase', [
+    '$window',
     '$q',
     '$log',
     '$firebaseObject',
     '$firebaseArray',
     'spfFirebaseRef',
-    function spfFirebaseFactory($q, $log, $firebaseObject, $firebaseArray, spfFirebaseRef) {
+    function spfFirebaseFactory($window, $q, $log, $firebaseObject, $firebaseArray, spfFirebaseRef) {
       var invalidChar = ['.', '#', '$', '/', '[', ']'];
       var spfFirebase;
 
       spfFirebase = {
+
+        ServerValue: $window.Firebase.ServerValue,
 
         /**
          * alias for spfFirebaseRef.

@@ -317,7 +317,7 @@
             profile: spfDataStore.profile(authData.publicId)
           });
 
-        // 2. get problem and resolution.
+        // 2. get problem and the user solution.
         }).then(function(data) {
           if (data.profile.$value === null) {
             data.profile = spfDataStore.initProfile();
@@ -326,37 +326,35 @@
           data.path = spfDataStore.paths.get(pathId);
           data.level = spfDataStore.levels.get(pathId, levelId);
           data.problem = spfDataStore.problems.get(pathId, levelId, problemId);
-          data.resolution = spfDataStore.resolutions.get(
-            pathId, levelId, problemId, data.currentUser.publicId
-          );
 
           return $q.all(data);
 
-        // 3. Check problem exist and if the resolution needs to be initialized.
+        // 3. Check the problem exist and load the user solution.
         }).then(function(data) {
+          // The view shouldn't load if the problem doesn't exist.
           if (!data.problem || data.problem.$value === null) {
             return $q.reject(errProblemNotFound);
           }
 
-          if (data.resolution && data.resolution.startedAt) {
-            return data;
-          }
-
-          return data.resolution.$init().then(function() {
-            return data;
-          });
-
-        // 4. return the solution is solution is not solved.
-        }).then(function(data) {
-          if (data.resolution.$solved()) {
-            return data;
-          }
-
           data.solution = spfDataStore.solutions.get(
-            pathId, levelId, problemId, data.currentUser.publicId
+            data.problem, data.currentUser
           );
 
           return $q.all(data);
+
+        // 4. solution state
+        }).then(function(data) {
+          // The solution might need to be started.
+          if (!data.solution.$isStarted()) {
+            return data.solution.$reset().then(function() {
+              return data;
+            });
+          }
+
+          // The solution state might not be correctly set in the profile
+          return data.solution.$register(data.profile).then(function() {
+            return data;
+          });
 
         // 5. recover from public id missing.
         }).catch(function(err) {
@@ -379,7 +377,9 @@
    *
    */
   controller('PlayProblemCtrl', [
+    '$scope',
     '$q',
+    '$log',
     '$location',
     'initialData',
     '$route',
@@ -390,7 +390,8 @@
     'spfAuthData',
     'spfDataStore',
     function PlayProblemCtrl(
-      $q, $location, initialData, $route, urlFor, spfFirebase, spfNavBarService, spfAlert, spfAuthData, spfDataStore
+      $scope, $q, $log, $location, initialData, $route,
+      urlFor, spfFirebase, spfNavBarService, spfAlert, spfAuthData, spfDataStore
     ) {
       var self = this;
       var original = {};
@@ -402,17 +403,15 @@
       this.level = initialData.level;
       this.problem = initialData.problem;
       this.solution = initialData.solution || {};
-      this.resolution = initialData.resolution;
 
       this.savingSolution = false;
       this.solutionSaved = false;
-      original.solution = this.solution.solution;
+      original.solution = (
+        this.solution &&
+        this.solution.payload &&
+        this.solution.payload.solution
+      );
       this.profileNeedsUpdate = this.currentUser && !this.currentUser.$completed();
-
-      function cleanProfile() {
-        self.currentUser.country = spfFirebase.cleanObj(self.currentUser.country);
-        self.currentUser.school = spfFirebase.cleanObj(self.currentUser.school);
-      }
 
       this.register = function(currentUser) {
         cleanProfile();
@@ -435,19 +434,7 @@
         return;
       }
 
-      spfNavBarService.update(
-        this.problem.title,
-        [{
-          title: 'Paths',
-          url: '#' + urlFor('paths')
-        }, {
-          title: this.path.title,
-          url: '#' + urlFor('levels', {pathId: this.path.$id})
-        }, {
-          title: this.level.title,
-          url: '#' + urlFor('problems', {pathId: this.path.$id, levelId: this.level.$id})
-        }], []
-      );
+      init();
 
       this.solve = function(currentUser, problem, solution) {
         var next;
@@ -473,18 +460,17 @@
         next.then(function() {
           self.profileNeedsUpdate = !self.currentUser.$completed();
         }).then(function() {
-          return spfDataStore.solutions.create(problem, currentUser.publicId, solution);
+          return self.solution.$submit(solution);
         }).then(function() {
           spfAlert.success('Solution saved');
-          return spfDataStore.verifierStatus();
-        }).then(function(serverInfo) {
-          self.serverIsRunning = serverInfo.status === 'running';
+        }).then(function() {
+          self.solution.$monitorTask();
         }).catch(function(err) {
           spfAlert.error(err.message || err.toString());
         }).finally(function() {
           self.savingSolution = false;
           self.solutionSaved = true;
-          original.solution = solution.solution;
+          original.solution = solution;
         });
       };
 
@@ -493,8 +479,53 @@
       };
 
       this.solutionChanged = function(solution) {
-        this.solutionSaved = this.solutionSaved && original.solution === solution.solution;
+        this.solutionSaved = this.solutionSaved && original.solution === solution;
       };
+
+      function init() {
+        var fns = [
+          self.profile,
+          self.path,
+          self.level,
+          self.problem,
+          self.solution
+        ].map(function(obj) {
+          return obj && obj.$destroy && obj.$destroy.bind && obj.$destroy.bind(obj);
+        }).filter(function(fn) {
+          return angular.isFunction(fn);
+        });
+
+        $scope.$on('$destroy', function() {
+          fns.map(function(fn) {
+            try {
+              fn();
+            } catch (e) {
+              $log.error(e);
+            }
+          });
+        });
+
+        spfNavBarService.update(
+          self.problem.title,
+          [{
+            title: 'Paths',
+            url: '#' + urlFor('paths')
+          }, {
+            title: self.path.title,
+            url: '#' + urlFor('levels', {pathId: self.path.$id})
+          }, {
+            title: self.level.title,
+            url: '#' + urlFor('problems', {pathId: self.path.$id, levelId: self.level.$id})
+          }], []
+        );
+
+        return fns;
+      }
+
+      function cleanProfile() {
+        self.currentUser.country = spfFirebase.cleanObj(self.currentUser.country);
+        self.currentUser.school = spfFirebase.cleanObj(self.currentUser.school);
+      }
     }
   ])
 

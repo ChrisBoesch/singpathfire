@@ -22,7 +22,7 @@
     </div>
 
     <div ng-if="ctrl.profile">
-        <form name="solutionForm" ng-submit="ctrl.solve(ctrl.currentUser, ctrl.problem, ctrl.solution)">
+        <form name="solutionForm" ng-submit="ctrl.solve(ctrl.currentUser, ctrl.problem, ctrl.solution.payload.solution)">
 
             <div class="details">
                 <div layout layout-align="center start">
@@ -44,9 +44,9 @@
             <spf-sign-form current-user="ctrl.currentUser" ng-if="ctrl.profileNeedsUpdate"></spf-sign-form>
 
             <div layout layout-sm="column" layout-padding>
-                <spf-editor-container flex ng-if="!ctrl.resolution.$solved()">
+                <spf-editor-container flex ng-if="!ctrl.solution.meta.solved">
                     <label>Solution</label>
-                    <textarea name="problemSolution" ng-model="ctrl.solution.solution" columns="1" required ng-minlength="3" ng-maxlength="8192" spf-editor="{{ctrl.problem.language}}" ng-change="ctrl.solutionChanged(ctrl.solution)"></textarea>
+                    <textarea name="problemSolution" ng-model="ctrl.solution.payload.solution" columns="1" required ng-minlength="3" ng-maxlength="8192" spf-editor="{{ctrl.problem.language}}" ng-change="ctrl.solutionChanged(ctrl.solution.payload.solution)"></textarea>
                     <div ng-messages="solutionForm.problemSolution.$error">
                         <div ng-message="required">This is required.</div>
                         <div ng-message="minlength">The solution has to be more than 1 characters long.</div>
@@ -60,32 +60,46 @@
                 </spf-editor-container>
             </div>
 
-            <div ng-if="ctrl.solutionSaved &amp;&amp; !ctrl.resolution.output" layout="column" layout-align="center center">
+            <div ng-if="ctrl.solutionSaved &amp;&amp; !ctrl.solution.meta.verified" layout="column" layout-align="center center">
                 <md-progress-circular md-mode="indeterminate"></md-progress-circular>
-                <p ng-if="!ctrl.serverIsRunning">
-                    The verification server is not running yet.
-                    it will need one or two minutes to start.
-                    Sorry for the delay...
-                </p>
-                <p ng-if="ctrl.serverIsRunning">Waiting for result...</p>
+                <p>Waiting for result...</p>
             </div>
 
-            <div layout layout-align="center center" layout-align="center center" ng-if="ctrl.resolution.$solved()">
+            <div layout layout-align="center center" layout-align="center center" ng-if="ctrl.solution.meta.solved">
                 <p class="solution-solved">Solved!</p>
             </div>
 
-            <div layout layout-align="center center" layout-align="center center" ng-if="ctrl.resolution.output &amp;&amp; !ctrl.resolution.output.solved">
+            <div layout layout-align="center center" layout-align="center center" ng-if="ctrl.solution.meta.verified && !ctrl.solution.meta.solved">
                 <p class="solution-failed">It didn't work... Try again.</p>
             </div>
 
-            <div ng-if="ctrl.resolution.output" ng-switch on="ctrl.problem.language">
-                <div ng-switch-when="python" layout layout-align="center center" class="solution-result python-result">
+            <div ng-if="ctrl.solution.meta.verified" ng-switch on="ctrl.problem.language">
+                <div ng-switch-when="java" layout layout-align="center center" class="solution-result java-result">
 
-                    <div ng-if="ctrl.resolution.output.errors" class="md-whiteframe-z1 solution-errors">
-                        {{ctrl.resolution.output.errors}}
+                    <div ng-if="ctrl.solution.results[ctrl.solution.meta.taskId].errors" class="md-whiteframe-z1 solution-errors">
+                        {{ctrl.solution.results[ctrl.solution.meta.taskId].errors}}
                     </div>
 
-                    <table class="md-whiteframe-z1" ng-class="{'solved': ctrl.resolution.$solved()}" ng-if="!(ctrl.resolution.output.results|spfEmpty)">
+                    <table class="md-whiteframe-z1" ng-class="{'solved': ctrl.solution.meta.solved}" ng-if="!(ctrl.solution.results[ctrl.solution.meta.taskId].results|spfEmpty)">
+                        <thead>
+                            <th>Call</th>
+                            <th>Correct</th>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="test in ctrl.solution.results[ctrl.solution.meta.taskId].results" ng-class="{'failed': !test.correct}">
+                                <td>{{test.call}}</td>
+                                <td>{{test.correct}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div ng-switch-when="python" layout layout-align="center center" class="solution-result python-result">
+
+                    <div ng-if="ctrl.solution.results[ctrl.solution.meta.taskId].errors" class="md-whiteframe-z1 solution-errors">
+                        {{ctrl.solution.results[ctrl.solution.meta.taskId].errors}}
+                    </div>
+
+                    <table class="md-whiteframe-z1" ng-class="{'solved': ctrl.solution.meta.solved}" ng-if="!(ctrl.solution.results[ctrl.solution.meta.taskId].results|spfEmpty)">
                         <thead>
                             <th>Call</th>
                             <th>Expected</th>
@@ -93,7 +107,7 @@
                             <th>Correct</th>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="test in ctrl.resolution.output.results" ng-class="{'failed': !test.correct}">
+                            <tr ng-repeat="test in ctrl.solution.results[ctrl.solution.meta.taskId].results" ng-class="{'failed': !test.correct}">
                                 <td>{{test.call}}</td>
                                 <td>{{test.expected}}</td>
                                 <td>{{test.received}}</td>
@@ -102,39 +116,21 @@
                         </tbody>
                     </table>
                 </div>
-                <div ng-switch-when="java" layout layout-align="center center" class="solution-result java-result">
 
-                    <div ng-if="ctrl.resolution.output.errors" class="md-whiteframe-z1 solution-errors">
-                        {{ctrl.resolution.output.errors}}
-                    </div>
-
-                    <table class="md-whiteframe-z1" ng-class="{'solved': ctrl.resolution.$solved()}" ng-if="!(ctrl.resolution.output.results|spfEmpty)">
-                        <thead>
-                            <th>Call</th>
-                            <th>Correct</th>
-                        </thead>
-                        <tbody>
-                            <tr ng-repeat="test in ctrl.resolution.output.results" ng-class="{'failed': !test.correct}">
-                                <td>{{test.call}}</td>
-                                <td>{{test.correct}}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
                 <div ng-switch-when="javascript" layout layout-align="center center" class="solution-result javascript-result">
 
-                    <div ng-if="ctrl.resolution.output.errors" class="md-whiteframe-z1 solution-errors">
-                        {{ctrl.resolution.output.errors}}
+                    <div ng-if="ctrl.solution.results[ctrl.solution.meta.taskId].errors" class="md-whiteframe-z1 solution-errors">
+                        {{ctrl.solution.results[ctrl.solution.meta.taskId].errors}}
                     </div>
 
-                    <table class="md-whiteframe-z1" ng-class="{'solved': ctrl.resolution.$solved()}" ng-if="!(ctrl.resolution.output.results|spfEmpty)">
+                    <table class="md-whiteframe-z1" ng-class="{'solved': ctrl.solution.meta.solved}" ng-if="!(ctrl.solution.results[ctrl.solution.meta.taskId].results|spfEmpty)">
                         <thead>
                             <th>Name</th>
                             <th>Correct</th>
                             <th>Error</th>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="test in ctrl.resolution.output.results" ng-class="{'failed': !test.correct}">
+                            <tr ng-repeat="test in ctrl.solution.results[ctrl.solution.meta.taskId].results" ng-class="{'failed': !test.correct}">
                                 <td>{{test.test}}</td>
                                 <td>{{test.correct}}</td>
                                 <td><span ng-if="test.error">{{test.error}}</span></td>
@@ -144,11 +140,11 @@
                 </div>
                 <div ng-switch-when="angularjs" layout layout-align="center center" class="solution-result angularjs-result">
 
-                    <div ng-if="ctrl.resolution.output.errors" class="md-whiteframe-z1 solution-errors">
-                        {{ctrl.resolution.output.errors}}
+                    <div ng-if="ctrl.solution.results[ctrl.solution.meta.taskId].errors" class="md-whiteframe-z1 solution-errors">
+                        {{ctrl.solution.results[ctrl.solution.meta.taskId].errors}}
                     </div>
 
-                    <table class="md-whiteframe-z1" ng-class="{'solved': ctrl.resolution.$solved()}" ng-repeat="result in ctrl.resolution.output.results">
+                    <table class="md-whiteframe-z1" ng-class="{'solved': ctrl.solution.meta.solved}" ng-repeat="result in ctrl.solution.results[ctrl.solution.meta.taskId].results">
                         <thead>
                             <tr>
                                 <th colspan="2">{{result.description}}</th>
@@ -169,8 +165,8 @@
             </div>
 
             <div layout="row" layout-align="center center" layout-padding>
-                <md-button flex="25" flex-sm="50" type="submit" class="md-raised md-primary" ng-disabled="!solutionForm.$valid || ctrl.savingSolution || ctrl.solutionSaved || ctrl.resolution.$solved()">Run Solution</md-button>
-                <md-button flex="25" flex-sm="50" type="reset" class="md-raised" ng-click="ctrl.reset(ctrl.solution)" ng-disabled="ctrl.resolution.$solved()">Reset</md-button>
+                <md-button flex="25" flex-sm="50" type="submit" class="md-raised md-primary" ng-disabled="!solutionForm.$valid || ctrl.savingSolution || ctrl.solutionSaved || ctrl.solution.meta.solved">Run Solution</md-button>
+                <md-button flex="25" flex-sm="50" type="reset" class="md-raised" ng-click="ctrl.reset(ctrl.solution)" ng-disabled="ctrl.solution.meta.solved">Reset</md-button>
             </div>
         </form>
     </div>
