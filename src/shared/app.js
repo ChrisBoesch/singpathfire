@@ -649,6 +649,7 @@
          */
         register: function(userDataObj) {
           var gravatarBaseUrl = '//www.gravatar.com/avatar/';
+          var email, name;
 
           if (angular.isUndefined(userDataObj)) {
             return $q.reject(new Error('A user should be logged in to register'));
@@ -660,12 +661,22 @@
             return $q.when(userDataObj);
           }
 
+          if (spfAuth.user.provider === 'google') {
+            email = spfAuth.user.google.email;
+            name = spfAuth.user.google.displayName;
+          } else if (spfAuth.user.provider === 'custom') {
+            email = 'custom@example.com';
+            name = 'Custom User';
+          } else {
+            return $q.reject(new Error('Wrong provider: ' + spfAuth.user.provider));
+          }
+
           userDataObj.$value = {
             id: spfAuth.user.uid,
-            fullName: spfAuth.user.google.displayName,
-            displayName: spfAuth.user.google.displayName,
-            email: spfAuth.user.google.email,
-            gravatar: gravatarBaseUrl + spfCrypto.md5(spfAuth.user.google.email),
+            fullName: name,
+            displayName: name,
+            email: email,
+            gravatar: gravatarBaseUrl + spfCrypto.md5(email),
             createdAt: {
               '.sv': 'timestamp'
             }
