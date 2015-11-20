@@ -333,7 +333,7 @@
 
         beforeEach(function() {
           problems = {};
-          profile = {},
+          profile = {};
           deps = {
             $log: jasmine.createSpyObj('$log', ['error']),
             clmDataStore: {
