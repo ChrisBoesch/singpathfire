@@ -630,6 +630,7 @@
                   owner: ownerId,
                   payload: payload,
                   solutionRef: solutionPath.join('/'),
+                  createdAt: spfFirebase.ServerValue.TIMESTAMP,
                   started: false,
                   completed: false,
                   consumed: false
