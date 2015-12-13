@@ -466,19 +466,15 @@
                * @return {Promise}              Resolves when the task is enqueued.
                */
               $submit: function(solution) {
-                var self = this;
-                var taskId, payload;
+                var payload;
 
                 payload = {
                   language: problem.language,
                   solution: solution,
                   tests: problem.tests
                 };
-                taskId = spfFirebase.ref(['singpath/queues', queueId, 'tasks']).push().key();
 
-                return this.$saveSolution(taskId, payload).then(function(path) {
-                  return self.$saveTask(taskId, userUid, path, payload);
-                });
+                return this.$saveSolution(userUid, payload);
               },
 
               /**
@@ -536,15 +532,19 @@
               $updateProfile: function(solved, duration) {
                 var self = this;
 
-                return spfFirebase.set([
-                  'singpath/userProfiles', publicId, 'queuedSolutions',
-                  pathId, levelId, problemId, queueId
-                ], {
+                return spfFirebase.set(this.$profilePath(), {
                   startedAt: self.meta.startedAt,
                   solved: solved || false,
                   duration: duration || null,
                   language: problem.language
                 });
+              },
+
+              $profilePath: function() {
+                return [
+                  'singpath', 'userProfiles', publicId, 'queuedSolutions',
+                  pathId, levelId, problemId, queueId
+                ];
               },
 
               /**
@@ -553,11 +553,14 @@
                * @private
                */
               $updateHistory: function(duration) {
-                spfFirebase.set([
-                  'singpath/queuedSolutions',
-                  pathId, levelId, problemId, publicId, queueId,
-                  'meta/history', this.meta.startedAt
-                ], duration || null);
+                spfFirebase.set(this.$historyPath(), duration || null);
+              },
+
+              $historyPath: function() {
+                return [
+                  'singpath', 'queuedSolutions', pathId, levelId, problemId,
+                  publicId, queueId, 'meta/history', this.meta.startedAt
+                ];
               },
 
               /**
@@ -586,12 +589,24 @@
                   return $q.reject(new Error('The solution did not solved the problem'));
                 }
 
-                var duration = this.meta.endedAt - this.meta.startedAt;
+                var profilePath = this.$profilePath().slice(1).join('/');
+                var historyPath = this.$historyPath().slice(1).join('/');
 
-                return $q.all(
-                  this.$updateProfile(true, duration),
-                  this.$updateHistory(duration)
-                ).then(function() {
+                var profileData = {
+                  startedAt: self.meta.startedAt,
+                  solved: true,
+                  duration: this.meta.endedAt - this.meta.startedAt,
+                  language: problem.language
+                };
+
+                var data = {};
+
+                data[historyPath] = profileData.duration;
+                Object.keys(profileData).forEach(function(key) {
+                  data[profilePath + '/' + key] = profileData[key];
+                });
+
+                return spfFirebase.patch('singpath', data).then(function() {
                   return self;
                 });
               },
@@ -601,32 +616,26 @@
                *
                * @private
                */
-              $saveSolution: function(taskId, payload) {
+              $saveSolution: function(ownerId, payload) {
+                var taskId = spfFirebase.ref(['singpath/queues', queueId, 'tasks']).push().key();
                 var solutionPath = [
-                  'singpath/queuedSolutions',
+                  'singpath', 'queuedSolutions',
                   pathId, levelId, problemId, publicId, queueId
                 ];
-
-                return spfFirebase.patch(solutionPath, {
+                var taskPath = [
+                  'singpath', 'queues', queueId, 'tasks', taskId
+                ];
+                var taskPathStr = taskPath.slice(1).join('/');
+                var solutionPathStr = solutionPath.slice(1).join('/');
+                var data = {};
+                var solutionData = {
                   'meta/endedAt': spfFirebase.ServerValue.TIMESTAMP,
                   'meta/taskId': taskId,
                   'meta/verified': false,
                   'meta/solved': false,
                   'payload': payload
-                }).then(function() {
-                  return solutionPath;
-                });
-              },
-
-              /**
-               * Add the task to the task queue.
-               *
-               * @private
-               */
-              $saveTask: function(taskId, ownerId, solutionPath, payload) {
-                return spfFirebase.set([
-                  'singpath/queues', queueId, 'tasks', taskId
-                ], {
+                };
+                var taskData = {
                   owner: ownerId,
                   payload: payload,
                   solutionRef: solutionPath.join('/'),
@@ -634,7 +643,17 @@
                   started: false,
                   completed: false,
                   consumed: false
+                };
+
+                Object.keys(solutionData).forEach(function(key) {
+                  data[solutionPathStr + '/' + key] = solutionData[key];
                 });
+
+                Object.keys(taskData).forEach(function(key) {
+                  data[taskPathStr + '/' + key] = taskData[key];
+                });
+
+                return spfFirebase.patch('/singpath', data);
               }
             });
           }
