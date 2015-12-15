@@ -3,7 +3,7 @@
     <p ng-if="ctrl.paths|spfEmpty">No path found.</p>
 
     <md-list>
-        <md-list-item class="md-3-line" ng-repeat="path in ctrl.paths">
+        <md-list-item class="md-3-line" ng-repeat="path in ctrl.paths" ng-if="path.language !== 'angularjs'">
             <div class="language-icon" >
                 <md-icon md-svg-icon="language:{{path.language}}" alt="{{path.language}}"></md-icon>
             </div>
