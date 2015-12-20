@@ -390,7 +390,6 @@
     'clmServicesUrl',
     function ClmSpfProfileCtrl($q, $log, clmDataStore, clmServicesUrl) {
       var self = this;
-      var lookUpPromise;
 
       this.loading = true;
       this.stats = {
@@ -400,62 +399,18 @@
       this.singpathUrl = clmServicesUrl.singPath;
 
       // Count problems by language
-      // and resolve to a map of problemPath -> problem.
-      //
-      // TODO: each solution record in the user profile should include
-      // the problem language.
-      lookUpPromise = clmDataStore.singPath.allProblems().then(function(paths) {
-        return Object.keys(paths || {}).reduce(function(result, pathKey) {
-          var levels = paths[pathKey] || {};
-
-          Object.keys(levels).forEach(function(levelKey) {
-            var problems = levels[levelKey] || {};
-
-            Object.keys(problems).forEach(function(problemKey) {
-              var path = [pathKey, levelKey, problemKey].join('/');
-              var language = problems[problemKey].language;
-
-              result.lookUp[path] = language;
-              result.count[language] = (result.count[language] || 0) + 1;
-            });
-          });
-
-          return result;
-        }, {lookUp: {}, count: {}});
-      }).then(function(languageStats) {
-        self.stats.total = languageStats.count;
-        return languageStats.lookUp;
+      var total = clmDataStore.singPath.allProblems().then(function(paths) {
+        return clmDataStore.singPath.countProblems(paths);
       });
 
-      // Count the number of problem the user solved
-      // by language.
-      $q.all({
-        lookUp: lookUpPromise,
-        profile: clmDataStore.singPath.profile(self.publicId)
-      }).then(function(data) {
-        var paths = data.profile.solutions || {};
+      // Count solved problem by language
+      var user = clmDataStore.singPath.profile(self.publicId).then(function(profile) {
+        return clmDataStore.singPath.countSolvedSolutionPerLanguage(profile);
+      });
 
-        return Object.keys(paths).reduce(function(result, pathKey) {
-          var levels = paths[pathKey] || {};
-
-          Object.keys(levels).forEach(function(levelKey) {
-            var problems = levels[levelKey] || {};
-
-            Object.keys(problems).forEach(function(problemKey) {
-              var path = [pathKey, levelKey, problemKey].join('/');
-              var language = data.lookUp[path];
-
-              if (problems[problemKey].solved) {
-                result[language] = (result[language] || 0) + 1;
-              }
-            });
-          });
-
-          return result;
-        }, {});
-      }).then(function(languageStats) {
-        self.stats.user = languageStats;
-        return languageStats;
+      $q.all({total: total, user: user}).then(function(stats) {
+        self.stats = stats;
+        return stats;
       }).catch(function(err) {
         $log.error(err);
       }).finally(function() {

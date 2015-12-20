@@ -44,7 +44,7 @@
         // });
 
         describe('playProblemCtrlInitialData', function() {
-          var $rootScope, $q, $route, urlFor, spfAuth, spfAuthData, spfDataStore, init;
+          var $rootScope, $q, $route, urlFor, spfAuth, spfAuthData, spfDataStore, init, solution;
 
           beforeEach(function() {
             $route = jasmine.createSpyObj('$route', ['reload']);
@@ -55,7 +55,6 @@
             spfDataStore.paths = jasmine.createSpyObj('spfDataStore.paths', ['get']);
             spfDataStore.levels = jasmine.createSpyObj('spfDataStore.levels', ['get']);
             spfDataStore.problems = jasmine.createSpyObj('spfDataStore.problems', ['get']);
-            spfDataStore.resolutions = jasmine.createSpyObj('spfDataStore.resolutions', ['get']);
             spfDataStore.solutions = jasmine.createSpyObj('spfDataStore.solutions', ['get']);
 
             $route.current = {
@@ -75,6 +74,12 @@
             $rootScope = _$rootScope_;
             $q = _$q_;
             init = playProblemCtrlInitialData;
+
+            solution = jasmine.createSpyObj('userSolution', [
+              '$isStarted', '$reset', '$register', '$submit', '$monitor'
+            ]);
+
+            spfDataStore.solutions.get.and.returnValue($q.when(solution));
           }));
 
           it('should resolve to an empty object if the user is not logged in', function() {
@@ -144,7 +149,6 @@
             expect(spfDataStore.paths.get).toHaveBeenCalledWith('pathId');
             expect(spfDataStore.levels.get).toHaveBeenCalledWith('pathId', 'levelId');
             expect(spfDataStore.problems.get).toHaveBeenCalledWith('pathId', 'levelId', 'problemId');
-            expect(spfDataStore.resolutions.get).toHaveBeenCalledWith('pathId', 'levelId', 'problemId', 'bob');
           });
 
           it('should reject if the problem is missing', function() {
@@ -152,11 +156,10 @@
             var resolution = jasmine.createSpyObj('resolution', ['$init', '$solved']);
             var err;
 
-            spfAuth.user = {uid: 'google:1234'};
+            spfAuth.user = {uid: 'google:1234', provider: 'google'};
             spfAuthData.user.and.returnValue($q.when(authData));
             spfDataStore.profile.and.returnValue({$id: 'bob', $value: null});
             spfDataStore.problems.get.and.returnValue({$id: 'problemId', $value: null});
-            spfDataStore.resolutions.get.and.returnValue(resolution);
             resolution.$init.and.returnValue($q.when());
 
             init().catch(function(e) {
@@ -168,83 +171,69 @@
             expect(err).toEqual(new Error('Problem not found.'));
           });
 
-          it('should start new resolution if one is not started', function() {
-            var authData = {displayName: 'bob smith', publicId: 'bob'};
-            var resolution = jasmine.createSpyObj('resolution', ['$init', '$solved']);
+          it('should query the user solution', function() {
+            var authData = {displayName: 'bob smith', publicId: 'bob', $id: 'bob'};
+            var problem = {$id: 'problemId'};
 
             spfAuth.user = {uid: 'google:1234'};
             spfAuthData.user.and.returnValue($q.when(authData));
             spfDataStore.profile.and.returnValue({$id: 'bob'});
-            spfDataStore.problems.get.and.returnValue({$id: 'problemId'});
-            spfDataStore.resolutions.get.and.returnValue(resolution);
-            resolution.$init.and.returnValue($q.when());
+            spfDataStore.problems.get.and.returnValue(problem);
+
+            solution.$isStarted.and.returnValue(false);
+            solution.$reset.and.returnValue($q.when());
+            solution.$register.and.returnValue($q.when());
 
             init();
 
             $rootScope.$apply();
-            expect(resolution.$init).toHaveBeenCalled();
+
+            expect(spfDataStore.solutions.get).toHaveBeenCalledWith(problem, authData);
           });
 
-          it('should not start the resolution if it is started already', function() {
+          it('should start the solution if it is not started', function() {
             var authData = {displayName: 'bob smith', publicId: 'bob'};
-            var resolution = jasmine.createSpyObj('resolution', ['$init', '$solved']);
 
             spfAuth.user = {uid: 'google:1234'};
             spfAuthData.user.and.returnValue($q.when(authData));
             spfDataStore.profile.and.returnValue({$id: 'bob'});
             spfDataStore.problems.get.and.returnValue({$id: 'problemId'});
-            spfDataStore.resolutions.get.and.returnValue(resolution);
-            resolution.startedAt = 1234;
+
+            solution.$isStarted.and.returnValue(false);
+            solution.$reset.and.returnValue($q.when());
+            solution.$register.and.returnValue($q.when());
 
             init();
 
             $rootScope.$apply();
-            expect(resolution.$init).not.toHaveBeenCalled();
+
+            expect(solution.$reset).toHaveBeenCalled();
+            expect(solution.$register).not.toHaveBeenCalled();
           });
 
-          it('should query the user solution if the problem is not solved', function() {
+          it('should not start the solution if it is started already', function() {
             var authData = {displayName: 'bob smith', publicId: 'bob'};
-            var resolution = jasmine.createSpyObj('resolution', ['$init', '$solved']);
+            var profile = {$id: 'bob'};
 
             spfAuth.user = {uid: 'google:1234'};
             spfAuthData.user.and.returnValue($q.when(authData));
-            spfDataStore.profile.and.returnValue({$id: 'bob'});
+            spfDataStore.profile.and.returnValue(profile);
             spfDataStore.problems.get.and.returnValue({$id: 'problemId'});
-            spfDataStore.resolutions.get.and.returnValue(resolution);
-            resolution.startedAt = 1234;
-            resolution.$solved.and.returnValue(false);
+
+            solution.$isStarted.and.returnValue(true);
+            solution.$reset.and.returnValue($q.when());
+            solution.$register.and.returnValue($q.when());
 
             init();
 
             $rootScope.$apply();
-            expect(
-              spfDataStore.solutions.get
-            ).toHaveBeenCalledWith(
-              'pathId', 'levelId', 'problemId', 'bob'
-            );
-          });
 
-          it('should not query the user solution if the problem is solved', function() {
-            var authData = {displayName: 'bob smith', publicId: 'bob'};
-            var resolution = jasmine.createSpyObj('resolution', ['$init', '$solved']);
-
-            spfAuth.user = {uid: 'google:1234'};
-            spfAuthData.user.and.returnValue($q.when(authData));
-            spfDataStore.profile.and.returnValue({$id: 'bob'});
-            spfDataStore.problems.get.and.returnValue({$id: 'problemId'});
-            spfDataStore.resolutions.get.and.returnValue(resolution);
-            resolution.startedAt = 1234;
-            resolution.$solved.and.returnValue(true);
-
-            init();
-
-            $rootScope.$apply();
-            expect(spfDataStore.solutions.get).not.toHaveBeenCalled();
+            expect(solution.$reset).not.toHaveBeenCalled();
+            expect(solution.$register).toHaveBeenCalledWith(profile);
           });
 
           it('should resolved to the problem data', function() {
             var authData = {displayName: 'bob smith', publicId: 'bob'};
-            var resolution = jasmine.createSpyObj('resolution', ['$init', '$solved']);
             var actual;
             var path = {};
             var level = {};
@@ -256,9 +245,9 @@
             spfDataStore.paths.get.and.returnValue(path);
             spfDataStore.levels.get.and.returnValue(level);
             spfDataStore.problems.get.and.returnValue(problem);
-            spfDataStore.resolutions.get.and.returnValue(resolution);
-            resolution.startedAt = 1234;
-            resolution.$solved.and.returnValue(true);
+            solution.$isStarted.and.returnValue(true);
+            solution.$reset.and.returnValue($q.when());
+            solution.$register.and.returnValue($q.when());
 
             init().then(function(data) {
               actual = data;
@@ -268,35 +257,11 @@
             expect(actual.path).toBe(path);
             expect(actual.level).toBe(level);
             expect(actual.problem).toBe(problem);
-            expect(actual.resolution).toBe(resolution);
-          });
-
-          it('should resolve to the solution if the problem is not solved', function() {
-            var authData = {displayName: 'bob smith', publicId: 'bob'};
-            var resolution = jasmine.createSpyObj('resolution', ['$init', '$solved']);
-            var actual;
-            var solution = {};
-
-            spfAuth.user = {uid: 'google:1234'};
-            spfAuthData.user.and.returnValue($q.when(authData));
-            spfDataStore.profile.and.returnValue({$id: 'bob'});
-            spfDataStore.problems.get.and.returnValue({});
-            spfDataStore.resolutions.get.and.returnValue(resolution);
-            spfDataStore.solutions.get.and.returnValue(solution);
-            resolution.startedAt = 1234;
-            resolution.$solved.and.returnValue(false);
-
-            init().then(function(data) {
-              actual = data;
-            });
-
-            $rootScope.$apply();
             expect(actual.solution).toBe(solution);
           });
 
           it('should resolve to user profile', function() {
             var authData = {displayName: 'bob smith', publicId: 'bob'};
-            var resolution = jasmine.createSpyObj('resolution', ['$init', '$solved']);
             var actual;
             var profile = {$id: 'bob'};
 
@@ -304,9 +269,9 @@
             spfAuthData.user.and.returnValue($q.when(authData));
             spfDataStore.profile.and.returnValue(profile);
             spfDataStore.problems.get.and.returnValue({});
-            spfDataStore.resolutions.get.and.returnValue(resolution);
-            resolution.startedAt = 1234;
-            resolution.$solved.and.returnValue(true);
+            solution.$isStarted.and.returnValue(true);
+            solution.$reset.and.returnValue($q.when());
+            solution.$register.and.returnValue($q.when());
 
             init().then(function(data) {
               actual = data;

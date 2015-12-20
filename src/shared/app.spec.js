@@ -872,6 +872,7 @@
           spfAuth = {
             user: {
               uid: 'google:1',
+              provider: 'google',
               google: {
                 displayName: 'Bob Smith',
                 email: 'bob@example.com'

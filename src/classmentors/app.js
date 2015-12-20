@@ -902,16 +902,14 @@
               return false;
             }
 
-            var path = task.singPathProblem.path.id;
-            var level = task.singPathProblem.level.id;
-            var problem = task.singPathProblem.problem.id;
+            var queueId = 'default';
 
-            return (
-              profile.solutions &&
-              profile.solutions[path] &&
-              profile.solutions[path][level] &&
-              profile.solutions[path][level][problem] &&
-              profile.solutions[path][level][problem].solved
+            return clmDataStore.singPath.hasSolved(
+              profile,
+              task.singPathProblem.path.id,
+              task.singPathProblem.level.id,
+              task.singPathProblem.problem.id,
+              queueId
             );
           },
 
@@ -934,24 +932,9 @@
           },
 
           _solvedProblems: function(singPathProfile) {
-            if (
-              !singPathProfile ||
-              !singPathProfile.solutions
-            ) {
-              return 0;
-            }
+            var queueId = 'default';
 
-            return Object.keys(singPathProfile.solutions).map(function(pathId) {
-              return Object.keys(singPathProfile.solutions[pathId]).map(function(levelId) {
-                return Object.keys(singPathProfile.solutions[pathId][levelId]).filter(function(problemId) {
-                  return singPathProfile.solutions[pathId][levelId][problemId].solved === true;
-                }).length;
-              }).reduce(function(sum, count) {
-                return sum + count;
-              }, 0);
-            }).reduce(function(sum, count) {
-              return sum + count;
-            }, 0);
+            return clmDataStore.singPath.countSolvedSolution(singPathProfile, queueId);
           },
 
           _getProgress: function(tasks, data) {
@@ -1494,6 +1477,67 @@
             });
           },
 
+          hasSolved: function(profile, pathId, levelId, problemId, queueId) {
+            return (
+              profile &&
+              profile.queuedSolutions &&
+              profile.queuedSolutions[pathId] &&
+              profile.queuedSolutions[pathId][levelId] &&
+              profile.queuedSolutions[pathId][levelId][problemId] &&
+              profile.queuedSolutions[pathId][levelId][problemId][queueId] &&
+              profile.queuedSolutions[pathId][levelId][problemId][queueId].solved
+            );
+          },
+
+          countSolvedSolution: function(profile, queueId) {
+            var solutions = profile && profile.queuedSolutions;
+
+            if (!solutions) {
+              return 0;
+            }
+
+            queueId = queueId || 'default';
+            return Object.keys(solutions).map(function(pathId) {
+              return Object.keys(solutions[pathId]).map(function(levelId) {
+                return Object.keys(solutions[pathId][levelId]).filter(function(problemId) {
+                  return (
+                    solutions[pathId][levelId][problemId][queueId] &&
+                    solutions[pathId][levelId][problemId][queueId].solved === true
+                  );
+                }).length;
+              }).reduce(function(sum, count) {
+                return sum + count;
+              }, 0);
+            }).reduce(function(sum, count) {
+              return sum + count;
+            }, 0);
+          },
+
+          countSolvedSolutionPerLanguage: function(profile, queueId) {
+            var paths = profile.queuedSolutions || {};
+
+            queueId = queueId || 'default';
+            return Object.keys(paths).reduce(function(result, pathKey) {
+              var levels = paths[pathKey] || {};
+
+              Object.keys(levels).forEach(function(levelKey) {
+                var problems = levels[levelKey] || {};
+
+                Object.keys(problems).forEach(function(problemKey) {
+                  var language = problems[problemKey][queueId].language;
+
+                  if (
+                    problems[problemKey][queueId] &&
+                    problems[problemKey][queueId].solved
+                  ) {
+                    result[language] = (result[language] || 0) + 1;
+                  }
+                });
+              });
+              return result;
+            }, {});
+          },
+
           /**
            * Return a map of available paths at SingPath
            *
@@ -1567,6 +1611,24 @@
            */
           allProblems: function() {
             return spfFirebase.valueAt(['singpath/problems']);
+          },
+
+          countProblems: function(paths) {
+            return Object.keys(paths || {}).reduce(function(result, pathKey) {
+              var levels = paths[pathKey] || {};
+
+              Object.keys(levels).forEach(function(levelKey) {
+                var problems = levels[levelKey] || {};
+
+                Object.keys(problems).forEach(function(problemKey) {
+                  var language = problems[problemKey].language;
+
+                  result[language] = (result[language] || 0) + 1;
+                });
+              });
+
+              return result;
+            }, {});
           }
         }
       };
