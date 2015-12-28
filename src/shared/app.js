@@ -692,13 +692,15 @@
             return $q.reject(new Error('The user has not set a user public id.'));
           }
 
-          return spfFirebase.set(['auth/publicIds', userSync.publicId], userSync.$id).then(function() {
-            return spfFirebase.set(['auth/usedPublicIds', userSync.publicId], true);
-          }, function(err) {
+          var data = {};
+
+          data['users/' + userSync.$id + '/publicId'] = userSync.publicId;
+          data['publicIds/' + userSync.publicId] = userSync.$id;
+          data['usedPublicIds/' + userSync.publicId] = true;
+
+          return spfFirebase.patch(['auth'], data).catch(function(err) {
             $log.info(err);
             return $q.reject(new Error('Failed to save public id. It might have already being used by an other user.'));
-          }).then(function() {
-            return userSync.$save();
           });
         },
 
