@@ -26,7 +26,7 @@
         </md-input-container>
     </div>
 
-    <div layout layout-sm="column">
+    <div layout layout-sm="column" ng-if="ctrl.publicIdIsReadOnly">
         <md-input-container flex layout="column">
             <md-select flex name="userCountry" ng-model="currentUser.country" required placeholder="Where are you from?">
                 <md-option ng-value="opt" ng-repeat="opt in ctrl.countries track by opt.code">{{opt.name}}</md-option>
