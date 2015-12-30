@@ -827,8 +827,9 @@
         ctrl = ctrlFn();
         $rootScope.$apply();
 
-        expect(ctrl.visibleTasks.length).toBe(1);
+        expect(ctrl.visibleTasks.length).toBe(2);
         expect(ctrl.visibleTasks[0].$id).toBe('someTaskId');
+        expect(ctrl.visibleTasks[1].$id).toBe('someClosedTaskId');
       });
 
       it('should set current user participation state', function() {
@@ -851,7 +852,7 @@
         ctrlFn.instance.tasks.push({$id: 'someTaskId'});
         ctrlFn.instance.tasks.push({$id: 'someOtherTaskId'});
         ctrlFn.instance.tasks.push({$id: 'someLastTaskId'});
-        ctrlFn.instance.tasks.push({$id: 'someClosedTaskId', closedAt: 123456});
+        ctrlFn.instance.tasks.push({$id: 'someArchivedTaskId', archived: true});
         ctrlFn.instance.progress.bob = {
           someTaskId: {completed: true},
           someOtherTaskId: {completed: true}
@@ -866,7 +867,7 @@
         expect(ctrl.taskCompletion.someTaskId).toBe(100);
         expect(ctrl.taskCompletion.someOtherTaskId).toBe(50);
         expect(ctrl.taskCompletion.someLastTaskId).toBe(0);
-        expect(ctrl.taskCompletion.someClosedTaskId).toBeUndefined();
+        expect(ctrl.taskCompletion.someArchivedTaskId).toBeUndefined();
       });
 
       it('should update task view when the tasks get updated', function() {
@@ -891,8 +892,9 @@
           fn();
         });
 
-        expect(ctrl.visibleTasks.length).toBe(1);
+        expect(ctrl.visibleTasks.length).toBe(2);
         expect(ctrl.visibleTasks[0].$id).toBe('someTaskId');
+        expect(ctrl.visibleTasks[1].$id).toBe('someClosedTaskId');
       });
 
       it('should update task completion rate when the tasks get updated', function() {

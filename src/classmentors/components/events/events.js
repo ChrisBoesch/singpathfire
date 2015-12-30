@@ -1066,7 +1066,7 @@
         }
 
         self.visibleTasks = self.tasks.filter(function(t) {
-          return !t.hidden && !t.archived && !t.closedAt;
+          return !t.hidden && !t.archived;
         });
 
         taskCompletion();
