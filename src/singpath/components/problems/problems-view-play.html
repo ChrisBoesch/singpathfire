@@ -165,7 +165,8 @@
             </div>
 
             <div layout="row" layout-align="center center" layout-padding>
-                <md-button flex="25" flex-sm="50" type="submit" class="md-raised md-primary" ng-disabled="!solutionForm.$valid || ctrl.savingSolution || ctrl.solutionSaved || ctrl.solution.meta.solved">Run Solution</md-button>
+                <md-button flex="25" flex-sm="50" type="submit" class="md-raised md-primary" ng-disabled="!solutionForm.$valid || ctrl.savingSolution || ctrl.solutionSaved" ng-if="!ctrl.solution.meta.solved">Run Solution</md-button>
+                <md-button flex="25" flex-sm="50" type="reset" ng-click="ctrl.retry()" class="md-raised md-primary" ng-if="ctrl.solution.meta.solved">Try again</md-button>
                 <md-button flex="25" flex-sm="50" type="reset" class="md-raised" ng-click="ctrl.reset(ctrl.solution)" ng-disabled="ctrl.solution.meta.solved">Reset</md-button>
             </div>
         </form>
