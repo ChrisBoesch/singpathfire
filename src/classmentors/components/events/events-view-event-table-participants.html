@@ -137,15 +137,15 @@
 
                     <td ng-repeat="task in ctrl.visibleTasks track by task.$id">
                         <div ng-if="ctrl.progress[participant.$id][task.$id].completed &amp;&amp; (ctrl.profile.$id == ctrl.event.owner.publicId || task.showProgress)">
-                            <span ng-if="!task.showLinks || (!task.textResponse &amp;&amp; !task.linkPattern)">
+                            <span ng-if="(!task.showLinks &amp;&amp; ctrl.profile.$id != ctrl.event.owner.publicId)) || (!task.textResponse &amp;&amp; !task.linkPattern)">
                                 Completed
                             </span>
 
-                            <span ng-if="task.textResponse &amp;&amp; task.showLinks">
+                            <span ng-if="task.textResponse &amp;&amp; (task.showLinks || ctrl.profile.$id == ctrl.event.owner.publicId)">
                                 {{ ctrl.solutions[participant.$id][task.$id] | cmTruncate: 10 }}
                             </span>
 
-                            <span ng-if="task.linkPattern &amp;&amp; task.showLinks">
+                            <span ng-if="task.linkPattern &amp;&amp; (task.showLinks || ctrl.profile.$id == ctrl.event.owner.publicId)">
                                 <a ng-href="{{ctrl.solutions[participant.$id][task.$id]}}" target="_blank">completed</a>
                             </span>
                         </div>
