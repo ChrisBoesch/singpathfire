@@ -436,6 +436,14 @@
 
       init();
 
+      this.retry = function() {
+        return self.solution.$reset().then(function() {
+          self.savingSolution = false;
+          self.solutionSaved = false;
+          original.solution = '';
+        });
+      };
+
       this.solve = function(currentUser, problem, solution) {
         var next;
 

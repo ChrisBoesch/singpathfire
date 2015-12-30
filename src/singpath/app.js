@@ -427,23 +427,33 @@
                */
               $reset: function() {
                 var self = this;
+                var resetData = {};
+                var baseSolutionPath = [
+                  'queuedSolutions', pathId, levelId, problemId, publicId, queueId
+                ].join('/');
+                var profilePath = [
+                  'userProfiles', publicId, 'queuedSolutions', pathId, levelId, problemId, queueId
+                ].join('/');
 
                 if (this.$isStarted() && !this.$isSolved()) {
                   return $q.reject(new Error('A problem can only be reset if it is solved'));
                 }
 
+                resetData[baseSolutionPath + '/meta/startedAt'] = spfFirebase.ServerValue.TIMESTAMP;
+                resetData[baseSolutionPath + '/meta/endedAt'] = null;
+                resetData[baseSolutionPath + '/meta/verified'] = false;
+                resetData[baseSolutionPath + '/meta/solved'] = false;
+                resetData[baseSolutionPath + '/meta/taskId'] = null;
+                resetData[baseSolutionPath + '/payload'] = null;
+                resetData[baseSolutionPath + '/results'] = null;
+
+                resetData[profilePath + '/duration'] = null;
+                resetData[profilePath + '/language'] = problem.language;
+                resetData[profilePath + '/solved'] = false;
+                resetData[profilePath + '/startedAt'] = spfFirebase.ServerValue.TIMESTAMP;
+
                 // 1. reset solution.
-                return spfFirebase.patch([
-                  'singpath/queuedSolutions', pathId, levelId, problemId, publicId, queueId
-                ], {
-                  'meta/startedAt': spfFirebase.ServerValue.TIMESTAMP,
-                  'meta/endedAt': null,
-                  'meta/verified': false,
-                  'meta/solved': false,
-                  'meta/taskId': null,
-                  'payload': null,
-                  'results': null
-                }).then(function() {
+                return spfFirebase.patch(['singpath'], resetData).then(function() {
                   return {
                     // 2a. load the payload empty record if it was missing
                     // (payload is not readeable when the solution is solved)
