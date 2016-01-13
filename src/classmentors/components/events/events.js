@@ -1418,6 +1418,10 @@
           self.currentUserSolutions = solutions;
           unwatchers.push(solutions.$destroy.bind(solutions));
           return solutions;
+        }),
+        singpathQueuedSolution: clmDataStore.singPath.queuedSolutions(this.profile.$id).then(function(paths) {
+          unwatchers.push(paths.$destroy.bind(paths));
+          return paths;
         })
       }).then(function(results) {
         visibleTasks();
@@ -1436,12 +1440,19 @@
       }).finally(function() {
         self.loading = false;
       }).then(function(results) {
-        return clmDataStore.events.updateCurrentUserProfile(
-          self.event,
-          self.tasks,
-          results.userSolution,
-          self.profile
-        );
+        var update = function() {
+          return clmDataStore.events.updateCurrentUserProfile(
+            self.event,
+            self.tasks,
+            results.userSolution,
+            self.profile
+          );
+        };
+
+        // Watch for singpath problem getting updated
+        unwatchers.push(results.singpathQueuedSolution.$watch(update));
+
+        return update();
       }).catch(function(err) {
         $log.error(err);
       });
