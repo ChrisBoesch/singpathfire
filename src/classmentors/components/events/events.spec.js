@@ -731,7 +731,7 @@
     });
 
     describe('ClmEventTableCtrl', function() {
-      var deps, ctrlFn, userProgress, userSolutions;
+      var deps, ctrlFn, userProgress, userSolutions, queuedSolutions;
 
       beforeEach(function() {
         deps = {
@@ -745,14 +745,20 @@
             events: jasmine.createSpyObj('events', [
               'submitSolution', 'updateCurrentUserProfile', 'removeParticpants',
               'getUserProgress', 'getUserSolutions'
-            ])
+            ]),
+            singPath: jasmine.createSpyObj('singPath', ['queuedSolutions'])
           }
         };
 
         userProgress = {$id: 'bob', $destroy: jasmine.createSpy('userProgressDestroy')};
         userSolutions = {$id: 'bob', $destroy: jasmine.createSpy('userSolutionsDestroy')};
+        queuedSolutions = {
+          $watch: jasmine.createSpy('queuedSolutionsWatch'),
+          $destroy: jasmine.createSpy('queuedSolutionsDestroy')
+        };
         deps.clmDataStore.events.getUserProgress.and.returnValue($q.when(userProgress));
         deps.clmDataStore.events.getUserSolutions.and.returnValue($q.when(userSolutions));
+        deps.clmDataStore.singPath.queuedSolutions.and.returnValue($q.when(queuedSolutions));
 
         // Binding the directive attributes to the controller instance
         // (undocumented feature of $controller).
