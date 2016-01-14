@@ -249,6 +249,38 @@
         problems: {
           errDeleteFailed: new Error('Failed to delete the problem and its solutions'),
 
+          defaults: {
+            python: '>>> hello\n"world"',
+
+            javascript: (
+              'test("foo is defined", () => assert.ok(foo));\n' +
+              'test("foo equals 1", () => assert.equal(1, foo))\n' +
+              'test("timer is defined", () => assert.ok(timer));\n' +
+              'test("timer is an async function", () => {\n' +
+              '  const now = Date.now();\n' +
+              '  \n' +
+              '  return new Promise(resolve => timer(100, resolve)).then(\n' +
+              '    () => assert.ok(Date.now() >= (now + 100))\n' +
+              '  );\n' +
+              '});\n'
+            ),
+
+            java: (
+              'import org.junit.Test;\n' +
+              'import static org.junit.Assert.*;\n' +
+              'import junit.framework.*;\n' +
+              'import com.singpath.SolutionRunner;\n' +
+              '\n' +
+              'public class SingPathTest extends SolutionRunner {\n' +
+              '\n' +
+              '    @Test\n' +
+              '    public void testSomething() throws Exception {\n' +
+              '        SingPath solution = new SingPath();\n' +
+              '    }\n' +
+              '}'
+            )
+          },
+
           _Factory: spfFirebase.objFactory({
             $canBeEditedBy: function(user) {
               return this.owner.publicId === user.publicId;
@@ -317,6 +349,10 @@
           errMissingPublicId: new Error('No public id for the solution'),
           errMissingUserData: new Error('No current user data. Is the user logged in?'),
           errMissingUserPublicId: new Error('The current user data have no public Id. Is the user registered?'),
+
+          defaults: {
+            java: 'public class SingPath {\n  \n}'
+          },
 
           /**
            * Return a solution object composed a meta, payload and results
@@ -465,7 +501,11 @@
                 }).then(function(data) {
                   // 3. add the payload firebaseObj to our solution object
                   self.payload = data.payload;
-                  self.payload.solution = problem.seed || '';
+                  self.payload.solution = (
+                    problem.seed ||
+                    spfDataStore.solutions.defaults[problem.language] ||
+                    ''
+                  );
                   return self;
                 });
               },
