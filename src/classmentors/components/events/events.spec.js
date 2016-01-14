@@ -1048,7 +1048,7 @@
       });
 
       it('should update the user participants state when the user SingPath solution progress is updated', function() {
-        var ctrl, onSolutionUpdate;
+        var ctrl;
 
         ctrlFn.instance.participants.push({$id: 'alice', user: {}});
 
