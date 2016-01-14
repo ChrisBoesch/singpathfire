@@ -465,6 +465,7 @@
                 }).then(function(data) {
                   // 3. add the payload firebaseObj to our solution object
                   self.payload = data.payload;
+                  self.payload.solution = problem.seed || '';
                   return self;
                 });
               },
