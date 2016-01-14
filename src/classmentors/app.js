@@ -1477,6 +1477,12 @@
             });
           },
 
+          queuedSolutions: function(publicId) {
+            return $q.when(publicId).then(function(id) {
+              return spfFirebase.loadedObj(['singpath/userProfiles', id, 'queuedSolutions']);
+            });
+          },
+
           hasSolved: function(profile, pathId, levelId, problemId, queueId) {
             return (
               profile &&

@@ -1037,7 +1037,7 @@
       };
 
       this.pagerOptions = clmPagerOption();
-      unwatchers.push(self.pagerOptions.$destroy);
+      unwatchers.push(self.pagerOptions.$destroy.bind(self.pagerOptions));
 
       /**
        * Get current user participant row
@@ -1411,13 +1411,17 @@
       $q.all({
         userProgress: clmDataStore.events.getUserProgress(this.event.$id, this.profile.$id).then(function(progress) {
           self.currentUserProgress = progress;
-          unwatchers.push(self.currentUserProgress.$destroy);
+          unwatchers.push(progress.$destroy.bind(progress));
           return progress;
         }),
         userSolution: clmDataStore.events.getUserSolutions(this.event.$id, this.profile.$id).then(function(solutions) {
           self.currentUserSolutions = solutions;
-          unwatchers.push(self.currentUserSolutions.$destroy);
+          unwatchers.push(solutions.$destroy.bind(solutions));
           return solutions;
+        }),
+        singpathQueuedSolution: clmDataStore.singPath.queuedSolutions(this.profile.$id).then(function(paths) {
+          unwatchers.push(paths.$destroy.bind(paths));
+          return paths;
         })
       }).then(function(results) {
         visibleTasks();
@@ -1436,12 +1440,19 @@
       }).finally(function() {
         self.loading = false;
       }).then(function(results) {
-        return clmDataStore.events.updateCurrentUserProfile(
-          self.event,
-          self.tasks,
-          results.userSolution,
-          self.profile
-        );
+        var update = function() {
+          return clmDataStore.events.updateCurrentUserProfile(
+            self.event,
+            self.tasks,
+            results.userSolution,
+            self.profile
+          );
+        };
+
+        // Watch for singpath problem getting updated
+        unwatchers.push(results.singpathQueuedSolution.$watch(update));
+
+        return update();
       }).catch(function(err) {
         $log.error(err);
       });
@@ -1525,7 +1536,7 @@
         reversed: false
       }];
       this.pagerOpts = clmPagerOption();
-      unwatchers.push(self.pagerOpts.$destroy);
+      unwatchers.push(self.pagerOpts.$destroy.bind(self.pagerOpts));
 
       load();
 
@@ -1539,7 +1550,7 @@
           unwatchers.push(self.pagerOpts.onChange(rankingView));
           updateRowCount();
 
-          unwatchers.push(self.ranking.$destroy);
+          unwatchers.push(self.ranking.$destroy.bind(self.ranking));
           unwatchers.push(self.ranking.$watch(updateRowCount));
         }).finally(function() {
           self.loading = false;
