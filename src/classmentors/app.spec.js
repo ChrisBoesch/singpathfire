@@ -737,6 +737,27 @@
 
           });
 
+          describe('queuedSolutions', function() {
+
+            it('should fetch the solution progress from the user profile at singpath', inject(function($rootScope, $q, clmDataStore) {
+              var expected = {};
+              var actual;
+
+              spfFirebase.loadedObj.and.returnValue($q.when(expected));
+
+              clmDataStore.singPath.queuedSolutions('bob').then(function(paths) {
+                actual = paths;
+              });
+
+              $rootScope.$apply();
+              expect(actual).toBe(expected);
+              expect(spfFirebase.loadedObj).toHaveBeenCalledWith(
+                ['singpath/userProfiles', 'bob', 'queuedSolutions']
+              );
+            }));
+
+          });
+
           describe('paths', function() {
 
             it('should return a map of available path at singpath', inject(function($rootScope, $q, clmDataStore) {
