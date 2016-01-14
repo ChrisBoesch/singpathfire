@@ -850,6 +850,13 @@
         expect(ctrl.currentUserParticipant.$id).toBe('bob');
       });
 
+      it('should load the current user solution progress at SingPath', function() {
+        ctrlFn.instance.participants.push({$id: 'bob', user: {}});
+        ctrlFn();
+
+        expect(deps.clmDataStore.singPath.queuedSolutions).toHaveBeenCalledWith('bob');
+      });
+
       it('should set tasks\' completion rates', function() {
         var ctrl;
 
@@ -1038,6 +1045,30 @@
 
         expect(ctrl.currentUserParticipant).toBeDefined();
         expect(ctrl.currentUserParticipant.$id).toBe('bob');
+      });
+
+      it('should update the user participants state when the user SingPath solution progress is updated', function() {
+        var ctrl;
+
+        ctrlFn.instance.participants.push({$id: 'alice', user: {}});
+
+        ctrl = ctrlFn();
+        $rootScope.$apply();
+
+        queuedSolutions.$watch.calls.allArgs().forEach(function(args) {
+          var callback = args[0];
+
+          expect(callback).toEqual(jasmine.any(Function));
+          callback();
+          return callback;
+        });
+
+        expect(deps.clmDataStore.events.updateCurrentUserProfile).toHaveBeenCalledWith(
+          ctrl.event,
+          ctrl.tasks,
+          ctrl.currentUserSolutions,
+          ctrl.profile
+        );
       });
 
       describe('orderBy', function() {
