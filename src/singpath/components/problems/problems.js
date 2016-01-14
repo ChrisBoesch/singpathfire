@@ -224,6 +224,12 @@
 
       this.saveProblem = function(problems, index) {
         return next(self.currentUser).then(function() {
+          problems[index].owner = {
+            displayName: self.currentUser.displayName,
+            gravatar: self.currentUser.gravatar,
+            publicId: self.currentUser.publicId
+          };
+
           return problems.$save(index);
         }).then(function(data) {
           spfAlert.success('Problem saved');
@@ -236,7 +242,11 @@
 
       this.createProblem = function(currentUser, problems, newProblem) {
         newProblem.language = self.level.language;
-        newProblem.owner = self.level.owner;
+        newProblem.owner = {
+          displayName: self.currentUser.displayName,
+          gravatar: self.currentUser.gravatar,
+          publicId: self.currentUser.publicId
+        };
 
         return next(currentUser).then(function() {
           return problems.$add(newProblem);
