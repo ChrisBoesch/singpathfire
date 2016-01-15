@@ -204,7 +204,10 @@
       this.path = initialData.path;
       this.level = initialData.level;
       this.problems = initialData.problems;
-      this.newProblem = {};
+      this.newProblem = {
+        tests: spfDataStore.problems.defaults[this.level.language] || '',
+        seed: spfDataStore.solutions.defaults[this.level.language] || ''
+      };
 
       this.profileNeedsUpdate = !this.currentUser.$completed();
 
@@ -224,6 +227,16 @@
 
       this.saveProblem = function(problems, index) {
         return next(self.currentUser).then(function() {
+          problems[index].owner = {
+            displayName: self.currentUser.displayName,
+            gravatar: self.currentUser.gravatar,
+            publicId: self.currentUser.publicId
+          };
+
+          if (!problems[index].seed) {
+            delete problems[index].seed;
+          }
+
           return problems.$save(index);
         }).then(function(data) {
           spfAlert.success('Problem saved');
@@ -236,7 +249,18 @@
 
       this.createProblem = function(currentUser, problems, newProblem) {
         newProblem.language = self.level.language;
-        newProblem.owner = self.level.owner;
+        newProblem.owner = {
+          displayName: self.currentUser.displayName,
+          gravatar: self.currentUser.gravatar,
+          publicId: self.currentUser.publicId
+        };
+
+        if (
+          !newProblem.seed ||
+          newProblem.seed === spfDataStore.solutions.defaults[this.level.language]
+        ) {
+          delete newProblem.seed;
+        }
 
         return next(currentUser).then(function() {
           return problems.$add(newProblem);
