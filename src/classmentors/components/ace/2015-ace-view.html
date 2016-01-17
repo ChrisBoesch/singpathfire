@@ -1,0 +1,98 @@
+<md-content flex>
+	<md-content class="md-padding">
+		<p>The <a href="http://www.infocommtalent.sg/nic4.aspx">IDA Ace of Coders</a> event will take place on September 10, 2015.</p>
+		<p>Click here to register and participate in the online portions of the <a href="http://www.classmentors.com/#/events/-Jqh4lFKnAQ3ACi3Crk6">junior</a> 
+		or <a href="http://www.classmentors.com/#/events/-Jqh51g1CR4E00gg3mFl">senior</a> categories. You will need to login with a Google ID and the click on the "Join" button. 
+		<p>There will be lucky draw prizes for online participants who do not qualify to attend the live event. Online qualfication will end on August 26th at 12pm.</p>
+		<p><b>{{ctrl.stats.total_participants}}</b> students have registered so far.</p>
+		<p><b>{{ctrl.stats.total_schools}}</b> schools are participating.</p>
+		<p>If you see a school missing in the rankings below, please encoruage them to participate.</p>
+		<p>You can visit the <a href="http://www.infocommtalent.sg/nic4.aspx">IDA website</a> for more details or visit the <a href="https://www.facebook.com/aceofcoders">Ace of Coders Facebook page</a> to leave comments, questions, and join the conversation.</p>
+		
+	</md-content>
+   
+	<md-toolbar md-scroll-shrink>
+		<div class="md-toolbar-tools">
+			<h3><span>{{ctrl.stats.junior_schools}} Participating Junior Category Schools</span></h3>
+		</div>
+	</md-toolbar>
+	<md-content class="md-padding">
+		<!--<md-subheader>0 School yet.</md-subheader>-->
+		<table>
+			<tr>
+				<th>Rank</th> 
+				<th>Achievements</th>
+				<th>School</th>
+				<th>Second ranked student from school</th> 
+			</tr>
+			<tr ng-repeat="school in ctrl.stats.junior_ranking" bgcolor="{{$index==9?'lightgreen':'white'}}">
+				<td>{{$index+1}}</td>				
+				<td>{{school.total}}</td>
+				<td>{{school.school}}</td>
+				<td ng-if="school.name !== 'no second student'">{{school.name}}</td>
+				<td ng-if="school.name == 'no second student'"><span style="font-style: italic; color: grey;">No second student</span></td>
+			</tr>
+
+	    </table>
+	</md-content>
+
+	<md-toolbar md-scroll-shrink>
+		<div class="md-toolbar-tools">
+			<h3><span>{{ctrl.stats.senior_ranking.length}} Participating Senior Category Schools</span></h3>
+		</div>
+	</md-toolbar>
+	<md-content class="md-padding">
+		<!--<md-subheader>0 School yet.</md-subheader>-->
+		<table>
+			<tr>
+				<th>Rank</th> 
+				<th>Achievements</th>
+				<th>School</th>
+				<th>Second ranked student from school</th> 
+			</tr>
+			<tr ng-repeat="school in ctrl.stats.senior_ranking"  bgcolor="{{$index==9?'lightgreen':'white'}}">
+				<td>{{$index+1}}</td>
+				<td>{{school.total}}</td>
+				<td>{{school.school}}</td>
+				<td ng-if="school.name !== 'no second student'">{{school.name}}</td>
+				<td ng-if="school.name == 'no second student'"><span style="font-style: italic; color: grey;">No second student</span></td>
+				
+			</tr>
+	    </table>
+	</md-content>
+		<md-toolbar md-scroll-shrink>
+		<div class="md-toolbar-tools">
+			<h3><span>Top 5 Junior Category Schools by Registrations</span></h3>
+		</div>
+	</md-toolbar>
+	<md-content class="md-padding">
+		<table>
+			<tr>
+				<th>Registered Students</th> 
+				<th>School</th>
+			</tr>
+			<tr ng-repeat="school in ctrl.stats.juniorSchoolRanking | limitTo:5">
+				<td>{{school.total}}</td>
+				<td>{{school.school}}</td>				
+			</tr>
+	    </table>
+	</md-content>
+	</md-content>
+		<md-toolbar md-scroll-shrink>
+		<div class="md-toolbar-tools">
+			<h3><span>Top 5 Senior Category Schools by Registrations</span></h3>
+		</div>
+	</md-toolbar>
+	<md-content class="md-padding">
+		<table>
+			<tr>
+				<th>Registered Students</th> 
+				<th>School</th>
+			</tr>
+			<tr ng-repeat="school in ctrl.stats.seniorSchoolRanking | limitTo:5">
+				<td>{{school.total}}</td>
+				<td>{{school.school}}</td>				
+			</tr>
+	    </table>
+	</md-content>
+</md-content>
